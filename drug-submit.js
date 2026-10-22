@@ -32,6 +32,16 @@
     if (d.every((x, i) => !i || x === d[i - 1] + 1) || d.every((x, i) => !i || x === d[i - 1] - 1)) return 'รหัสผ่านห้ามเป็นเลขเรียงกัน (เช่น 1234 หรือ 4321)';
     return '';
   }
+  // กด Enter แล้วเลื่อนไปช่องถัดไป (ช่องสุดท้าย = กดปุ่มส่ง)
+  const enterChain = (ids, goId) => ids.forEach((id, i) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const nx = i < ids.length - 1 ? document.getElementById(ids[i + 1]) : null;
+      if (nx) nx.focus(); else document.getElementById(goId).click();
+    });
+  });
   const onlyDigits = (el, max) => el.addEventListener('input', () => { el.value = el.value.replace(/\D/g, '').slice(0, max); });
 
   // ---------- UI shell ----------
@@ -121,7 +131,7 @@
       '<button class="dsm-link" id="dsm_reg" type="button">ยังไม่มีบัญชี? สมัครใช้งาน</button>';
     onlyDigits($('#dsm_emp'), 9); onlyDigits($('#dsm_pin'), 4);
     $('#dsm_reg').onclick = viewRegister;
-    $('#dsm_pin').addEventListener('keydown', e => { if (e.key === 'Enter') $('#dsm_go').click(); });
+    enterChain(['dsm_emp', 'dsm_pin'], 'dsm_go');
     $('#dsm_go').onclick = async () => {
       const empId = $('#dsm_emp').value, pin = $('#dsm_pin').value;
       if (!/^\d{9}$/.test(empId)) return setMsg('err', 'รหัสพนักงานต้องเป็นตัวเลข 9 หลัก');
@@ -148,6 +158,7 @@
       '<button class="dsm-link" id="dsm_back" type="button">← กลับไปเข้าสู่ระบบ</button>';
     onlyDigits($('#dsm_emp'), 9); onlyDigits($('#dsm_lic'), 5); onlyDigits($('#dsm_pin'), 4); onlyDigits($('#dsm_pin2'), 4);
     $('#dsm_back').onclick = () => viewLogin();
+    enterChain(['dsm_emp', 'dsm_lic', 'dsm_pin', 'dsm_pin2'], 'dsm_go');
     $('#dsm_go').onclick = async () => {
       const empId = $('#dsm_emp').value, pin = $('#dsm_pin').value;
       if (!/^\d{9}$/.test(empId)) return setMsg('err', 'รหัสพนักงานต้องเป็นตัวเลข 9 หลัก');
@@ -167,10 +178,12 @@
 
   function typeOptions() {
     const sel = document.getElementById('sel_drug_type');
-    if (!sel) return '<option value="เม็ด">เม็ด</option>';
+    if (!sel) return '<option value="ยาเม็ด">ยาเม็ด</option>';
     const opt = o => {
-      const th = o.textContent.replace(/\s*\(.*\)\s*$/, '').trim();   // เก็บเฉพาะข้อความไทย ให้ตรงกับรูปแบบในชีท
-      return '<option value="' + th + '">' + o.textContent + '</option>';
+      let th = o.textContent.replace(/\s*\(.*\)\s*$/, '').trim();   // เก็บเฉพาะข้อความไทย ให้ตรงกับรูปแบบในชีท
+      if (th === 'เม็ด') th = 'ยาเม็ด';                                // "เม็ด" เฉยๆ ถูกแปลเป็น grain → ใช้ "ยาเม็ด" ให้แปลเป็น tablet
+      const label = th === 'ยาเม็ด' && /^เม็ด\b/.test(o.textContent) ? o.textContent.replace(/^เม็ด/, 'ยาเม็ด') : o.textContent;
+      return '<option value="' + th + '">' + label + '</option>';
     };
     return Array.from(sel.children).map(c => c.tagName === 'OPTGROUP'
       ? '<optgroup label="' + c.label + '">' + Array.from(c.children).map(opt).join('') + '</optgroup>'
