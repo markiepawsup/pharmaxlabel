@@ -4,7 +4,7 @@
   'use strict';
 
   // ⬇⬇⬇ ใส่ URL ของ Web App (ลงท้ายด้วย /exec) หลัง Deploy Apps Script ⬇⬇⬇
-  const WEB_APP_URL = '';
+  const WEB_APP_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRXtVDHSByDI_Z4QR3NnTB8iQC605yC_eZE9EJyoLcEzxYY6FbK2U7FNU5-YiUs104imNoRu-l99ZkVBimVNHg8j8Ik3k9MlNrPuwLktUDq_kc1cdQtg6P63Eea_CprfNno4zFHdEB_rUwzoZHQTsXM0wN_h4LvD2yjpJLBOjZLJrpK-Vt9ej1hco0bKg6YvGrrH8TbtWujKOnWxeMzTSBJVSfstRY6MaXbWXhkgzYlS15r9VJAiOMSLBwLovpg-mVIH9vCLz10cT-dKhppTTqgVZ8mjg&lib=Mfftw7agV6qL6uorTAoZfO0wZ7ki6rcAH';
 
   const $ = (s, r) => (r || document).querySelector(s);
   const SESSION_KEY = 'pharmax_submit_session';
