@@ -186,7 +186,7 @@ const UI_TEXT = {
         drug: "ชื่อยา", indication: "สรรพคุณ", type: "ชนิด",
         morning: "เช้า", noon: "กลางวัน", evening: "เย็น", bed: "ก่อนนอน",
         time: "เวลา", advice: "คำแนะนำ",
-        drugTypes: { tablet:"เม็ด", capsule:"แคปซูล", syrup:"น้ำเชื่อม", solution:"ยาน้ำ/สารละลาย", suspension:"ยาแขวนตะกอน", emulsion:"อิมัลชัน", powder:"ผง", granule:"เกล็ด/แกรนูล", lozenge:"ยาอม", external:"ยาใช้ภายนอก", ointment:"ยาขี้ผึ้ง", cream:"ครีม", gel:"เจล", paste:"เพสต์", patch:"แผ่นแปะผิวหนัง",
+        drugTypes: { tablet:"ยาเม็ด", capsule:"แคปซูล", syrup:"ยาน้ำเชื่อม", solution:"ยาน้ำ/สารละลาย", suspension:"ยาแขวนตะกอน", emulsion:"อิมัลชัน", powder:"ยาผง", granule:"เกล็ด/แกรนูล", lozenge:"ยาอม", external:"ยาใช้ภายนอก", ointment:"ยาขี้ผึ้ง", cream:"ครีม", gel:"เจล", paste:"เพสต์", patch:"แผ่นแปะผิวหนัง",
             iv:"ฉีดเข้าเส้นเลือดดำ", im:"ฉีดเข้ากล้ามเนื้อ", sc:"ฉีดใต้ผิวหนัง",
             sublingual:"อมใต้ลิ้น", buccal:"อมกระพุ้งแก้ม", mouthPaint:"ยาป้ายลิ้น/แผลในปาก", gargle:"ยากลั้วคอ", suppositoryRectal:"ยาเหน็บทวารหนัก", suppositoryVaginal:"ยาเหน็บช่องคลอด", eye:"ยาหยอดตา", ear:"ยาหยอดหู", nasalSpray:"ยาพ่นจมูก", nasalDrops:"ยาหยอดจมูก",
             aerosol:"ยาละอองลอย", inhaler:"ยาสูดพ่น", nebulizer:"ยาพ่นละอองฝอย",
