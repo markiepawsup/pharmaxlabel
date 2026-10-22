@@ -4,7 +4,7 @@
   'use strict';
 
   // ⬇⬇⬇ ใส่ URL ของ Web App (ลงท้ายด้วย /exec) หลัง Deploy Apps Script ⬇⬇⬇
-  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+  const WEB_APP_URL = '';
 
   const $ = (s, r) => (r || document).querySelector(s);
   const SESSION_KEY = 'pharmax_submit_session';
@@ -128,9 +128,11 @@
       '<label>รหัสผ่าน (ตัวเลข 4 หลัก)</label><input id="dsm_pin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••">' +
       '<div id="dsm_m">' + (note || '') + '</div>' +
       '<button class="dsm-btn" id="dsm_go" type="button">เข้าสู่ระบบ</button>' +
-      '<button class="dsm-link" id="dsm_reg" type="button">ยังไม่มีบัญชี? สมัครใช้งาน</button>';
+      '<button class="dsm-link" id="dsm_reg" type="button">ยังไม่มีบัญชี? สมัครใช้งาน</button>' +
+      '<button class="dsm-link" id="dsm_forgot" type="button">ลืมรหัสผ่าน?</button>';
     onlyDigits($('#dsm_emp'), 9); onlyDigits($('#dsm_pin'), 4);
     $('#dsm_reg').onclick = viewRegister;
+    $('#dsm_forgot').onclick = viewReset;
     enterChain(['dsm_emp', 'dsm_pin'], 'dsm_go');
     $('#dsm_go').onclick = async () => {
       const empId = $('#dsm_emp').value, pin = $('#dsm_pin').value;
@@ -139,11 +141,41 @@
       const b = $('#dsm_go'); b.disabled = true; b.textContent = 'กำลังตรวจสอบ…';
       const r = await api({ action: 'login', empId, pin });
       b.disabled = false; b.textContent = 'เข้าสู่ระบบ';
-      if (!r.ok) return setMsg(r.error === 'pending' ? 'warn' : 'err', r.message || 'เข้าสู่ระบบไม่สำเร็จ');
+      if (!r.ok) return setMsg(r.error === 'pending' || r.error === 'reset_pending' ? 'warn' : 'err', r.message || 'เข้าสู่ระบบไม่สำเร็จ');
       session = { empId: r.empId, pin, name: r.name };
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
       const nx = afterLogin; afterLogin = null;
       (nx || viewForm)();
+    };
+  }
+
+  // ลืมรหัสผ่าน: ตั้งรหัสใหม่ส่งให้แอดมินอนุมัติ (ยืนยันตัวตนด้วยรหัสพนักงาน + เลขที่ใบอนุญาตที่สมัครไว้)
+  function viewReset() {
+    body().innerHTML = head('🔑 ลืมรหัสผ่าน') +
+      '<div class="dsm-hint" style="margin-bottom:6px">ตั้งรหัสผ่านใหม่แล้วส่งให้แอดมินอนุมัติ — เมื่อแอดมินอนุมัติแล้วจึงเข้าระบบด้วยรหัสใหม่ได้ (ระหว่างรอ ยังใช้รหัสเดิมได้ถ้าจำได้)</div>' +
+      '<label>รหัสพนักงาน (9 หลัก)</label><input id="dsm_emp" inputmode="numeric" autocomplete="off">' +
+      '<label>เลขที่ใบอนุญาตประกอบวิชาชีพเภสัชกรรม (5 หลัก) ที่ใช้สมัคร</label><input id="dsm_lic" inputmode="numeric" autocomplete="off" placeholder="เฉพาะตัวเลข">' +
+      '<label>ตั้งรหัสผ่านใหม่ (ตัวเลข 4 หลัก ไม่เรียงกัน) <span class="dsm-hint">เช่น 2580, 1379 — ห้าม 1234 / 4321 / 1111</span></label><input id="dsm_pin" type="password" inputmode="numeric" autocomplete="off">' +
+      '<label>ยืนยันรหัสผ่านใหม่อีกครั้ง</label><input id="dsm_pin2" type="password" inputmode="numeric" autocomplete="off">' +
+      '<div id="dsm_m"></div>' +
+      '<button class="dsm-btn" id="dsm_go" type="button">ส่งคำขอเปลี่ยนรหัสผ่าน</button>' +
+      '<button class="dsm-link" id="dsm_back" type="button">← กลับไปเข้าสู่ระบบ</button>';
+    onlyDigits($('#dsm_emp'), 9); onlyDigits($('#dsm_lic'), 5); onlyDigits($('#dsm_pin'), 4); onlyDigits($('#dsm_pin2'), 4);
+    $('#dsm_back').onclick = () => viewLogin();
+    enterChain(['dsm_emp', 'dsm_lic', 'dsm_pin', 'dsm_pin2'], 'dsm_go');
+    $('#dsm_go').onclick = async () => {
+      const empId = $('#dsm_emp').value, licenseNo = $('#dsm_lic').value, pin = $('#dsm_pin').value;
+      if (!/^\d{9}$/.test(empId)) return setMsg('err', 'รหัสพนักงานต้องเป็นตัวเลข 9 หลัก');
+      if (!/^\d{5}$/.test(licenseNo)) return setMsg('err', 'เลขที่ใบอนุญาตต้องเป็นตัวเลข 5 หลัก');
+      const pe = pinError(pin); if (pe) return setMsg('err', pe);
+      if (pin !== $('#dsm_pin2').value) return setMsg('err', 'รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+      const b = $('#dsm_go'); b.disabled = true; b.textContent = 'กำลังส่ง…';
+      const r = await api({ action: 'requestReset', empId, licenseNo, pin });
+      b.disabled = false; b.textContent = 'ส่งคำขอเปลี่ยนรหัสผ่าน';
+      if (!r.ok) return setMsg('err', r.message || 'ส่งคำขอไม่สำเร็จ');
+      body().innerHTML = head('✅ ส่งคำขอแล้ว') +
+        msg('ok', 'ส่งคำขอเปลี่ยนรหัสผ่านให้แอดมินแล้ว<br>เมื่อแอดมินอนุมัติ จะเข้าระบบด้วย <b>รหัสใหม่</b> ได้ทันที (ถ้ายังไม่อนุมัติ กรุณารอหรือแจ้งแอดมิน)') +
+        '<button class="dsm-btn" data-close type="button">ตกลง</button>';
     };
   }
 

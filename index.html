@@ -1097,8 +1097,9 @@
         .c4-btn-sub { font-size: 0.72rem; font-weight: 400; opacity: 0.85; }
         details.c4-more { margin-top: 10px; border: 1px dashed #cfd6e4; border-radius: 8px; padding: 6px 10px; }
         details.c4-more > summary { cursor: pointer; font-size: 0.8rem; font-weight: 600; color: #5a6785; }
-        .btn-admin { border-color: #1a2b5c; color: #1a2b5c; }
-        .btn-admin:hover { background: #e8ecf7; }
+        /* ลิงก์แอดมิน: เล็กและจางมากในส่วนท้ายหน้า (ไม่ให้คนทั่วไปสังเกต/กดโดยไม่ตั้งใจ) — เมาส์ชี้ถึงจะเห็นชัดขึ้น */
+        .footer-admin-link { color: #d5dbe0; text-decoration: none; margin-left: 6px; font-size: 0.7rem; cursor: default; }
+        .footer-admin-link:hover { color: var(--color-navy); cursor: pointer; }
 
         /* --- ปุ่มพิมพ์ด่วนแบบลอย (ไม่ติดไปกับฉลากที่พิมพ์เด็ดขาด) --- */
         #fab_print {
@@ -1197,8 +1198,7 @@
         <div class="top-bar-row">
             <div style="display:flex; align-items:center; gap:6px;">
                 <button type="button" class="btn-home" onclick="goHome()">🏠 หน้าแรก (เปลี่ยนสาขา)</button>
-                <button type="button" class="btn-home btn-feedback" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openFeedback()" title="ส่งความคิดเห็นเกี่ยวกับข้อมูลยา/การใช้งาน (ต้องเข้าสู่ระบบ)">💬 ฟีดแบ็ก</button>
-                <button type="button" class="btn-home btn-admin" onclick="openAdminPage()" title="เปิดหน้าล็อกอินแอดมิน (แท็บใหม่)">🔐 แอดมิน</button>
+                <button type="button" class="btn-home btn-feedback" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openFeedback()" title="ส่งความคิดเห็นเกี่ยวกับข้อมูลยา/การใช้งาน (ต้องเข้าสู่ระบบ)">💬 Feedback</button>
 
             </div>
             <span class="current-branch-badge" id="current_branch_badge"></span>
@@ -1475,6 +1475,7 @@
         <!-- 📝 เครดิตผู้สร้างและหมายเลขเวอร์ชันมุมล่างสุดของจอฝั่งซ้าย -->
         <div class="app-footer no-print" style="margin-top: 16px; border-top: 1px solid #eee; padding-top: 8px;">
             Pharmax Pharmacy &middot; ระบบพิมพ์ฉลากยาหลายภาษา &middot; Created by Mark Rx Mobile &middot; <span id="footer_version"></span>
+            <a href="#" class="footer-admin-link" onclick="openAdminPage(); return false;" title="Admin">Admin</a>
         </div>
     </div>
 
