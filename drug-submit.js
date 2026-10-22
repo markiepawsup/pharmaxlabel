@@ -7,9 +7,12 @@
   const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
 
   const $ = (s, r) => (r || document).querySelector(s);
-  const SESSION_KEY = 'pharmax_submit_session';
+  // v2: เก็บเฉพาะ token ที่เซิร์ฟเวอร์ออกให้ (ไม่เก็บ PIN ไว้ในเครื่องอีกต่อไป)
+  const SESSION_KEY = 'pharmax_submit_session_v2';
   let session = null;
+  try { sessionStorage.removeItem('pharmax_submit_session'); } catch (e) {}          // ลบ session รุ่นเก่าที่มี PIN ค้างอยู่
   try { session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch (e) {}
+  if (!session || !session.token) session = null;
 
   // ---------- API ----------
   async function api(payload) {
@@ -22,7 +25,7 @@
       return { ok: false, message: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' };
     }
   }
-  const auth = () => ({ empId: session.empId, pin: session.pin });
+  const auth = () => ({ token: session.token });
 
   // ---------- validation ----------
   function pinError(pin) {
@@ -144,7 +147,8 @@
       const r = await api({ action: 'login', empId, pin });
       b.disabled = false; b.textContent = 'เข้าสู่ระบบ';
       if (!r.ok) return setMsg(r.error === 'pending' || r.error === 'reset_pending' ? 'warn' : 'err', r.message || 'เข้าสู่ระบบไม่สำเร็จ');
-      session = { empId: r.empId, pin, name: r.name };
+      if (!r.token) return setMsg('err', 'เซิร์ฟเวอร์ยังเป็นเวอร์ชันเก่า กรุณาแจ้งแอดมินให้ Deploy Code.gs ใหม่');
+      session = { empId: r.empId, token: r.token, name: r.name };
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
       const nx = afterLogin; afterLogin = null;
       (nx || viewForm)();
@@ -369,11 +373,14 @@
 
   const whoLine = () => '<div class="dsm-who">ผู้ใช้: <b>' + esc(session.name || '-') + '</b> (' + esc(session.empId) + ') · <button class="dsm-link" id="dsm_out" type="button" style="margin:0">ออกจากระบบ</button> · <button class="dsm-link" id="dsm_tofb" type="button" style="margin:0">💬 ส่งความคิดเห็น</button></div>';
   function wireWho() {
-    $('#dsm_out').onclick = () => { session = null; sessionStorage.removeItem(SESSION_KEY); afterLogin = null; viewLogin(); };
+    $('#dsm_out').onclick = () => {
+      if (session && session.token) api({ action: 'logout', token: session.token });   // ไม่ต้องรอผล
+      session = null; sessionStorage.removeItem(SESSION_KEY); afterLogin = null; viewLogin();
+    };
     $('#dsm_tofb').onclick = viewFeedback;
   }
   function authFail(r) {   // รหัสผ่าน/สถานะผู้ใช้ใช้ไม่ได้แล้ว -> กลับหน้าเข้าสู่ระบบ
-    if (['invalid', 'pending', 'rejected', 'locked'].indexOf(r.error) >= 0) { session = null; sessionStorage.removeItem(SESSION_KEY); viewLogin(msg('err', r.message)); return true; }
+    if (['invalid', 'pending', 'rejected', 'locked', 'expired'].indexOf(r.error) >= 0) { session = null; sessionStorage.removeItem(SESSION_KEY); viewLogin(msg('err', r.message)); return true; }
     return false;
   }
 
@@ -451,7 +458,7 @@
       } catch (e) {}
     }
     if (cats.length) {
-      sel.innerHTML = '<option value="">-- ไม่ระบุ --</option>' + cats.map(c => '<option value="' + c.replace(/"/g, '&quot;') + '">' + c + '</option>').join('');
+      sel.innerHTML = '<option value="">-- ไม่ระบุ --</option>' + cats.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
       hint.textContent = '';
     } else { hint.textContent = '(โหลดรายการไม่ได้ — ปล่อยว่างได้)'; }
   }
@@ -474,7 +481,7 @@
   function showDuplicate(bc, name) {
     $('#dsm_rest').style.display = 'none';
     $('#dsm_dup').innerHTML =
-      msg('warn', '⚠️ <b>บาร์โค้ดนี้มีข้อมูลอยู่ในระบบแล้ว' + (name ? ' (' + name + ')' : '') + '</b><br>ไม่อนุญาตให้เพิ่มข้อมูลซ้ำ — หากต้องการแก้ไข กรุณาระบุรายละเอียดด้านล่าง เพื่อให้แอดมินตรวจสอบ') +
+      msg('warn', '⚠️ <b>บาร์โค้ดนี้มีข้อมูลอยู่ในระบบแล้ว' + (name ? ' (' + esc(name) + ')' : '') + '</b><br>ไม่อนุญาตให้เพิ่มข้อมูลซ้ำ — หากต้องการแก้ไข กรุณาระบุรายละเอียดด้านล่าง เพื่อให้แอดมินตรวจสอบ') +
       '<label>ต้องการให้แก้ไขข้อมูลเป็นอย่างไร</label><textarea id="dsm_cmt" rows="3"></textarea>' +
       '<div id="dsm_m"></div><button class="dsm-btn sec" id="dsm_sendc" type="button">ส่งคำขอแก้ไข</button>';
     $('#dsm_sendc').onclick = async () => {
@@ -483,7 +490,7 @@
       const b = $('#dsm_sendc'); b.disabled = true;
       const r = await api(Object.assign({ action: 'submitEdit', barcodeNo: bc, comment: c }, auth()));
       b.disabled = false;
-      if (!r.ok) return setMsg('err', r.message || 'ส่งไม่สำเร็จ');
+      if (!r.ok) { if (authFail(r)) return; return setMsg('err', r.message || 'ส่งไม่สำเร็จ'); }
       done('✅ ส่งคำขอแก้ไขแล้ว', 'แอดมินจะตรวจสอบข้อมูลภายหลัง');
     };
   }
@@ -506,7 +513,7 @@
     b.disabled = false; b.textContent = 'Submit';
     if (r.duplicate) return showDuplicate(drug.barcodeNo, r.drugName);
     if (!r.ok) {
-      if (r.error === 'invalid' || r.error === 'pending' || r.error === 'rejected' || r.error === 'locked') { session = null; sessionStorage.removeItem(SESSION_KEY); return viewLogin(msg('err', r.message)); }
+      if (authFail(r)) return;
       return setMsg('err', r.message || 'ส่งไม่สำเร็จ');
     }
     done('✅ ส่งข้อมูลแล้ว', 'กรุณารอการตรวจสอบข้อมูล หากข้อมูลถูกต้อง จะสามารถใช้บาร์โค้ดยานี้ได้โดยอัตโนมัติ');
