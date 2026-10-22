@@ -4,7 +4,8 @@
   'use strict';
 
   // ⬇⬇⬇ ใส่ URL ของ Web App (ลงท้ายด้วย /exec) หลัง Deploy Apps Script ⬇⬇⬇
-  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec'
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+
   const $ = (s, r) => (r || document).querySelector(s);
   const SESSION_KEY = 'pharmax_submit_session';
   let session = null;
@@ -127,8 +128,10 @@
       '<label>รหัสผ่าน (ตัวเลข 4 หลัก)</label><input id="dsm_pin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••">' +
       '<div id="dsm_m">' + (note || '') + '</div>' +
       '<button class="dsm-btn" id="dsm_go" type="button">เข้าสู่ระบบ</button>' +
-      '<button class="dsm-link" id="dsm_reg" type="button">ยังไม่มีบัญชี? สมัครใช้งาน</button>' +
-      '<button class="dsm-link" id="dsm_forgot" type="button">ลืมรหัสผ่าน?</button>';
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">' +
+        '<button class="dsm-link" id="dsm_forgot" type="button">ลืมรหัสผ่าน?</button>' +
+        '<button class="dsm-link" id="dsm_reg" type="button">ยังไม่มีบัญชี? สมัครใช้งาน</button>' +
+      '</div>';
     onlyDigits($('#dsm_emp'), 9); onlyDigits($('#dsm_pin'), 4);
     $('#dsm_reg').onclick = viewRegister;
     $('#dsm_forgot').onclick = viewReset;
