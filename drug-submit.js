@@ -4,7 +4,7 @@
   'use strict';
 
   // ⬇⬇⬇ ใส่ URL ของ Web App (ลงท้ายด้วย /exec) หลัง Deploy Apps Script ⬇⬇⬇
-  const WEB_APP_URL = '';
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
 
   const $ = (s, r) => (r || document).querySelector(s);
   const SESSION_KEY = 'pharmax_submit_session';
