@@ -4,7 +4,7 @@
   'use strict';
 
   // ⬇⬇⬇ ใส่ URL ของ Web App (ลงท้ายด้วย /exec) หลัง Deploy Apps Script ⬇⬇⬇
-  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+  const WEB_APP_URL = '';
 
   const $ = (s, r) => (r || document).querySelector(s);
   const SESSION_KEY = 'pharmax_submit_session';
@@ -140,24 +140,27 @@
   function viewRegister() {
     body().innerHTML = head('📝 สมัครใช้งาน') +
       '<label>รหัสพนักงาน (9 หลัก)</label><input id="dsm_emp" inputmode="numeric" autocomplete="off">' +
+      '<label>เลขที่ใบอนุญาตประกอบวิชาชีพเภสัชกรรม (5 หลัก)</label><input id="dsm_lic" inputmode="numeric" autocomplete="off" placeholder="เฉพาะตัวเลข">' +
       '<label>ตั้งรหัสผ่าน (ตัวเลข 4 หลัก ไม่เรียงกัน) <span class="dsm-hint">เช่น 2580, 1379 — ห้าม 1234 / 4321 / 1111</span></label><input id="dsm_pin" type="password" inputmode="numeric" autocomplete="off">' +
       '<label>ยืนยันรหัสผ่านอีกครั้ง</label><input id="dsm_pin2" type="password" inputmode="numeric" autocomplete="off">' +
       '<div id="dsm_m"></div>' +
       '<button class="dsm-btn" id="dsm_go" type="button">ส่งคำขอสมัคร</button>' +
       '<button class="dsm-link" id="dsm_back" type="button">← กลับไปเข้าสู่ระบบ</button>';
-    onlyDigits($('#dsm_emp'), 9); onlyDigits($('#dsm_pin'), 4); onlyDigits($('#dsm_pin2'), 4);
+    onlyDigits($('#dsm_emp'), 9); onlyDigits($('#dsm_lic'), 5); onlyDigits($('#dsm_pin'), 4); onlyDigits($('#dsm_pin2'), 4);
     $('#dsm_back').onclick = () => viewLogin();
     $('#dsm_go').onclick = async () => {
       const empId = $('#dsm_emp').value, pin = $('#dsm_pin').value;
       if (!/^\d{9}$/.test(empId)) return setMsg('err', 'รหัสพนักงานต้องเป็นตัวเลข 9 หลัก');
+      const licenseNo = $('#dsm_lic').value;
+      if (!/^\d{5}$/.test(licenseNo)) return setMsg('err', 'เลขที่ใบอนุญาตต้องเป็นตัวเลข 5 หลัก');
       const pe = pinError(pin); if (pe) return setMsg('err', pe);
       if (pin !== $('#dsm_pin2').value) return setMsg('err', 'รหัสผ่านทั้งสองช่องไม่ตรงกัน');
       const b = $('#dsm_go'); b.disabled = true; b.textContent = 'กำลังส่ง…';
-      const r = await api({ action: 'register', empId, pin });
+      const r = await api({ action: 'register', empId, pin, licenseNo });
       b.disabled = false; b.textContent = 'ส่งคำขอสมัคร';
       if (!r.ok) return setMsg('err', r.message || 'สมัครไม่สำเร็จ');
       body().innerHTML = head('✅ ส่งคำขอสมัครแล้ว') +
-        msg('ok', 'กรุณารอแอดมินตรวจสอบข้อมูล แล้วกลับมาเข้าสู่ระบบภายหลัง') +
+        msg('ok', (r.pharmacistName ? 'พบข้อมูลในทะเบียนสภาเภสัชกรรม: <b>' + esc(r.pharmacistName) + '</b><br>' : '') + 'กรุณารอแอดมินตรวจสอบข้อมูล แล้วกลับมาเข้าสู่ระบบภายหลัง') +
         '<button class="dsm-btn" data-close type="button">ตกลง</button>';
     };
   }
