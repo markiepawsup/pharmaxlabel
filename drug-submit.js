@@ -4,7 +4,7 @@
   'use strict';
 
   // ⬇⬇⬇ ใส่ URL ของ Web App (ลงท้ายด้วย /exec) หลัง Deploy Apps Script ⬇⬇⬇
-  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+  const WEB_APP_URL = '';
 
   const $ = (s, r) => (r || document).querySelector(s);
   const SESSION_KEY = 'pharmax_submit_session';
@@ -367,7 +367,8 @@
   function viewForm() {
     const pre = pendingCode; pendingCode = '';
     body().innerHTML = head('💊 เพิ่มข้อมูลยาใหม่') + whoLine() +
-      '<label>บาร์โค้ด <span class="dsm-hint">ยิงเครื่องสแกนได้เลย</span></label><input id="dsm_bc" inputmode="numeric" autocomplete="off">' +
+      '<label>บาร์โค้ดแผง <span class="dsm-hint">ยิงเครื่องสแกนได้เลย</span></label><input id="dsm_bc" inputmode="numeric" autocomplete="off">' +
+      '<label>บาร์โค้ดกล่อง (ยกแพ็ค) <span class="dsm-hint">หากมี</span></label><input id="dsm_bc_pack" inputmode="numeric" autocomplete="off">' +
       '<label>Item No. (7 หลัก)</label><input id="dsm_item" inputmode="numeric" autocomplete="off" maxlength="7">' +
       '<div id="dsm_dup"></div>' +
       '<div id="dsm_rest">' +
@@ -386,7 +387,7 @@
       '<div id="dsm_m"></div>' +
       '<button class="dsm-btn" id="dsm_submit" type="button">Submit</button>' +
       '</div>';
-    onlyDigits($('#dsm_bc'), 14); onlyDigits($('#dsm_item'), 7);
+    onlyDigits($('#dsm_bc'), 14); onlyDigits($('#dsm_bc_pack'), 14); onlyDigits($('#dsm_item'), 7);
     $('#dsm_generic').addEventListener('input', e => {
       const el = e.target, p = el.selectionStart; el.value = el.value.toUpperCase(); try { el.setSelectionRange(p, p); } catch (x) {}
     });
@@ -423,12 +424,12 @@
 
   // ตรวจซ้ำ: เช็คในแคชของแอปก่อน (เร็ว) แล้วเช็คกับเซิร์ฟเวอร์ (ครอบคลุมรายการที่รอตรวจ)
   async function checkDup() {
-    const bc = $('#dsm_bc').value, item = $('#dsm_item').value;
+    const bc = $('#dsm_bc').value, bc_pack = $('#dsm_bc_pack').value, item = $('#dsm_item').value;
     if (bc.length < 8) return false;
     let hit = null;
     try { if (typeof PharmaxSheet !== 'undefined') hit = PharmaxSheet.findByCode(bc); } catch (e) {}
     if (!hit) {
-      const r = await api(Object.assign({ action: 'checkBarcode', barcodeNo: bc, itemNo: item }, auth()));
+      const r = await api(Object.assign({ action: 'checkBarcode', barcodeNo: bc, barcodeno_pack: bc_pack, itemNo: item }, auth()));
       if (r.ok && r.duplicate) hit = { name: r.drugName || '' };
     }
     if (hit) { showDuplicate(bc, hit.name); return true; }
@@ -456,7 +457,7 @@
   async function submit() {
     const v = id => $('#' + id).value.trim();
     const drug = {
-      barcodeNo: v('dsm_bc'), itemNo: v('dsm_item'), tradeName: v('dsm_trade'), genericName: v('dsm_generic').toUpperCase(),
+      barcodeNo: v('dsm_bc'), barcodeno_pack: v('dsm_bc_pack'), itemNo: v('dsm_item'), tradeName: v('dsm_trade'), genericName: v('dsm_generic').toUpperCase(),
       drugType: v('dsm_type'), category: v('dsm_cat'), meal: v('dsm_meal'), indication: v('dsm_ind'), advice: v('dsm_adv'),
       morning: v('dsm_m1'), noon: v('dsm_m2'), evening: v('dsm_m3'), bed: v('dsm_m4')
     };
