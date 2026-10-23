@@ -1839,7 +1839,7 @@
             [/ใต้ลิ้น/, 'sublingual'], [/กระพุ้งแก้ม/, 'buccal'],
             [/หยอดตา/, 'eye'], [/หยอดหู/, 'ear'], [/หยอดจมูก/, 'nasalDrops'], [/พ่นจมูก/, 'nasalSpray'],
             [/เหน็บทวาร/, 'suppositoryRectal'], [/เหน็บช่องคลอด/, 'suppositoryVaginal'],
-            [/กลั้วคอ/, 'gargle'], [/ป้ายลิ้น|ป้ายปาก|แผลในปาก/, 'mouthPaint'],
+            [/กลั้วคอ/, 'gargle'], [/ป้ายลิ้น|ป้ายปาก|แผลในปาก|ทาในช่องปาก|ทาในปาก|ทาช่องปาก|ใช้ในช่องปาก/, 'mouthPaint'],   // v1.35: + "ยาทาในช่องปาก"
             [/ขี้ผึ้ง/, 'ointment'], [/ครีม/, 'cream'], [/เจล/, 'gel'], [/เพสต์|เพส/, 'paste'],
             [/แผ่นแปะ|พลาสเตอร์/, 'patch'],
             [/น้ำเชื่อม/, 'syrup'], [/แขวนตะกอน/, 'suspension'], [/อิมัลชัน/, 'emulsion'],
@@ -2126,10 +2126,12 @@
             const $ = id => document.getElementById(id);
             $('in_drug_name').value = se.name.toUpperCase();
             if (se.typeKey && $('sel_drug_type').querySelector('option[value="' + se.typeKey + '"]')) $('sel_drug_type').value = se.typeKey;
+            else if (se.drugType) unmappedType[se.key] = $('sel_drug_type').value;   // v1.35: ชนิดยาในชีทที่ไม่มีในรายการ → จำไว้ ใช้ข้อความจากชีทแทน
             if (se.mealKey) $('sel_meal').value = se.mealKey;
             if (SLOTS.some(s => se.dose[s])) SLOTS.forEach(s => { $('qty_' + s).value = se.dose[s]; });
-            if (se.indication) $('in_indication').value = se.indication;
-            if (se.advice) $('in_advice').value = se.advice;
+            // v1.35: คงการขึ้นบรรทัดตามชีท (เดิมรวมเป็นบรรทัดเดียว → จับคู่คำแปลทีละบรรทัดไม่ได้)
+            if (se.indication) $('in_indication').value = (se.indicationLines && se.indicationLines.length ? se.indicationLines.join('\n') : se.indication);
+            if (se.advice) $('in_advice').value = (se.adviceLines && se.adviceLines.length ? se.adviceLines.join('\n') : se.advice);
         }
         // ยาที่มีเฉพาะใน Sheet (ไม่มีใน data.js) -> ล้างฟอร์มแล้วเติมจาก Sheet ล้วนๆ
         function applySheetOnly(se) {
@@ -2146,15 +2148,25 @@
         }
 
         // ---------- translation overrides (คืน null = ไม่ override ให้ใช้ระบบเดิม) ----------
+        // v1.35: ชนิดยาในชีทที่โปรแกรมไม่รู้จัก (เช่น "ยาทาในช่องปาก" ก่อนเพิ่มกฎ) → ช่องเลือกค้างค่าเดิม (มักเป็น "ยาเม็ด")
+        //  ถ้าเภสัชกรไม่ได้เปลี่ยนช่องเลือก ให้ใช้ข้อความจากชีทแทน: ไทย = drugTH · ภาษาอื่น = แท็บภาษา → glossary
+        const unmappedType = {};
         function overrideDrugType(typeKey, drugName, lang) {
             const se = find(drugName);
+            if (se && !se.typeKey && se.drugType && unmappedType[se.key] === typeKey) {
+                if (!lang || lang === 'th') return se.drugType;
+                const t0 = trFor(se, lang);
+                return (t0 && t0.drugType) || (typeof Glossary !== 'undefined' && Glossary.lookup(se.drugType, lang)) || null;
+            }
             if (!se || !typeKey || se.typeKey !== typeKey) return null;
+            if (!lang || lang === 'th') return se.drugType || null;   // v1.35: ฉลากไทย = ข้อความใน drugTH (ต้นฉบับ)
             const t = trFor(se, lang);
             return (t && t.drugType) || null;
         }
         function overrideMeal(mealKey, drugName, lang) {
             const se = find(drugName);
             if (!se || !mealKey || se.mealKey !== mealKey) return null;
+            if (!lang || lang === 'th') return se.meal || null;       // v1.35: ฉลากไทย = ข้อความใน drugTH (ต้นฉบับ)
             const t = trFor(se, lang);
             return (t && t.meal) || null;
         }
@@ -3482,6 +3494,7 @@
             if (e.name === 'AbortError') return;
             throw e;
         }
+        if (controller.signal.aborted) return;   // v1.35: มีการเปลี่ยนยา/ภาษาระหว่างแปล → ห้ามเขียนผลของยาตัวเก่าทับ
         document.getElementById('out_indication').innerText = outLines.join(', ');
         updateTranslateWarning('ind', anyFailed);
         fitLabelToBox();
@@ -3514,6 +3527,7 @@
             if (e.name === 'AbortError') return;
             throw e;
         }
+        if (controller.signal.aborted) return;   // v1.35: มีการเปลี่ยนยา/ภาษาระหว่างแปล → ห้ามเขียนผลของยาตัวเก่าทับ
         document.getElementById('out_advice').innerText = outLines.join(', ');
         updateTranslateWarning('adv', anyFailed);
         fitLabelToBox();
