@@ -35,16 +35,21 @@
     if (d.every((x, i) => !i || x === d[i - 1] + 1) || d.every((x, i) => !i || x === d[i - 1] - 1)) return 'รหัสผ่านห้ามเป็นเลขเรียงกัน (เช่น 1234 หรือ 4321)';
     return '';
   }
-  // กด Enter แล้วเลื่อนไปช่องถัดไป (ช่องสุดท้าย = กดปุ่มส่ง)
+  // กด Enter แล้วเลื่อนไปช่องถัดไป · ช่องสุดท้าย: goId = id ปุ่มที่จะกด หรือ function ที่จะเรียก
+  // (ช่องข้อความหลายบรรทัด เช่น สรรพคุณ ไม่อยู่ในลำดับนี้ เพราะ Enter ใช้ขึ้นบรรทัดใหม่)
   const enterChain = (ids, goId) => ids.forEach((id, i) => {
     const el = document.getElementById(id); if (!el) return;
     el.addEventListener('keydown', e => {
-      if (e.key !== 'Enter') return;
+      if (e.key !== 'Enter' || e.isComposing) return;
       e.preventDefault();
-      const nx = i < ids.length - 1 ? document.getElementById(ids[i + 1]) : null;
-      if (nx) nx.focus(); else document.getElementById(goId).click();
+      let k = i + 1, nx = null;
+      while (k < ids.length && !nx) { const c = document.getElementById(ids[k++]); if (c && c.offsetParent !== null && !c.disabled) nx = c; }
+      if (nx) { nx.focus(); if (nx.select && nx.tagName === 'INPUT') nx.select(); }
+      else if (typeof goId === 'function') goId();
+      else if (goId) document.getElementById(goId).click();
     });
   });
+  const focusEl = id => () => { const el = document.getElementById(id); if (el) el.focus(); };
   const onlyDigits = (el, max) => el.addEventListener('input', () => { el.value = el.value.replace(/\D/g, '').slice(0, max); });
 
   // ---------- UI shell ----------
@@ -465,8 +470,12 @@
       const el = e.target, p = el.selectionStart; el.value = el.value.toUpperCase(); try { el.setSelectionRange(p, p); } catch (x) {}
     });
     wireWho();
-    $('#dsm_bc').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#dsm_item').focus(); } });
+    // v1.35: Enter = ไปช่องถัดไป (บาร์โค้ดแผง → บาร์โค้ดกล่อง → Item No. → ชื่อการค้า → ชื่อสามัญ → กลุ่มยา → สรรพคุณ)
+    //        (ชนิดยา → เวลาใช้ยา → เช้า → กลางวัน → เย็น → ก่อนนอน → คำแนะนำ)
+    enterChain(['dsm_bc', 'dsm_bc_pack', 'dsm_item', 'dsm_trade', 'dsm_generic', 'dsm_cat'], focusEl('dsm_ind'));
+    enterChain(['dsm_type', 'dsm_meal', 'dsm_m1', 'dsm_m2', 'dsm_m3', 'dsm_m4'], focusEl('dsm_adv'));
     $('#dsm_bc').addEventListener('change', checkDup);
+    $('#dsm_bc_pack').addEventListener('change', checkDup);
     $('#dsm_item').addEventListener('change', checkDup);
     $('#dsm_submit').onclick = submit;
     loadCategories();

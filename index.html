@@ -5773,23 +5773,34 @@
         return /^\d$/.test(e.key) ? e.key : null;
     }
     function visible(el) { return !!el && el.offsetParent !== null; }
+    const SCAN_FIELDS = ['dsm_bc', 'dsm_bc_pack', 'dsm_item', 'dsm_e_barcodenopack', 'dsm_e_itemno'];
     function findTarget() {
         const ov = document.querySelector('.dsm-overlay.open');
-        if (ov) { const b = document.getElementById('dsm_bc'); return visible(b) ? b : null; }  // หน้าต่างเพิ่มยาใหม่: ใช้ช่องบาร์โค้ดของฟอร์มนั้น
+        if (ov) {
+            // v1.35: หน้าต่างเพิ่มยา — ยิงลงช่องบาร์โค้ด/รหัสที่เคอร์เซอร์อยู่ (บาร์โค้ดแผง / บาร์โค้ดกล่อง / Item No.)
+            //  เดิมส่งเข้า "บาร์โค้ดแผง" เสมอ → ยิงบาร์โค้ดกล่องแล้วไปทับช่องบาร์โค้ดแผง
+            const a = document.activeElement;
+            if (a && ov.contains(a) && a.tagName === 'INPUT' && SCAN_FIELDS.indexOf(a.id) >= 0 && visible(a)) return a;
+            const b = document.getElementById('dsm_bc'); return visible(b) ? b : null;
+        }
         const t = document.getElementById('in_barcode_scan');
         return visible(t) ? t : null;
     }
     function reset() { buf = ''; fast = 0; active = false; clearTimeout(timer); timer = null; origEl = null; }
     function finish() {
-        const t = findTarget(), code = buf;
+        let t = findTarget(); const code = buf;
         reset();
         if (!t || !code) return;
+        // ยิงบาร์โค้ดยาว (8+ หลัก) ตอนอยู่ช่อง Item No. (7 หลัก) → น่าจะเป็นบาร์โค้ดแผง
+        if (/itemno$|^dsm_item$/.test(t.id) && code.length > 7) { const b = document.getElementById('dsm_bc'); if (visible(b)) t = b; }
         t.value = code; t.focus();
         if (t.id === 'in_barcode_scan') {
             if (code.length >= 4 && typeof submitBarcodeLookup === 'function') submitBarcodeLookup();
         } else {
             t.dispatchEvent(new Event('input', { bubbles: true }));
             t.dispatchEvent(new Event('change', { bubbles: true }));
+            // v1.35: ยิงเสร็จ → ทำเหมือนกด Enter (หน้าต่างเพิ่มยาจะเลื่อนไปช่องถัดไปให้)
+            t.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
         }
     }
     function takeOver(t) {
