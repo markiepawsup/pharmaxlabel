@@ -1503,7 +1503,7 @@
         
                 <div class="label-row" style="margin-top: 5px; border:none; padding-bottom:0;">
                     <span class="label-title"><span id="lbl_title_type"></span> <span class="thai-text">(ชนิด)</span>:</span>
-                    <span class="label-value" id="out_drug_type" style="white-space: nowrap;"></span>
+                    <span class="label-value" id="out_drug_type"></span>
                 </div>
         
                 <table class="time-table">
@@ -1523,7 +1523,7 @@
         
                 <div class="label-row" style="border:none;">
                     <span class="label-title"><span id="lbl_title_time"></span> <span class="thai-text">(เวลา)</span>:</span>
-                    <span class="label-value" id="out_meal" style="white-space: nowrap;"></span>
+                    <span class="label-value" id="out_meal"></span>
                 </div>
         
                 <!-- คำแนะนำ: แสดงแบบ Inline พร้อมไอคอนและข้อความไหลเต็มพื้นที่ -->
@@ -5892,7 +5892,7 @@
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
