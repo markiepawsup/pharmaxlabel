@@ -85,6 +85,34 @@ const DOSE_PHRASES = {"ป้าย": {"en": "Dab on gently (do not rub)", "ja":
 const DOSE_OPTIONS = ["1 เม็ด", "ทาบางๆ", "1-2 เม็ด", "1 แคปซูล", "1 หยด", "1-2 หยด", "2 เม็ด", "1 ซอง", "ป้ายบางๆ", "1-2 ช้อนชา", "1 ช้อนโต๊ะ", "ทาถูนวด", "พ่น 1 ครั้ง", "2-4 เม็ด", "1-2 แคปซูล", "10 มล.", "พ่น 2 ครั้ง", "1-2 ช้อนโต๊ะ", "พ่น 2-3 ครั้ง", "5 มล.", "แปะ 1 แผ่น", "15-30 มล.", "พ่น 1-2 ครั้ง", "ป้ายทา", "1-2 มล.", "ทา 1-2 ครั้ง", "2-3 แคปซูล", "ทาบริเวณที่ปวด", "1-2 แผ่น", "10-15 มล.", "พ่น 2-4 ครั้ง", "4 ซอง", "1-2 ซอง", "1 ช้อนชา", "พ่นข้างละ 1 ครั้ง", "แปะ 1-2 แผ่น", "15-20 มล.", "15 มล.", "2 แคปซูล", "ทาทั่วใบหน้า", "หยดทาบางๆ", "ทาบำรุงผิว", "แต้มหัวสิว", "ตามแพทย์สั่ง", "พ่นข้างละ 1-2 ครั้ง", "ล้าง 1 ครั้ง", "ล้างตามต้องการ", "1 ครั้ง", "1 แผ่น", "ทาสัปดาห์ละ 1-2 ครั้ง", "จิบตลอดวัน", "ป้ายตา", "1 หลอด", "1 แท่ง", "1 ชิ้น", "4-5 หยด", "ครึ่งเม็ด"];
 // ประโยคที่เครื่องแปลผิดบ่อย — เขียนลง glossary ไปพร้อมกัน
 const GLOSSARY_EXTRA = [["Advice", "ป้ายบริเวณที่มีอาการวันละ 4 ครั้ง หลังอาหารและก่อนนอน", {"en": "Dab onto the affected area 4 times a day, after meals and at bedtime. Do not rub.", "ja": "1日4回、食後と就寝前に患部に軽くのせてください。こすらないでください。", "zh-CN": "每日4次，饭后及睡前轻点于患处，勿揉擦。", "zh-TW": "每日4次，飯後及睡前輕點於患處，勿揉擦。", "ko": "하루 4회, 식후와 취침 전에 환부에 살짝 올려 주세요. 문지르지 마세요.", "es": "Aplicar a toques sobre la zona afectada 4 veces al día, después de las comidas y antes de acostarse. No frotar.", "fr": "Tamponner la zone atteinte 4 fois par jour, après les repas et au coucher. Ne pas frotter.", "it": "Applicare tamponando sulla zona interessata 4 volte al giorno, dopo i pasti e prima di coricarsi. Non strofinare.", "de": "4-mal täglich nach den Mahlzeiten und vor dem Schlafengehen sanft auf die betroffene Stelle auftupfen. Nicht einreiben.", "ru": "Наносить точечно на поражённый участок 4 раза в день, после еды и перед сном. Не втирать.", "ar": "يوضع بلطف على المنطقة المصابة 4 مرات يومياً بعد الوجبات وقبل النوم، دون فرك.", "vi": "Chấm nhẹ lên vùng bị bệnh 4 lần mỗi ngày, sau bữa ăn và trước khi đi ngủ. Không chà xát.", "km": "ប៉ះដាក់ថ្នមៗលើកន្លែងដែលមានរោគសញ្ញា ៤ ដងក្នុងមួយថ្ងៃ ក្រោយអាហារ និងមុនពេលចូលគេង។ កុំត្រដុស។", "my": "ရောဂါဖြစ်သည့်နေရာတွင် တစ်နေ့ ၄ ကြိမ်၊ အစာစားပြီးနှင့် အိပ်ရာမဝင်မီ ညင်သာစွာ တို့ပေးပါ။ မပွတ်ရ။", "hi": "प्रभावित जगह पर दिन में 4 बार, भोजन के बाद और सोने से पहले हल्के से लगाएँ। रगड़ें नहीं।"}]];
+// ===== v1.36: กลุ่มยา (category_th ใน drugTH) — ลำดับใน dropdown · โรคติดเชื้อแยกเป็น แบคทีเรีย / รา / ไวรัส =====
+const DRUG_CATEGORIES = [
+    'โรคติดเชื้อแบคทีเรีย', 'โรคติดเชื้อรา', 'โรคติดเชื้อไวรัส', 'โรคพยาธิและปรสิต',
+    'บรรเทาอาการปวด ลดไข้ กล้ามเนื้อและข้อ', 'โรคหวัดและภูมิแพ้', 'โรคระบบทางเดินหายใจ', 'โรคช่องปากและลำคอ',
+    'โรคระบบทางเดินอาหาร', 'โรคริดสีดวงทวาร', 'โรคผิวหนัง', 'โรคตา', 'โรคหู',
+    'โรคระบบทางเดินปัสสาวะและต่อมลูกหมาก', 'โรคทางสูตินรีเวช', 'โรคเกาต์', 'บรรเทาอาการเวียนศีรษะและเมารถ'
+];
+// ชื่อกลุ่มที่เลิกใช้ (ไม่ขึ้นใน dropdown) — ยาในกลุ่มนี้ให้ย้ายด้วยปุ่ม "🏷 แยกกลุ่มโรคติดเชื้อ" ในหน้าแอดมิน
+const RETIRED_CATEGORIES = ['โรคติดเชื้อและยาปฏิชีวนะ'];
+// ตัวยาสำคัญ (จากชื่อสามัญในวงเล็บ) → กลุ่มโรคติดเชื้อ (ใช้แนะนำกลุ่มอัตโนมัติ และตอนแยกกลุ่ม)
+const CATEGORY_RULES = [
+    { cat: 'โรคติดเชื้อแบคทีเรีย', re: 'AMOXI|CLAVULAN|AMPICILLIN|PENICILLIN|DICLOXACILLIN|CLOXACILLIN|\\bCEF|\\bCEPH|\\bCAPHALEXIN|AZITHROMYCIN|CLARITHROMYCIN|ROXITHROMYCIN|ERYTHROMYCIN|FLOXACIN|DOXYCYCLINE|TETRACYCLINE|MINOCYCLINE|CLINDAMYCIN|SULFAMETHOXAZOLE|TRIMETHOPRIM|CO-TRIMOXAZOLE|NITROFURANTOIN|FOSFOMYCIN|NIFUROXAZIDE|METRONIDAZOLE|TINIDAZOLE|FUSIDIC|MUPIROCIN|NEOMYCIN|GENTAMICIN|TOBRAMYCIN|CHLORAMPHENICOL|POLYMYXIN|BACITRACIN|RIFAMPICIN' },
+    { cat: 'โรคติดเชื้อรา', re: 'CLOTRIMAZOLE|MICONAZOLE|KETOCONAZOLE|FLUCONAZOLE|ITRACONAZOLE|ECONAZOLE|ISOCONAZOLE|SERTACONAZOLE|BIFONAZOLE|TIOCONAZOLE|TERBINAFINE|NYSTATIN|GRISEOFULVIN|AMOROLFINE|CICLOPIROX|TOLNAFTATE|WHITFIELD' },
+    { cat: 'โรคติดเชื้อไวรัส', re: 'ACICLOVIR|ACYCLOVIR|VALACICLOVIR|FAMCICLOVIR|PENCICLOVIR|OSELTAMIVIR|FAVIPIRAVIR|MOLNUPIRAVIR' }
+];
+// ชื่อยา/ชื่อสามัญ → กลุ่มโรคติดเชื้อที่ตรง (ยาผสมหลายกลุ่ม → คืนทุกกลุ่มที่ตรง)
+// ใช้ชื่อสามัญในวงเล็บท้ายชื่อ (ถ้ามี) — กันชื่อการค้าที่บังเอิญคล้าย เช่น "Cefen (IBUPROFEN)"
+const genericPartOf = name => { const s = String(name == null ? '' : name), m = s.match(/\(([^()]*)\)\s*$/); return (m && /[A-Za-z]{4}/.test(m[1]) ? m[1] : s).toUpperCase(); };
+function infectionCategoriesOf(name) {
+    const n = genericPartOf(name);
+    return CATEGORY_RULES.filter(r => new RegExp(r.re).test(n)).map(r => r.cat);
+}
+// รายการกลุ่มยาสำหรับ dropdown = รายการมาตรฐาน + กลุ่มอื่นที่มีในชีท (ไม่รวมกลุ่มที่เลิกใช้)
+function categoryOptions(sheetCats) {
+    const out = DRUG_CATEGORIES.slice();
+    (sheetCats || []).forEach(c => { c = String(c || '').trim(); if (c && out.indexOf(c) < 0 && RETIRED_CATEGORIES.indexOf(c) < 0) out.push(c); });
+    return out;
+}
 // ข้อความไทยที่เก็บลงชีท = th ของตัวเลือก (เดิมตัดวงเล็บจาก label · "เม็ด" เฉยๆ ห้ามใช้ เพราะถูกแปลเป็น grain)
 const sheetTextOf = label => { if (label && typeof label === 'object') return label.th || ''; const t = String(label).replace(/\s*\(.*\)\s*$/, '').trim(); return t === 'เม็ด' ? 'ยาเม็ด' : t; };
 const ALL_TYPE_OPTIONS = DRUG_TYPE_GROUPS.reduce((a, g) => a.concat(g.options), []);

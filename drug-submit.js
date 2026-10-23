@@ -466,6 +466,16 @@
       '<button class="dsm-btn" id="dsm_submit" type="button">Submit</button>' +
       '</div>';
     onlyDigits($('#dsm_bc'), 14); onlyDigits($('#dsm_bc_pack'), 14); onlyDigits($('#dsm_item'), 7);
+    // v1.36: แนะนำกลุ่มโรคติดเชื้อจากชื่อสามัญ (เฉพาะตอนช่องกลุ่มยายังว่าง หรือยังเป็นค่าที่ระบบเลือกให้)
+    const autoCat = () => {
+      const sel = $('#dsm_cat'); if (!sel || (sel.value && sel.dataset.auto !== sel.value)) return;
+      let hit = []; try { hit = infectionCategoriesOf($('#dsm_generic').value || $('#dsm_trade').value); } catch (e) {}
+      const c = hit.length === 1 ? hit[0] : '';
+      if (c && Array.from(sel.options).some(o => o.value === c)) { sel.value = c; sel.dataset.auto = c; }
+      else if (sel.dataset.auto && sel.value === sel.dataset.auto) { sel.value = ''; sel.dataset.auto = ''; }
+    };
+    $('#dsm_generic').addEventListener('change', autoCat);
+    $('#dsm_generic').addEventListener('blur', autoCat);
     $('#dsm_generic').addEventListener('input', e => {
       const el = e.target, p = el.selectionStart; el.value = el.value.toUpperCase(); try { el.setSelectionRange(p, p); } catch (x) {}
     });
@@ -498,6 +508,7 @@
         cats = Object.keys(set).sort((a, b) => a.localeCompare(b, 'th'));
       } catch (e) {}
     }
+    try { cats = categoryOptions(cats); } catch (e) {}   // v1.36: รายการมาตรฐาน (แยก แบคทีเรีย/รา/ไวรัส) + กลุ่มอื่นในชีท
     if (cats.length) {
       sel.innerHTML = '<option value="">-- ไม่ระบุ --</option>' + cats.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
       hint.textContent = '';
