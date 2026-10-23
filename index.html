@@ -600,6 +600,8 @@
             word-break: break-word;
         }
         /* เฉพาะภาษาจีน (ตัวย่อ/ตัวเต็ม) และญี่ปุ่น ให้ลดน้ำหนักฟอนต์รายละเอียดลงให้อ่านง่ายขึ้น (ไม่รวมเกาหลี) */
+        /* v1.35: ฉลากภาษาไทย ไม่ต้องมีคำไทยในวงเล็บซ้ำ (เช่น "ชื่อยา (ชื่อยา)") */
+        .label-box[data-lang="th"] .thai-text { display: none; }
         .label-box[data-lang="zh-CN"] .label-value,
         .label-box[data-lang="zh-TW"] .label-value,
         .label-box[data-lang="ja"] .label-value {
@@ -2756,6 +2758,7 @@
 
     function translateUnit(val, lang, drugName) {
         const L = lang || currentLang;
+        if (L === 'th') return String(val == null ? '' : val).trim();   // v1.35: ฉลากไทยใช้ข้อความไทยตามที่กรอก (เดิม "ทาบางๆ" กลายเป็น "apply thinly")
         // v1.7: คำแปลขนาดยาจาก Google Sheet (ใช้เมื่อข้อความไทยตรงกับใน Sheet เป๊ะ)
         const sheetDose = PharmaxSheet.overrideDose(val, drugName, L);
         if (sheetDose) return sheetDose;
@@ -3369,8 +3372,11 @@
             if (res.status === 429) throw new Error('MyMemory 429');
             if (!res.ok) throw new Error(`MyMemory HTTP ${res.status}`);
             let data = await res.json();
-            if (data && data.responseData && data.responseData.translatedText) {
-                return data.responseData.translatedText;
+            // v1.35: MyMemory ตอบ HTTP 200 แม้เป็น error (ข้อความ error อยู่ใน translatedText) → ต้องเช็ค responseStatus
+            const st = Number(data && data.responseStatus);
+            const tx = data && data.responseData && data.responseData.translatedText;
+            if (tx && (!st || st === 200) && !/PLEASE SELECT|MYMEMORY WARNING|INVALID (LANGUAGE|SOURCE|TARGET)|QUERY LENGTH LIMIT/i.test(tx)) {
+                return tx;
             }
             throw new Error('MyMemory empty');
         } catch (e) {
@@ -3385,6 +3391,9 @@
     ];
 
     async function translateLine(text, lang, db, signal, drugName) {
+        // v1.35: ฉลากภาษาไทย (รวมสำเนาไทยที่พิมพ์คู่) ไม่ต้องแปล — เดิมส่งไปแปล "ไทย→ไทย" แล้ว MyMemory ตอบข้อความ error
+        //  "PLEASE SELECT TWO DISTINCT LANGUAGES" กลับมาพิมพ์บนฉลาก
+        if (!lang || lang === 'th') return { text: text, failed: false };
         // v1.19: รอคำแปลจาก Google Sheet ก่อนเสมอ (ไม่เกิน 5 วิ) ก่อนจะ fallback ไปแปลสดด้วย Google/MyMemory
         //  กันปัญหาที่ผ่านมา: สลับภาษาปุ๊บ ระบบรีบแปลสดทันทีทั้งที่ Sheet เตรียมคำแปลไว้ให้แล้ว แค่ยังโหลดไม่ทัน
         //  (ถ้า Sheet โหลดไว้แล้วในรอบก่อน หรือเชื่อมต่อไม่ได้เลย จะไม่หน่วงเพิ่ม เพราะ whenReady() คืนค่าทันที)
@@ -5852,7 +5861,7 @@
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
