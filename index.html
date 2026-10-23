@@ -1,4 +1,4 @@
-<!-- Pharmax multi-language label printer (v1.34 — เลขบนฉลากมาจาก APP_VERSION ใน data.js). Built for Pharmax Pharmacy by Mark Sirikorn. Unauthorized copying/redistribution of this file is prohibited. Requires data.js (same folder) for BRANCHES, UI_TEXT, indicationsDB, advicesDB, DRUG_PRESETS, DRUG_REFERENCE_DB, CATEGORY_DEFAULTS, etc. -->
+<!-- Pharmax multi-language label printer (v1.35 — เลขบนฉลากมาจาก APP_VERSION ใน data.js). Built for Pharmax Pharmacy by Mark Sirikorn. Unauthorized copying/redistribution of this file is prohibited. Requires data.js (same folder) for BRANCHES, UI_TEXT, indicationsDB, advicesDB, DRUG_PRESETS, DRUG_REFERENCE_DB, CATEGORY_DEFAULTS, etc. -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -518,7 +518,7 @@
             margin-bottom: 1px;
         }
         .label-logo {
-            height: calc(4mm * var(--label-scale));
+            height: 3mm;   /* v1.35: โลโก้เล็กลงและคงที่ (ไม่ขยายตามข้อความ) ให้พื้นที่กับข้อมูลยา */
             width: auto;
             display: block;
         }
@@ -555,16 +555,17 @@
         .label-header {
             text-align: center;
             font-weight: bold;
-            font-size: calc(7.5pt * var(--label-scale)); 
+            font-size: 6.3pt;   /* v1.35: ชื่อสาขาเล็กลงและคงที่ — เน้นข้อมูลยาแทน */
+            line-height: 1.15;
             color: #000;
-            border-bottom: 1.5px solid #000;
-            padding-bottom: 3px;
-            margin-bottom: 6px; 
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+            margin-bottom: 4px;
         }
         .label-header .sub-header {
             font-weight: normal;
-            font-size: max(6pt, calc(6.5pt * var(--label-scale)));
-            margin-top: 1px;
+            font-size: 5.3pt;   /* v1.35: ที่อยู่/เวลาทำการ */
+            margin-top: 0;
         }
         .label-row {
             margin-bottom: 5px; 
@@ -5840,7 +5841,7 @@
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
