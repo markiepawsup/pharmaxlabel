@@ -1,4 +1,4 @@
-/* Pharmax – เพิ่มข้อมูลยาใหม่ผ่านหน้าเว็บ (login / สมัคร / ส่งข้อมูลให้แอดมินตรวจ)
+/* Pharmax – เพิ่มข้อมูลยาใหม่ผ่านหน้าเว็บ (login / สมัคร / ส่งข้อมูลให้แอดมินตรวจ)  ·  v1.34
  * ใช้คู่กับ Code.gs (Apps Script Web App)  —  วางไฟล์นี้ไว้โฟลเดอร์เดียวกับ index.html */
 (function () {
   'use strict';
@@ -226,7 +226,7 @@
     const opt = o => {
       let th = o.textContent.replace(/\s*\(.*\)\s*$/, '').trim();   // เก็บเฉพาะข้อความไทย ให้ตรงกับรูปแบบในชีท
       if (th === 'เม็ด') th = 'ยาเม็ด';                                // "เม็ด" เฉยๆ ถูกแปลเป็น grain → ใช้ "ยาเม็ด" ให้แปลเป็น tablet
-      const label = th === 'ยาเม็ด' && /^เม็ด\b/.test(o.textContent) ? o.textContent.replace(/^เม็ด/, 'ยาเม็ด') : o.textContent;
+      const label = th === 'ยาเม็ด' && /^เม็ด(\s|\(|$)/.test(o.textContent) ? o.textContent.replace(/^เม็ด/, 'ยาเม็ด') : o.textContent;   // กันกรณี data.js รุ่นเก่า
       return '<option value="' + th + '">' + label + '</option>';
     };
     return Array.from(sel.children).map(c => c.tagName === 'OPTGROUP'

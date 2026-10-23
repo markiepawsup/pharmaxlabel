@@ -1,4 +1,4 @@
-<!-- Pharmax multi-language label printer (v1.17). Built for Pharmax Pharmacy by Mark Sirikorn. Unauthorized copying/redistribution of this file is prohibited. Requires data.js (same folder) for BRANCHES, UI_TEXT, indicationsDB, advicesDB, DRUG_PRESETS, DRUG_REFERENCE_DB, CATEGORY_DEFAULTS, etc. -->
+<!-- Pharmax multi-language label printer (v1.34 — เลขบนฉลากมาจาก APP_VERSION ใน data.js). Built for Pharmax Pharmacy by Mark Sirikorn. Unauthorized copying/redistribution of this file is prohibited. Requires data.js (same folder) for BRANCHES, UI_TEXT, indicationsDB, advicesDB, DRUG_PRESETS, DRUG_REFERENCE_DB, CATEGORY_DEFAULTS, etc. -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -500,7 +500,7 @@
             min-width: 76mm;
             background: #fff;
             border: 1px solid #000;
-            padding: 0.6mm 3.5mm 2mm 3.5mm; /* v1.12: ลด padding-top เพื่อขยับวันที่/เวลาขึ้นไปใกล้ขอบบนอีกนิด */
+            padding: 0.8mm 2.5mm 2.8mm 2.5mm; /* v1.33: ลดขอบซ้าย-ขวา (3.5 → 2.5 มม.) · ขอบล่างเว้นไว้ให้บรรทัดวันที่/เวอร์ชัน */
             box-sizing: border-box;
             color: #000;
             font-size: calc(8pt * var(--label-scale));
@@ -513,7 +513,7 @@
         }
         .label-topbar {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;   /* v1.33: โลโก้กึ่งกลาง ตรงกับชื่อสาขา (วันที่ย้ายไปบรรทัดล่างสุด) */
             align-items: flex-end;
             margin-bottom: 1px;
         }
@@ -525,12 +525,33 @@
         /* v1.22: สลับเปิด/ปิดโลโก้-เวลาทำการบนฉลาก (สาขาที่ใช้สติกเกอร์ร่วมแบรนด์อื่น) */
         .label-box.hide-logo .label-logo { display: none !important; }
         .label-box.hide-hours .label-hours-line { display: none !important; }
+        /* v1.33: วันที่-เวลาพิมพ์ ย้ายจากมุมขวาบนลงไปบรรทัดล่างสุด (ซ้าย) คู่กับเลขเวอร์ชัน (ขวา) */
         .label-date {
-            text-align: right;
-            font-size: calc(4.8pt * var(--label-scale));
+            position: absolute;
+            left: 2.5mm;
+            bottom: 0.6mm;
+            font-size: 4.8pt;
             font-weight: bold;
             color: #000;
+            line-height: 1;
         }
+        .label-box.rtl-mode .label-date { left: auto; right: 2.5mm; }
+        /* v1.34: บรรทัดเภสัชกรผู้จ่ายยา (เหนือบรรทัดวันที่) — มีเมื่อกรอกเลขใบอนุญาต */
+        .label-dispenser {
+            position: absolute;
+            left: 2.5mm;
+            right: 2.5mm;
+            bottom: 2.7mm;
+            font-size: 4.8pt;
+            font-weight: 600;
+            color: #000;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .label-box.rtl-mode .label-dispenser { direction: ltr; text-align: right; }
+        .label-box.has-dispenser { padding-bottom: 5mm; }
         .label-header {
             text-align: center;
             font-weight: bold;
@@ -642,15 +663,15 @@
 
         .label-version {
             position: absolute;
-            right: 3mm;
+            right: 2.5mm;
             bottom: 0.6mm;
-            font-size: calc(4.5pt * var(--label-scale));
+            font-size: 4.5pt;
             font-weight: 400;
             color: #000;
             line-height: 1;
             letter-spacing: 0.2px;
         }
-        .label-box.rtl-mode .label-version { right: auto; left: 3mm; }
+        .label-box.rtl-mode .label-version { right: auto; left: 2.5mm; }
 
         /* --- RTL support --- */
         .label-box.rtl-mode .label-row { flex-direction: row-reverse; }
@@ -857,7 +878,7 @@
                 max-height: 76mm;
                 border: none;
                 margin: 0;
-                padding: 1mm 3.5mm 1.5mm 3.5mm;
+                padding: 0.8mm 2.5mm 2.6mm 2.5mm;   /* v1.33: ลดขอบ · ขอบล่างเว้นให้บรรทัดวันที่/เวอร์ชัน */
                 box-sizing: border-box;
                 overflow: hidden;
                 transform-origin: top left;
@@ -871,6 +892,10 @@
             }
             .label-version { right: 2.5mm; bottom: 0.4mm; }
             .label-box.rtl-mode .label-version { right: auto; left: 2.5mm; }
+            .label-date { left: 2.5mm; bottom: 0.4mm; }
+            .label-box.rtl-mode .label-date { left: auto; right: 2.5mm; }
+            .label-dispenser { bottom: 2.4mm; }
+            .batch-label-page .label-box.has-dispenser { padding-bottom: 4.7mm; }
         }
 
         /* --- Quick Queue Widget Styling (Right Panel) --- */
@@ -1275,6 +1300,17 @@
             <div id="patient_name_hint" class="hint" style="display:none; color:#c0392b;">⚠️ รับเฉพาะตัวอักษรภาษาอังกฤษ (A-Z) — ตัวอักษรอื่นถูกลบออกให้แล้ว</div>
         </div>
 
+        <!-- v1.34: เภสัชกรผู้จ่ายยา (ไม่บังคับ) — ใส่เลขใบอนุญาต 5 หลัก ระบบค้นชื่อจากเว็บสภาเภสัชกรรมให้ · จำไว้ในเครื่องนี้ -->
+        <div class="form-group">
+            <label>⚕️ เลขที่ใบอนุญาตเภสัชกรผู้จ่ายยา: <span class="hint">ไม่บังคับ · ใส่เลข 5 หลัก ระบบค้นชื่อจากสภาเภสัชกรรมให้ และจำไว้ในเครื่องนี้</span></label>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input type="text" id="in_rph_license" inputmode="numeric" maxlength="5" placeholder="เช่น 41618" autocomplete="off" style="max-width:140px;"
+                       oninput="onRphLicenseInput(this)">
+                <button type="button" id="rph_clear_btn" class="no-print" onclick="clearRphLicense()" title="ล้าง" style="display:none; border:1px solid #ccc; background:#fff; border-radius:6px; padding:4px 10px; cursor:pointer;">✕ ล้าง</button>
+                <span id="rph_status" class="hint" style="font-size:.85em;"></span>
+            </div>
+        </div>
+
         <div class="form-group">
             <label>ชื่อยา (Generic name / Trade name): <span class="hint">พิมพ์แล้วเลือกจากรายการ หรือกด Tab/Space เพื่อรับคำแนะนำอัตโนมัติ</span></label>
             <div class="ghost-wrap">
@@ -1495,6 +1531,7 @@
                 </div>
 
                 <div class="label-version" id="label_version"></div>
+                <div class="label-dispenser" id="out_dispenser" style="display:none;"></div>
             </div>
             </div>
         </div>
@@ -3179,12 +3216,77 @@
         updateLabel();
     }
 
+    // ==========================================================================
+    // v1.34: เภสัชกรผู้จ่ายยา — กรอกเลขใบอนุญาต 5 หลัก → ค้นชื่อจากเว็บสภาเภสัชกรรม (ผ่าน Apps Script) → แสดงท้ายฉลาก
+    //   "เภสัชกรผู้จ่ายยา: ภก. ชื่อ นามสกุล (ภ.12345)" · จำเลข/ชื่อไว้ในเครื่อง (เภสัชกรคนเดิมใช้เครื่องเดิมทั้งวัน)
+    // ==========================================================================
+    const RPH_KEY = 'pharmax_rph_v1', RPH_NAMES_KEY = 'pharmax_rph_names_v1';
+    let _rph = (function () { try { return JSON.parse(localStorage.getItem(RPH_KEY) || 'null'); } catch (e) { return null; } })();
+    let _rphSeq = 0;
+    function rphText() { return _rph && _rph.name && _rph.license ? 'เภสัชกรผู้จ่ายยา: ' + _rph.name + ' (ภ.' + _rph.license + ')' : ''; }
+    function saveRph() { try { _rph ? localStorage.setItem(RPH_KEY, JSON.stringify(_rph)) : localStorage.removeItem(RPH_KEY); } catch (e) {} }
+    function rphNameCache() { try { return JSON.parse(localStorage.getItem(RPH_NAMES_KEY) || '{}'); } catch (e) { return {}; } }
+    function setRphStatus(html, color) { const el = document.getElementById('rph_status'); if (el) { el.innerHTML = html; el.style.color = color || ''; } }
+    function clearRphLicense() {
+        _rph = null; saveRph();
+        const el = document.getElementById('in_rph_license'); if (el) el.value = '';
+        setRphStatus(''); document.getElementById('rph_clear_btn').style.display = 'none';
+        updateLabel();
+    }
+    async function onRphLicenseInput(el) {
+        el.value = el.value.replace(/\D/g, '').slice(0, 5);
+        document.getElementById('rph_clear_btn').style.display = el.value ? '' : 'none';
+        const lic = el.value, seq = ++_rphSeq;
+        if (lic.length < 5) {
+            if (_rph) { _rph = null; saveRph(); updateLabel(); }
+            setRphStatus(lic ? 'ใส่ให้ครบ 5 หลัก' : '');
+            return;
+        }
+        const cached = rphNameCache()[lic];
+        if (cached) { _rph = { license: lic, name: cached }; saveRph(); updateLabel(); setRphStatus('✅ ' + escapeHtml(cached), '#1a7a3a'); }
+        else setRphStatus('🔎 กำลังค้นชื่อจากสภาเภสัชกรรม…', '#555');
+        try {
+            const url = await webAppUrlForTranslate();
+            if (!url) throw new Error('no url');
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'pharmacist', license: lic }) });
+            const d = await res.json();
+            if (seq !== _rphSeq) return;                                   // ระหว่างรอ พิมพ์เลขใหม่ไปแล้ว
+            if (d.ok && d.found && d.name) {
+                const m = rphNameCache(); m[lic] = d.name; try { localStorage.setItem(RPH_NAMES_KEY, JSON.stringify(m)); } catch (e) {}
+                _rph = { license: lic, name: d.name }; saveRph(); updateLabel();
+                setRphStatus('✅ ' + escapeHtml(d.name) + (d.expired ? ' <b style="color:#b3261e">⚠ ใบอนุญาตหมดอายุ ' + escapeHtml(d.expiry || '') + '</b>' : ''), '#1a7a3a');
+            } else if (d.ok && !d.found) {
+                _rph = null; saveRph(); updateLabel();
+                setRphStatus('❌ ไม่พบเลขที่ใบอนุญาต ' + lic + ' ในทะเบียนสภาเภสัชกรรม', '#b3261e');
+            } else if (!cached) {
+                setRphStatus('⚠️ ค้นชื่อไม่สำเร็จ (เว็บสภาฯ อาจขัดข้อง) — ลองใหม่อีกครั้ง', '#b3261e');
+            }
+        } catch (e) {
+            if (seq === _rphSeq && !cached) setRphStatus('⚠️ เชื่อมต่อไม่ได้ — ลองใหม่อีกครั้ง', '#b3261e');
+        }
+    }
+    // เปิดหน้าเว็บ: ใส่เลข/ชื่อเภสัชกรที่จำไว้กลับเข้าช่อง
+    (function restoreRph() {
+        const go = () => {
+            const el = document.getElementById('in_rph_license');
+            if (!el || !_rph || !_rph.license) return;
+            el.value = _rph.license;
+            document.getElementById('rph_clear_btn').style.display = '';
+            setRphStatus('✅ ' + escapeHtml(_rph.name || ''), '#1a7a3a');
+        };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+    })();
+
     function updateLabel() {
         stampCurrentDate();
         document.getElementById('out_drug_name').innerText = document.getElementById('in_drug_name').value.toUpperCase();
         const _pn = getPatientName();
         document.getElementById('out_patient_name').innerText = _pn;
         document.getElementById('row_patient_name').style.display = _pn ? 'flex' : 'none';
+        const _rphT = rphText();                                         // v1.34: เภสัชกรผู้จ่ายยา
+        document.getElementById('out_dispenser').innerText = _rphT;
+        document.getElementById('out_dispenser').style.display = _rphT ? 'block' : 'none';
+        document.getElementById('label_box').classList.toggle('has-dispenser', !!_rphT);
 
         let typeKey = document.getElementById('sel_drug_type').value;
         const sheetDrugName = document.getElementById('in_drug_name').value;
@@ -3472,6 +3574,7 @@
     // ==========================================================================
     const LABEL_MIN_FONT_PT = 6;
     const FIT_MIN_SCALE = 0.5;
+    const FIT_MAX_SCALE = 1.3;   // v1.33: ข้อความสั้น → ขยายตัวอักษรให้เต็มฉลาก (ไม่เหลือที่ว่างด้านล่าง) สูงสุด 130%
     let _lastFit = null;
 
     // ==========================================================================
@@ -3550,6 +3653,17 @@
         void box.offsetHeight; // v1.14: บังคับ reflow ทันทีหลังเปลี่ยน CSS variable กันเบราว์เซอร์ (โดยเฉพาะ Safari) อ่านค่าความสูงเก่าค้างไว้
         // ยังคง "+1" tolerance ไว้ตามเดิม เพราะ scrollHeight/clientHeight บางเบราว์เซอร์ปัดเศษต่างกัน 1px ได้จากหน่วย mm -> px
         // ถ้าตัด tolerance ออกจะย่อฟอนต์ถี่เกินจำเป็นในเคสที่จริงๆ พอดีอยู่แล้ว
+        // v1.33: ถ้ายังมีที่ว่าง ขยายขึ้นทีละ 2% จนเกือบเต็ม (แล้วถอยกลับ 1 ขั้นถ้าล้น)
+        if (box.scrollHeight <= box.clientHeight + 1) {
+            const maxScale = Math.max(scale, FIT_MAX_SCALE * scale);
+            while (scale + 0.02 <= maxScale && guard < 30) {
+                box.style.setProperty('--label-scale', (scale + 0.02).toFixed(2));
+                void box.offsetHeight;
+                if (box.scrollHeight > box.clientHeight + 1) { box.style.setProperty('--label-scale', scale.toFixed(2)); void box.offsetHeight; break; }
+                scale += 0.02; guard++;
+            }
+            return scale;
+        }
         while (box.scrollHeight > box.clientHeight + 1 && scale > FIT_MIN_SCALE && guard < 50) {
             scale -= 0.02;
             box.style.setProperty('--label-scale', scale.toFixed(2));
@@ -5299,7 +5413,8 @@
 
         // v1.22: ใส่คลาสซ่อนโลโก้/เวลาทำการ และระบุบรรทัดเวลาทำการให้ตรงกับพรีวิว (line4 ถ้ามี ไม่งั้น line3)
         const hoursKey = getHoursLineKey(branchText);
-        const boxExtraClasses = [(_labelLogoHidden ? 'hide-logo' : ''), (_labelHoursHidden ? 'hide-hours' : '')].filter(Boolean).join(' ');
+        const _rphT = rphText();
+        const boxExtraClasses = [(_labelLogoHidden ? 'hide-logo' : ''), (_labelHoursHidden ? 'hide-hours' : ''), (_rphT ? 'has-dispenser' : '')].filter(Boolean).join(' ');
         return `
             <div class="batch-label-page">
                 <div class="label-box batch-box-item ${lang === 'ar' ? 'rtl-mode' : ''} ${boxExtraClasses}" data-lang="${lang}">
@@ -5347,6 +5462,7 @@
                         <span class="label-value" style="font-weight: 900; margin-left: 0; display: inline;">${escapeHtml(adviceTranslated)}</span>
                     </div>
                     <div class="label-version">${APP_VERSION}</div>
+                    ${_rphT ? '<div class="label-dispenser">' + escapeHtml(_rphT) + '</div>' : ''}
                 </div>
             </div>
         `;
@@ -5724,7 +5840,7 @@
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {

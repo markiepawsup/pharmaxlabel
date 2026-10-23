@@ -1,15 +1,15 @@
 
 // ==========================================
-// PHARMAX LABEL APP - DATA FILE (v1.32)
+// PHARMAX LABEL APP - DATA FILE (v1.34)
 // ==========================================
 
-const APP_VERSION = 'v1.32';
+const APP_VERSION = 'v1.34';
 
 // ===== v1.30: รายการชนิดยา / เวลาใช้ยา — แหล่งเดียวของทั้งระบบ (index.html, ฟอร์มเพิ่มยา, หน้าแอดมิน อ่านจากที่นี่) =====
 // value = key ที่โปรแกรมใช้ · label = ข้อความที่แสดง (ส่วนในวงเล็บตัดทิ้งเมื่อบันทึกลงชีท)
 const DRUG_TYPE_GROUPS = [
     { label: "รับประทาน (Swallowed/Oral)", options: [
-        { value: "tablet", label: "เม็ด (Tablet)" },
+        { value: "tablet", label: "ยาเม็ด (Tablet)" },
         { value: "effervescent", label: "ยาเม็ดฟู่ละลายน้ำ (Effervescent Tablet)" },
         { value: "capsule", label: "แคปซูล (Capsule)" },
         { value: "syrup", label: "น้ำเชื่อม (Syrup)" },
@@ -250,7 +250,7 @@ const UI_TEXT = {
         drug: "ชื่อยา", indication: "สรรพคุณ", type: "ชนิด",
         morning: "เช้า", noon: "กลางวัน", evening: "เย็น", bed: "ก่อนนอน",
         time: "เวลา", advice: "คำแนะนำ",
-        drugTypes: { tablet:"เม็ด", effervescent:"ยาเม็ดฟู่ละลายน้ำ", capsule:"แคปซูล", syrup:"น้ำเชื่อม", solution:"ยาน้ำ/สารละลาย", suspension:"ยาแขวนตะกอน", emulsion:"อิมัลชัน", powder:"ผง", granule:"เกล็ด/แกรนูล", lozenge:"ยาอม", external:"ยาใช้ภายนอก", ointment:"ยาขี้ผึ้ง", cream:"ครีม", gel:"เจล", paste:"เพสต์", patch:"แผ่นแปะผิวหนัง",
+        drugTypes: { tablet:"ยาเม็ด", effervescent:"ยาเม็ดฟู่ละลายน้ำ", capsule:"แคปซูล", syrup:"น้ำเชื่อม", solution:"ยาน้ำ/สารละลาย", suspension:"ยาแขวนตะกอน", emulsion:"อิมัลชัน", powder:"ผง", granule:"เกล็ด/แกรนูล", lozenge:"ยาอม", external:"ยาใช้ภายนอก", ointment:"ยาขี้ผึ้ง", cream:"ครีม", gel:"เจล", paste:"เพสต์", patch:"แผ่นแปะผิวหนัง",
             iv:"ฉีดเข้าเส้นเลือดดำ", im:"ฉีดเข้ากล้ามเนื้อ", sc:"ฉีดใต้ผิวหนัง",
             sublingual:"อมใต้ลิ้น", buccal:"อมกระพุ้งแก้ม", mouthPaint:"ยาป้ายลิ้น/แผลในปาก", gargle:"ยากลั้วคอ", suppositoryRectal:"ยาเหน็บทวารหนัก", suppositoryVaginal:"ยาเหน็บช่องคลอด", eye:"ยาหยอดตา", ear:"ยาหยอดหู", nasalSpray:"ยาพ่นจมูก", nasalDrops:"ยาหยอดจมูก",
             aerosol:"ยาละอองลอย", inhaler:"ยาสูดพ่น", nebulizer:"ยาพ่นละอองฝอย",
