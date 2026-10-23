@@ -1,4 +1,4 @@
-<!-- Pharmax multi-language label printer (v1.35 — เลขบนฉลากมาจาก APP_VERSION ใน data.js). Built for Pharmax Pharmacy by Mark Sirikorn. Unauthorized copying/redistribution of this file is prohibited. Requires data.js (same folder) for BRANCHES, UI_TEXT, indicationsDB, advicesDB, DRUG_PRESETS, DRUG_REFERENCE_DB, CATEGORY_DEFAULTS, etc. -->
+<!-- Pharmax multi-language label printer (v1.36 — เลขบนฉลากมาจาก APP_VERSION ใน data.js). Built for Pharmax Pharmacy by Mark Sirikorn. Unauthorized copying/redistribution of this file is prohibited. Requires data.js (same folder) for BRANCHES, UI_TEXT, indicationsDB, advicesDB, DRUG_PRESETS, DRUG_REFERENCE_DB, CATEGORY_DEFAULTS, etc. -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1360,10 +1360,10 @@
         <div class="form-group">
             <label>ปริมาณการใช้ยา <span class="hint">(เว้นว่างไว้จะขึ้น X อัตโนมัติ | <b>ไม่ต้องพิมพ์หน่วยภาษาไทยในฉลาก</b> | กด <kbd>Enter</kbd> เพื่อเลื่อนช่องถัดไป)</span>:</label>
             <div class="dosage-grid">
-                <div class="dosage-item"><label>เช้า</label><input type="text" id="qty_morning" placeholder="" oninput="updateLabel()"></div>
-                <div class="dosage-item"><label>กลางวัน</label><input type="text" id="qty_noon" placeholder="" oninput="updateLabel()"></div>
-                <div class="dosage-item"><label>เย็น</label><input type="text" id="qty_evening" placeholder="" oninput="updateLabel()"></div>
-                <div class="dosage-item"><label>ก่อนนอน</label><input type="text" id="qty_bed" placeholder="" oninput="updateLabel()"></div>
+                <div class="dosage-item"><label>เช้า</label><input type="text" id="qty_morning" list="dose_options" autocomplete="off" placeholder="" oninput="updateLabel()"></div>
+                <div class="dosage-item"><label>กลางวัน</label><input type="text" id="qty_noon" list="dose_options" autocomplete="off" placeholder="" oninput="updateLabel()"></div>
+                <div class="dosage-item"><label>เย็น</label><input type="text" id="qty_evening" list="dose_options" autocomplete="off" placeholder="" oninput="updateLabel()"></div>
+                <div class="dosage-item"><label>ก่อนนอน</label><input type="text" id="qty_bed" list="dose_options" autocomplete="off" placeholder="" oninput="updateLabel()"></div>
             </div>
 
             <div id="high_alert_warning" class="high-alert-warning" style="display:none;">
@@ -1744,11 +1744,17 @@
     // v1.30: สร้างตัวเลือกชนิดยา/เวลาใช้ยาจาก data.js (ต้องรันก่อนสคริปต์หลัก)
     (function () {
         const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-        if (typeof DRUG_TYPE_GROUPS === 'undefined' || typeof MEAL_OPTIONS === 'undefined') { console.error('data.js เป็นรุ่นเก่า — กรุณาอัปโหลด data.js v1.30 คู่กับ index.html'); return; }
+        if (typeof DRUG_TYPE_GROUPS === 'undefined' || typeof MEAL_OPTIONS === 'undefined') { console.error('data.js เป็นรุ่นเก่า — กรุณาอัปโหลด data.js v1.36 คู่กับ index.html'); return; }
         const t = document.getElementById('sel_drug_type'), m = document.getElementById('sel_meal');
         if (t) t.innerHTML = DRUG_TYPE_GROUPS.map(g => '<optgroup label="' + esc(g.label) + '">' +
             g.options.map(o => '<option value="' + esc(o.value) + '">' + esc(o.label) + '</option>').join('') + '</optgroup>').join('');
         if (m) m.innerHTML = MEAL_OPTIONS.map(o => '<option value="' + esc(o.value) + '">' + esc(o.label) + '</option>').join('');
+        // v1.36: ขนาดยาที่ใช้จริงใน drugTH — ขึ้นเป็นตัวเลือกแนะนำในช่องขนาดยา (ยังพิมพ์เองได้)
+        if (typeof DOSE_OPTIONS !== 'undefined' && !document.getElementById('dose_options')) {
+            const dl = document.createElement('datalist'); dl.id = 'dose_options';
+            dl.innerHTML = DOSE_OPTIONS.map(v => '<option value="' + esc(v) + '"></option>').join('');
+            document.body.appendChild(dl);
+        }
     })();
 </script>
 <script>
@@ -1829,7 +1835,7 @@
             // เมื่อใส่แล้วจะใช้ URL นี้แทนการอ่านชีตตรงๆ (รูปแบบ JSON ดูในคำอธิบายท้ายไฟล์)
             webAppUrl: '',
             timeoutMs: 10000,
-            cacheKey: 'pharmax_sheet_cache_v1_9'
+            cacheKey: 'pharmax_sheet_cache_v1_10'
         };
         const FIELDS = ['drugType', 'meal', 'morning', 'noon', 'evening', 'bed', 'indication', 'advice'];
         const SLOTS = ['morning', 'noon', 'evening', 'bed'];
@@ -1838,7 +1844,7 @@
         const TYPE_RULES = [
             [/ใต้ลิ้น/, 'sublingual'], [/กระพุ้งแก้ม/, 'buccal'],
             [/หยอดตา/, 'eye'], [/หยอดหู/, 'ear'], [/หยอดจมูก/, 'nasalDrops'], [/พ่นจมูก/, 'nasalSpray'],
-            [/เหน็บทวาร/, 'suppositoryRectal'], [/เหน็บช่องคลอด/, 'suppositoryVaginal'],
+            [/เหน็บทวาร/, 'suppositoryRectal'], [/เหน็บช่องคลอด|สอดช่องคลอด/, 'suppositoryVaginal'],
             [/กลั้วคอ/, 'gargle'], [/ป้ายลิ้น|ป้ายปาก|แผลในปาก|ทาในช่องปาก|ทาในปาก|ทาช่องปาก|ใช้ในช่องปาก/, 'mouthPaint'],   // v1.35: + "ยาทาในช่องปาก"
             [/ขี้ผึ้ง/, 'ointment'], [/ครีม/, 'cream'], [/เจล/, 'gel'], [/เพสต์|เพส/, 'paste'],
             [/แผ่นแปะ|พลาสเตอร์/, 'patch'],
@@ -1847,7 +1853,7 @@
             [/ผง/, 'powder'], [/แกรนูล|เกล็ด/, 'granule'],
             [/แคปซูล/, 'capsule'], [/เม็ด/, 'tablet'], [/อม/, 'lozenge'],
             [/ยาน้ำ|สารละลาย/, 'solution'],
-            [/ทาภายนอก|ใช้ภายนอก/, 'external'],
+            [/ทาภายนอก/, 'topical'], [/ใช้ภายนอก/, 'external'], [/พ่นคอ|พ่นปาก|พ่นช่องปาก/, 'throatSpray'],
             [/สูดพ่น/, 'inhaler'], [/ละอองฝอย/, 'nebulizer'], [/ยาพ่น|สเปรย์/, 'aerosol'],
             [/ใช้เมื่อมีอาการ/, 'prn']
         ];
@@ -1855,8 +1861,13 @@
         const MEAL_RULES = [
             [/ไม่ขึ้นกับ|ไม่จำกัด|ไม่ระบุมื้อ/, 'any'],
             [/หลังอาหารทันที/, 'afterImmediate'],
+            [/หลังอาหารเช้า/, 'afterBreakfast'], [/หลังอาหารเย็น/, 'afterDinner'],
             [/หลังอาหาร/, 'after'],
-            [/ก่อนอาหาร/, 'before30'],
+            [/ก่อนอาหารเช้า/, 'beforeBreakfast'],
+            [/ก่อนอาหาร\s*1\s*ชั่วโมง|ก่อนอาหาร\s*60/, 'before60'], [/ก่อนอาหาร\s*30\s*-\s*60/, 'before30_60'], [/ก่อนอาหาร(อย่างน้อย)?\s*30/, 'before30'],
+            [/ก่อนอาหาร\s*20\s*-\s*30/, 'before20_30'], [/ก่อนอาหาร\s*20/, 'before20'], [/ก่อนอาหาร\s*15\s*-\s*30/, 'before15_30'], [/ก่อนอาหาร\s*15/, 'before15'],
+            [/ก่อนอาหาร/, 'before'],
+            [/ก่อนนอน/, 'bedtime'],
             [/พร้อมอาหาร|พร้อมมื้อ/, 'withMeal']
         ];
 
@@ -1874,6 +1885,7 @@
         const splitLines = s => String(s == null ? '' : s).split(/\r?\n/).map(normText).filter(Boolean);
         const cleanDose = v => { v = normText(v); return (v.toLowerCase() === 'x' || v === '-') ? '' : v; };
         const ruleLookup = (rules, text) => { for (const [re, key] of rules) if (re.test(text)) return key; return ''; };
+        const termKey = (kind, text) => { try { return termKeyOf(kind, text); } catch (e) { return ''; } };
 
         // v1.24: ตัวเลข Barcode/รหัสสินค้า อาจมีเลข 0 นำหน้าหายไปถ้า Google Sheet เก็บเป็นตัวเลข (ไม่ใช่ข้อความ) -> ตัดช่องว่าง/อักขระที่ไม่ใช่ตัวเลขออกเพื่อเทียบกันได้ตรงๆ
         const normCode = s => String(s == null ? '' : s).replace(/[^0-9]/g, '');
@@ -1893,8 +1905,8 @@
                 indicationLines: splitLines(raw.indication),
                 adviceLines: splitLines(raw.advice),
                 category: normText(raw.category),
-                typeKey: ruleLookup(TYPE_RULES, normText(raw.drugType)),
-                mealKey: ruleLookup(MEAL_RULES, normText(raw.meal)),
+                typeKey: termKey('type', raw.drugType) || ruleLookup(TYPE_RULES, normText(raw.drugType)),   // v1.36: ชื่อมาตรฐานใน data.js ก่อน
+                mealKey: termKey('meal', raw.meal) || ruleLookup(MEAL_RULES, normText(raw.meal)),
                 barcodeNo: normCode(raw.barcodeNo),
                 barcodePack: normCode(raw.barcodePack),
                 itemNo: normCode(raw.itemNo)
@@ -2156,10 +2168,12 @@
             if (se && !se.typeKey && se.drugType && unmappedType[se.key] === typeKey) {
                 if (!lang || lang === 'th') return se.drugType;
                 const t0 = trFor(se, lang);
-                return (t0 && t0.drugType) || (typeof Glossary !== 'undefined' && Glossary.lookup(se.drugType, lang)) || null;
+                return (typeof Glossary !== 'undefined' && Glossary.lookup(se.drugType, lang)) || (t0 && t0.drugType) || null;
             }
             if (!se || !typeKey || se.typeKey !== typeKey) return null;
             if (!lang || lang === 'th') return se.drugType || null;   // v1.35: ฉลากไทย = ข้อความใน drugTH (ต้นฉบับ)
+            const gT = typeof Glossary !== 'undefined' && Glossary.lookup(se.drugType, lang);   // v1.35: glossary ของข้อความใน drugTH ก่อน
+            if (gT) return gT;
             const t = trFor(se, lang);
             return (t && t.drugType) || null;
         }
@@ -2327,8 +2341,8 @@
                                       : MEAL_OPTIONS.find(o => o.value === key);
             } catch (e) {}
             if (!opt) return null;
-            const plain = String(opt.label).replace(/\s*\(.*\)\s*$/, '').trim();
-            return lookup(plain, lang) || lookup('ยา' + plain, lang) || lookup(plain.replace(/^ยา/, ''), lang);
+            const plain = opt.th || String(opt.label).replace(/\s*\(.*\)\s*$/, '').trim();   // v1.36: ใช้ชื่อมาตรฐาน (th) — ตรงกับ glossary และ drugTH
+            return lookup(plain, lang);
         }
         loadCache();
         return { sync, whenReady, lookup, lookupOption, size: () => Object.keys(map).length };
@@ -2772,11 +2786,12 @@
         const L = lang || currentLang;
         if (L === 'th') return String(val == null ? '' : val).trim();   // v1.35: ฉลากไทยใช้ข้อความไทยตามที่กรอก (เดิม "ทาบางๆ" กลายเป็น "apply thinly")
         // v1.7: คำแปลขนาดยาจาก Google Sheet (ใช้เมื่อข้อความไทยตรงกับใน Sheet เป๊ะ)
+        const gDose = Glossary.lookup(val, L) || Glossary.lookup(normalizeDoseText(val), L);   // v1.35: glossary ก่อน (เช่น "ป้ายทา" → 塗布 แทน サイン)
+        if (gDose) return gDose;
         const sheetDose = PharmaxSheet.overrideDose(val, drugName, L);
         if (sheetDose) return sheetDose;
-        const gDose = Glossary.lookup(val, L) || Glossary.lookup(normalizeDoseText(val), L);   // v1.31: เช่น "1 เม็ด" → "1 pill"
-        if (gDose) return gDose;
         let t = normalizeDoseText(val);
+        try { const canon = doseTextOf(val, L) || doseTextOf(t, L); if (canon) return canon; } catch (e) {}   // v1.36: หน่วยนับมาตรฐานเดียวกับ glossary
         // ครึ่งเม็ดพอดี -> ใช้คำสำเร็จรูป (เช่น half tablet / 半錠) ที่ถูกไวยากรณ์ทุกภาษา
         if (/^0\.5\s*เม็ด$/.test(t)) return unitWord('halfTablet', L);
         t = t.replace(/แคปซูล/g, unitWord('capsule', L));
@@ -3414,16 +3429,17 @@
             if (signal && signal.aborted) throw new DOMException('Aborted', 'AbortError');
         }
 
-        // v1.31: ลำดับความน่าเชื่อถือ
-        //  1) คำแปลของยาตัวนี้ในแท็บภาษา (drugEN, drugJA …) ที่คนเตรียม/ตรวจไว้  2) แท็บ medical_glossary  3) พจนานุกรมใน data.js
+        // v1.35: ลำดับความน่าเชื่อถือ
+        //  1) แท็บ medical_glossary  2) คำแปลของยาตัวนี้ในแท็บภาษา (drugEN, drugJA …)  3) พจนานุกรมใน data.js
         //  4) คำแปลในแท็บภาษาที่ระบบแปลอัตโนมัติ (ยังไม่มีคนตรวจ)  5) แปลสด
         //  (เดิมคำแปลในชีททุกแบบมาก่อนพจนานุกรม → คำแปลอัตโนมัติทับคำแปลที่คัดไว้)
         const sheetInfo = PharmaxSheet.overrideLineInfo(db === indicationsDB ? 'indication' : 'advice', text, drugName, lang);
-        if (sheetInfo && sheetInfo.trusted) return { text: sheetInfo.text, failed: false };
-
+        // medical_glossary มาก่อน: แท็บภาษาในชีทเป็นสูตร GOOGLETRANSLATE (เครื่องแปล) ส่วน glossary คือคำที่คนคัดไว้
         if (lang !== 'th') await Glossary.whenReady(3000);
-        const glossaryText = Glossary.lookup(text, lang);          // คำแปลที่เตรียมไว้ในแท็บ medical_glossary
+        const glossaryText = Glossary.lookup(text, lang);
         if (glossaryText) return { text: glossaryText, failed: false };
+
+        if (sheetInfo && sheetInfo.trusted) return { text: sheetInfo.text, failed: false };
 
         let verified = findVerified(text, db, lang);
         if (verified) return { text: verified, failed: false };
@@ -3758,7 +3774,7 @@
     // ==========================================================================
     // v1.8: ระบบเตือนยาความเสี่ยงสูง / ข้อควรระวังสำคัญ (กฎอยู่ใน data.js -> DRUG_WARNING_RULES)
     // ==========================================================================
-    const WARN_NON_ORAL_TYPES = ['external', 'ointment', 'cream', 'gel', 'paste', 'patch', 'eye', 'ear', 'nasalSpray', 'nasalDrops',
+    const WARN_NON_ORAL_TYPES = ['topical', 'throatSpray', 'external', 'ointment', 'cream', 'gel', 'paste', 'patch', 'eye', 'ear', 'nasalSpray', 'nasalDrops',
         'gargle', 'mouthPaint', 'suppositoryRectal', 'suppositoryVaginal', 'aerosol', 'inhaler', 'nebulizer'];
     let _warnRuleRegex = null;
     let _warnBrandIndex = null;
@@ -4425,7 +4441,7 @@
 
     function generateShortDoseText(item) {
         let type = item.drugType;
-        if (['external', 'ointment', 'cream', 'gel', 'paste', 'patch'].includes(type)) {
+        if (['topical', 'external', 'ointment', 'cream', 'gel', 'paste', 'patch'].includes(type)) {
             return "ทาบางๆ";
         }
 
@@ -4443,9 +4459,10 @@
         let freqStr = parts.join("-");
 
         let mealCode = "";
-        if (item.meal === "before30") mealCode = "ac";
-        else if (item.meal === "after" || item.meal === "afterImmediate") mealCode = "pc";
+        if (/^before/.test(item.meal || '')) mealCode = "ac";
+        else if (/^after/.test(item.meal || '')) mealCode = "pc";
         else if (item.meal === "withMeal") mealCode = "w/meal";
+        else if (item.meal === "bedtime") mealCode = "hs";
 
         return freqStr + (mealCode ? " " + mealCode : "");
     }

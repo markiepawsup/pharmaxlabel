@@ -1,4 +1,4 @@
-/* Pharmax – เพิ่มข้อมูลยาใหม่ผ่านหน้าเว็บ (login / สมัคร / ส่งข้อมูลให้แอดมินตรวจ)  ·  v1.35
+/* Pharmax – เพิ่มข้อมูลยาใหม่ผ่านหน้าเว็บ (login / สมัคร / ส่งข้อมูลให้แอดมินตรวจ)  ·  v1.36
  * ใช้คู่กับ Code.gs (Apps Script Web App)  —  วางไฟล์นี้ไว้โฟลเดอร์เดียวกับ index.html */
 (function () {
   'use strict';
@@ -225,27 +225,28 @@
     };
   }
 
+  // v1.36: ตัวเลือกมาจากคำศัพท์มาตรฐานใน data.js (ข้อความไทย = ค่าที่บันทึกลง drugTH และตรงกับ medical_glossary)
   function typeOptions() {
-    const sel = document.getElementById('sel_drug_type');
-    if (!sel) return '<option value="ยาเม็ด">ยาเม็ด</option>';
-    const opt = o => {
-      let th = o.textContent.replace(/\s*\(.*\)\s*$/, '').trim();   // เก็บเฉพาะข้อความไทย ให้ตรงกับรูปแบบในชีท
-      if (th === 'เม็ด') th = 'ยาเม็ด';                                // "เม็ด" เฉยๆ ถูกแปลเป็น grain → ใช้ "ยาเม็ด" ให้แปลเป็น tablet
-      const label = th === 'ยาเม็ด' && /^เม็ด(\s|\(|$)/.test(o.textContent) ? o.textContent.replace(/^เม็ด/, 'ยาเม็ด') : o.textContent;   // กันกรณี data.js รุ่นเก่า
-      return '<option value="' + th + '">' + label + '</option>';
-    };
-    return Array.from(sel.children).map(c => c.tagName === 'OPTGROUP'
-      ? '<optgroup label="' + c.label + '">' + Array.from(c.children).map(opt).join('') + '</optgroup>'
-      : opt(c)).join('');
+    try {
+      return DRUG_TYPE_GROUPS.map(g => '<optgroup label="' + esc(g.label) + '">' +
+        g.options.map(o => '<option value="' + esc(o.th) + '">' + esc(o.label) + '</option>').join('') + '</optgroup>').join('');
+    } catch (e) { return '<option value="ยาเม็ด">ยาเม็ด</option>'; }
   }
   function mealOptions() {
-    const sel = document.getElementById('sel_meal');
-    if (!sel) return '<option value="">-- ไม่ระบุ --</option>';
-    return Array.from(sel.options).map(o => {
-      const th = o.value ? o.textContent.replace(/\s*\(.*\)\s*$/, '').trim() : '';
-      return '<option value="' + th + '">' + o.textContent + '</option>';
-    }).join('');
+    try { return MEAL_OPTIONS.map(o => '<option value="' + esc(o.th || '') + '">' + esc(o.label) + '</option>').join(''); }
+    catch (e) { return '<option value="">-- ไม่ระบุ --</option>'; }
   }
+  // ข้อความในชีท (รวมชื่อเก่า/ชื่ออื่น) → ชื่อมาตรฐาน · ไม่รู้จัก → คืนค่าเดิม
+  function canonTerm(kind, text) {
+    const t = String(text == null ? '' : text).trim();
+    try { const o = termOptionOf(kind, termKeyOf(kind, t)); if (o) return o.th; } catch (e) {}
+    return t;
+  }
+  function doseDatalist() {
+    try { return '<datalist id="dsm_dose_list">' + DOSE_OPTIONS.map(v => '<option value="' + esc(v) + '"></option>').join('') + '</datalist>'; }
+    catch (e) { return ''; }
+  }
+
 
   // ---------- ghost text + dropdown (ใช้ข้อมูลชุดเดียวกับหน้าแรก: indicationsDB / advicesDB + สรรพคุณ/คำแนะนำของยาในชีท) ----------
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -363,9 +364,8 @@
       { label: '1x1 ก่อนนอน', morning: '', noon: '', evening: '', bed: '1 เม็ด', meal: '' }];
   }
   function mealThaiByKey(key) {      // key ของหน้าแรก (after/any/...) -> ข้อความไทยที่ dropdown ในฟอร์มนี้ใช้
-    const sel = document.getElementById('sel_meal');
-    const o = sel && Array.from(sel.options).find(x => x.value === key);
-    return o ? (o.value ? o.textContent.replace(/\s*\(.*\)\s*$/, '').trim() : '') : null;
+    if (!key) return '';
+    try { const o = termOptionOf('meal', key); return o ? o.th : null; } catch (e) { return null; }
   }
   function setupFreqChips() {
     const box = $('#dsm_freq'); if (!box) return;
@@ -457,9 +457,9 @@
       // ===== card 2 (ขนาดยาและเวลา) — ยกมาจากหน้าหลัก =====
       '<div class="dsm-card2"><div class="dsm-card2-title"><span class="dsm-num">2</span> ขนาดยาและเวลา (Dosage &amp; Timing)</div>' +
       '<div class="dsm-row2"><div><label>ประเภทของยา (Dosage Form)</label><select id="dsm_type">' + typeOptions() + '</select></div>' +
-      '<div><label>เวลาใช้ยา (Meal Time)</label><select id="dsm_meal">' + mealOptions() + '</select></div></div>' +
+      '<div><label>เวลาใช้ยา (Meal Time)</label><select id="dsm_meal">' + mealOptions() + '</select></div></div>' + doseDatalist() +
       '<label>ปริมาณการใช้ยา <span class="dsm-hint">เช่น 1 เม็ด (เว้นว่างถ้าไม่ใช้)</span></label>' +
-      '<div class="dsm-grid4"><div><label>เช้า</label><input id="dsm_m1" autocomplete="off"></div><div><label>กลางวัน</label><input id="dsm_m2" autocomplete="off"></div><div><label>เย็น</label><input id="dsm_m3" autocomplete="off"></div><div><label>ก่อนนอน</label><input id="dsm_m4" autocomplete="off"></div></div>' +
+      '<div class="dsm-grid4"><div><label>เช้า</label><input id="dsm_m1" list="dsm_dose_list" autocomplete="off"></div><div><label>กลางวัน</label><input id="dsm_m2" list="dsm_dose_list" autocomplete="off"></div><div><label>เย็น</label><input id="dsm_m3" list="dsm_dose_list" autocomplete="off"></div><div><label>ก่อนนอน</label><input id="dsm_m4" list="dsm_dose_list" autocomplete="off"></div></div>' +
       '<div class="dsm-chips" id="dsm_chips"></div><div class="dsm-chips" id="dsm_freq"></div></div>' +
       '<label>คำแนะนำเพิ่มเติม <span class="dsm-hint">พิมพ์แล้วมีตัวเลือก · กด Tab รับข้อความเงา</span></label>' + smartField('dsm_adv') +
       '<div id="dsm_m"></div>' +
@@ -530,8 +530,11 @@
       const id = 'dsm_e_' + f.key;
       if (f.key === 'drugtype' || f.key === 'meal') {
         let L = []; try { L = (f.key === 'drugtype' ? SHEET_DRUG_TYPES : SHEET_MEALS).slice(); } catch (e) {}
-        if (f.value && L.indexOf(f.value) < 0) L.unshift(f.value);
-        return '<select id="' + id + '"><option value="">-- ไม่ระบุ --</option>' + L.map(o => '<option value="' + esc(o) + '"' + (o === f.value ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select>';
+        // v1.36: ค่าในชีทที่เป็นชื่อเก่า/ชื่ออื่น → เลือกชื่อมาตรฐานไว้ให้ (ช่องจะเป็นสีเขียว = ขอแก้เป็นชื่อมาตรฐาน) · ค่าที่ไม่รู้จักเลย คงไว้ให้เห็น
+        const canon = f.value ? canonTerm(f.key === 'drugtype' ? 'type' : 'meal', f.value) : '';
+        if (f.value && L.indexOf(f.value) < 0 && canon === f.value) L.unshift(f.value);
+        const pick = canon || f.value;
+        return '<select id="' + id + '"><option value="">-- ไม่ระบุ --</option>' + L.map(o => '<option value="' + esc(o) + '"' + (o === pick ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select>';
       }
       if (f.key === 'indication' || f.key === 'advice') return smartField(id);
       return '<input id="' + id + '" autocomplete="off"' + (f.key === 'itemno' || f.key === 'barcodenopack' ? ' inputmode="numeric"' : '') + '>';
