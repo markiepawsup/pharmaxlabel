@@ -1309,6 +1309,24 @@
         .clin-under { margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .clin-under .clin-open-btn { width: auto; padding: 4px 12px; font-size: 0.74rem; border-radius: 8px; }
         .clin-under .patient-profile-summary { margin-top: 0; flex: 1 1 200px; }
+        /* v1.38: สแกนบาร์โค้ดด้วยกล้อง */
+        .barcode-cam-btn { flex: 0 0 auto; width: 46px; border: none; border-radius: 10px; background: rgba(255,255,255,0.16); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .barcode-cam-btn:hover { background: rgba(255,255,255,0.28); }
+        .pxs-overlay { position: fixed; inset: 0; z-index: 10050; background: rgba(8,14,26,0.86); display: none; align-items: center; justify-content: center; padding: 12px; }
+        .pxs-overlay.open { display: flex; }
+        .pxs-box { width: 100%; max-width: 560px; background: #111827; color: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); font-family: inherit; }
+        .pxs-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; font-weight: 700; font-size: 0.95rem; }
+        .pxs-x { background: none; border: none; color: #fff; font-size: 1.6rem; line-height: 1; cursor: pointer; padding: 4px 8px; }
+        .pxs-view { position: relative; background: #000; aspect-ratio: 4 / 3; }
+        .pxs-view video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .pxs-frame { position: absolute; left: 8%; right: 8%; top: 32%; bottom: 32%; border: 3px solid #04B085; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.38); pointer-events: none; }
+        .pxs-frame::after { content: ""; position: absolute; left: 6px; right: 6px; top: 50%; height: 2px; background: #ff4d4f; box-shadow: 0 0 8px #ff4d4f; animation: pxsLine 1.6s ease-in-out infinite; }
+        @keyframes pxsLine { 0%, 100% { transform: translateY(-18px); } 50% { transform: translateY(18px); } }
+        .pxs-overlay.hit .pxs-frame { border-color: #FDB713; }
+        .pxs-foot { padding: 10px 14px 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .pxs-msg { flex: 1 1 100%; font-size: 0.84rem; color: #cbd5e1; min-height: 1.2em; }
+        .pxs-btn { border: 1px solid rgba(255,255,255,0.35); background: transparent; color: #fff; border-radius: 10px; padding: 9px 14px; font: inherit; font-size: 0.85rem; cursor: pointer; }
+        .pxs-btn[hidden] { display: none; }
         /* v1.38: บีบให้อยู่ในหน้าเดียว */
         .scan-band .lang-btn { padding: 3px 8px 3px 6px; font-size: 0.74rem; }
         .scan-band .lang-switch { gap: 4px; }
@@ -1442,6 +1460,7 @@
                        inputmode="numeric" autocomplete="off"
                        oninput="handleBarcodeInput()"
                        onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitBarcodeLookup(); }">
+                <button type="button" class="barcode-cam-btn" id="barcode_cam_btn" onclick="openBarcodeCamera()" title="สแกนบาร์โค้ดด้วยกล้อง (มือถือ/แท็บเล็ต)" aria-label="สแกนบาร์โค้ดด้วยกล้อง"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></button>
                 <button type="button" class="barcode-scan-go-btn" onclick="submitBarcodeLookup()">ค้นหา</button>
             </div>
             <div id="barcode_scan_status" class="barcode-scan-status" style="display:none;"></div>
@@ -4722,6 +4741,7 @@
             return;
         }
         if (e.key === 'Escape') {
+            if (document.querySelector('.pxs-overlay.open, .dsm-overlay.open')) return;   // v1.38: หน้าต่างกล้อง/เพิ่มยาเปิดอยู่ → Esc ปิดหน้าต่างนั้น ไม่ล้างฟอร์ม
             if (isModalOpen()) {
                 closeHelpModal();
                 closeCheatModal();
@@ -6193,6 +6213,179 @@
     }
 </script>
 
+
+<!-- v1.38: สแกนบาร์โค้ดด้วยกล้อง (มือถือ/แท็บเล็ต/เว็บแคม) — ใช้ BarcodeDetector ของเบราว์เซอร์ถ้ามี (Chrome บน Android) ไม่งั้นโหลด ZXing เมื่อกดใช้ครั้งแรก -->
+<script>
+window.PharmaxScanner = (function () {
+    'use strict';
+    const ZXING_URLS = ['https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js', 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js'];
+    const NATIVE_FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf'];
+    let ov, video, msg, torchBtn, flipBtn, stream = null, timer = null, detector = null, zx = null, onHit = null, last = '', lastAt = 0, facing = 'environment', busy = false;
+    const $ = id => document.getElementById(id);
+
+    function build() {
+        if (ov) return;
+        ov = document.createElement('div');
+        ov.className = 'pxs-overlay no-print';
+        ov.innerHTML = '<div class="pxs-box" role="dialog" aria-modal="true" aria-label="สแกนบาร์โค้ด">' +
+            '<div class="pxs-head"><span id="pxs_title">สแกนบาร์โค้ด</span><button type="button" class="pxs-x" id="pxs_close" aria-label="ปิด">×</button></div>' +
+            '<div class="pxs-view"><video id="pxs_video" playsinline muted autoplay></video><div class="pxs-frame"></div></div>' +
+            '<div class="pxs-foot"><div class="pxs-msg" id="pxs_msg">กำลังเปิดกล้อง…</div>' +
+            '<button type="button" class="pxs-btn" id="pxs_torch" hidden>🔦 ไฟฉาย</button>' +
+            '<button type="button" class="pxs-btn" id="pxs_flip">🔄 สลับกล้อง</button>' +
+            '<button type="button" class="pxs-btn" id="pxs_cancel">ยกเลิก</button></div></div>';
+        document.body.appendChild(ov);
+        video = $('pxs_video'); msg = $('pxs_msg'); torchBtn = $('pxs_torch'); flipBtn = $('pxs_flip');
+        $('pxs_close').onclick = close; $('pxs_cancel').onclick = close;
+        ov.addEventListener('mousedown', e => { if (e.target === ov) close(); });
+        flipBtn.onclick = () => { facing = facing === 'environment' ? 'user' : 'environment'; startCamera(); };
+        torchBtn.onclick = toggleTorch;
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('open')) close(); });
+    }
+    const say = t => { if (msg) msg.textContent = t; };
+
+    function loadScript(urls) {
+        return urls.reduce((p, u) => p.catch(() => new Promise((res, rej) => {
+            const sc = document.createElement('script'); sc.src = u; sc.async = true;
+            sc.onload = () => window.ZXing ? res() : rej(new Error('no ZXing'));
+            sc.onerror = () => { sc.remove(); rej(new Error('load ' + u)); };
+            document.head.appendChild(sc);
+        })), Promise.reject());
+    }
+    async function prepareDecoder() {
+        if (detector || zx) return;
+        if ('BarcodeDetector' in window) {
+            try {
+                const sup = await window.BarcodeDetector.getSupportedFormats();
+                const f = NATIVE_FORMATS.filter(x => sup.indexOf(x) >= 0);
+                if (f.length) { detector = new window.BarcodeDetector({ formats: f }); return; }
+            } catch (e) {}
+        }
+        say('กำลังโหลดตัวอ่านบาร์โค้ด…');
+        if (!window.ZXing) await loadScript(ZXING_URLS);
+        const Z = window.ZXing, hints = new Map();
+        hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E, Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.CODE_39, Z.BarcodeFormat.ITF]);
+        hints.set(Z.DecodeHintType.TRY_HARDER, true);
+        const r = new Z.MultiFormatReader(); r.setHints(hints);
+        zx = { Z: Z, reader: r, canvas: document.createElement('canvas') };
+    }
+
+    function stopCamera() {
+        clearTimeout(timer); timer = null;
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        if (video) video.srcObject = null;
+    }
+    async function startCamera() {
+        stopCamera();
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+        } catch (e) {
+            say(e && e.name === 'NotAllowedError' ? '❌ ไม่ได้รับอนุญาตให้ใช้กล้อง — กดไอคอนกล้อง/แม่กุญแจที่แถบที่อยู่ แล้วเลือก "อนุญาต"' : '❌ เปิดกล้องไม่ได้ (' + (e && e.name || e) + ')');
+            return;
+        }
+        video.srcObject = stream;
+        try { await video.play(); } catch (e) {}
+        const track = stream.getVideoTracks()[0];
+        let caps = {}; try { caps = track.getCapabilities ? track.getCapabilities() : {}; } catch (e) {}
+        torchBtn.hidden = !caps.torch;
+        try { if (caps.focusMode && caps.focusMode.indexOf('continuous') >= 0) track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch (e) {}
+        say('เล็งบาร์โค้ดให้อยู่ในกรอบสีเขียว · ถือนิ่งๆ ห่างประมาณ 10–20 ซม.');
+        loop();
+    }
+    let torchOn = false;
+    function toggleTorch() {
+        const t = stream && stream.getVideoTracks()[0]; if (!t) return;
+        torchOn = !torchOn; t.applyConstraints({ advanced: [{ torch: torchOn }] }).catch(() => {});
+    }
+
+    // ตรวจเลขหลักสุดท้าย (check digit) ของ EAN/UPC กันอ่านเพี้ยน
+    function checksumOk(code) {
+        if (!/^\d+$/.test(code) || [8, 12, 13, 14].indexOf(code.length) < 0) return true;
+        const d = code.split('').map(Number), chk = d.pop();
+        const sum = d.reverse().reduce((a, x, i) => a + x * (i % 2 === 0 ? 3 : 1), 0);
+        return (10 - sum % 10) % 10 === chk;
+    }
+    async function decodeFrame() {
+        if (!video || video.readyState < 2 || !video.videoWidth) return null;
+        if (detector) {
+            const r = await detector.detect(video);
+            return r && r.length ? String(r[0].rawValue || '') : null;
+        }
+        const vw = video.videoWidth, vh = video.videoHeight;
+        const sx = vw * 0.06, sy = vh * 0.25, sw = vw * 0.88, sh = vh * 0.5;   // ส่วนกลางภาพ (ตรงกรอบเล็ง)
+        const scale = Math.min(1, 960 / sw), c = zx.canvas;
+        c.width = Math.round(sw * scale); c.height = Math.round(sh * scale);
+        const g = c.getContext('2d', { willReadFrequently: true });
+        g.drawImage(video, sx, sy, sw, sh, 0, 0, c.width, c.height);
+        try {
+            const Z = zx.Z, src = new Z.HTMLCanvasElementLuminanceSource(c);
+            const res = zx.reader.decodeWithState(new Z.BinaryBitmap(new Z.HybridBinarizer(src)));
+            return res ? String(res.getText()) : null;
+        } catch (e) { return null; }
+    }
+    async function loop() {
+        if (!stream || busy) return;
+        busy = true;
+        let code = null;
+        try { code = await decodeFrame(); } catch (e) {}
+        busy = false;
+        if (!stream) return;
+        if (code) {
+            code = code.replace(/\s+/g, '');
+            if (checksumOk(code)) {
+                const now = Date.now();
+                if (code === last && now - lastAt < 2000) return hit(code);   // อ่านได้ตรงกัน 2 ครั้ง = มั่นใจ
+                last = code; lastAt = now;
+                say('อ่านได้ ' + code + ' · ถือนิ่งอีกนิด…');
+            }
+        }
+        timer = setTimeout(loop, detector ? 120 : 90);
+    }
+    function beep() {
+        try {
+            const A = window.AudioContext || window.webkitAudioContext; if (!A) return;
+            const a = new A(), o = a.createOscillator(), g = a.createGain();
+            o.frequency.value = 1760; g.gain.value = 0.12; o.connect(g); g.connect(a.destination);
+            o.start(); o.stop(a.currentTime + 0.12); setTimeout(() => a.close(), 300);
+        } catch (e) {}
+    }
+    function hit(code) {
+        ov.classList.add('hit'); say('✅ ' + code);
+        try { navigator.vibrate && navigator.vibrate(80); } catch (e) {}
+        beep();
+        const cb = onHit; onHit = null;
+        setTimeout(() => { close(); if (cb) cb(code); }, 250);
+    }
+
+    async function open(cb, title) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert(window.isSecureContext === false ? 'ต้องเปิดหน้าเว็บผ่าน https:// จึงจะใช้กล้องได้' : 'เบราว์เซอร์/อุปกรณ์นี้ไม่รองรับการใช้กล้อง');
+            return;
+        }
+        build();
+        onHit = cb; last = ''; lastAt = 0;
+        $('pxs_title').textContent = title || 'สแกนบาร์โค้ด';
+        ov.classList.remove('hit'); ov.classList.add('open');
+        say('กำลังเปิดกล้อง…');
+        try { await prepareDecoder(); }
+        catch (e) { say('❌ โหลดตัวอ่านบาร์โค้ดไม่ได้ (ต้องต่ออินเทอร์เน็ตตอนใช้ครั้งแรก) — ลองใหม่อีกครั้ง'); return; }
+        if (!ov.classList.contains('open')) return;
+        startCamera();
+    }
+    function close() { stopCamera(); if (ov) ov.classList.remove('open', 'hit'); onHit = null; }
+    return { open: open, close: close };
+})();
+
+function openBarcodeCamera() {
+    PharmaxScanner.open(code => {
+        const el = document.getElementById('in_barcode_scan');
+        if (!el) return;
+        el.value = code.replace(/\D/g, '') || code;
+        submitBarcodeLookup();
+    }, 'สแกนบาร์โค้ดยา');
+}
+</script>
+
 <!-- ปุ่มพิมพ์ด่วนแบบลอย: อยู่นอก .app-container และถูกซ่อนทั้งด้วย CSS @media print + JS (beforeprint) -->
 <button type="button" id="fab_print" class="no-print" onclick="printSingleCurrentItem()" title="พิมพ์ฉลากยาปัจจุบันทันที">🖨️ พิมพ์ฉลากนี้ทันที</button>
 <script>
@@ -6312,7 +6505,7 @@
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {

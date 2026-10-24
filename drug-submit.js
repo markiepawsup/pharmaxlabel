@@ -98,6 +98,9 @@
   .dsm-pill.w{background:#fff3cd;color:#7a5b00}.dsm-pill.ok{background:#d9f3e6;color:#1a7a3a}.dsm-pill.no{background:#fde0de;color:#b3261e}.dsm-pill.dn{background:#e3e8ef;color:#445}
   .dsm-note{margin-top:5px;background:#f1f6fd;border-left:3px solid #16478E;padding:5px 8px;font-size:.8rem;white-space:pre-wrap}
   .dsm-edgrid label{margin-top:8px}.dsm-chg{border-color:#04B085 !important;background:#f0fbf7 !important}
+  .dsm-camrow{display:flex;gap:6px}.dsm-camrow input{flex:1 1 auto;min-width:0}
+  .dsm-cam{flex:0 0 auto;width:42px;border:1px solid #16478E;background:#eef3fa;color:#16478E;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+  .dsm-cam:hover{background:#dde8f6}
   @media print{.dsm-fab,.dsm-overlay,.no-print{display:none !important}}`;
   const style = document.createElement('style'); style.textContent = css; document.head.appendChild(style);
 
@@ -466,6 +469,7 @@
       '<button class="dsm-btn" id="dsm_submit" type="button">Submit</button>' +
       '</div>';
     onlyDigits($('#dsm_bc'), 14); onlyDigits($('#dsm_bc_pack'), 14); onlyDigits($('#dsm_item'), 7);
+    addCamButton('dsm_bc', 'สแกนบาร์โค้ดแผง (ขายแยกชิ้น)'); addCamButton('dsm_bc_pack', 'สแกนบาร์โค้ดกล่อง');
     // v1.36: แนะนำกลุ่มโรคติดเชื้อจากชื่อสามัญ (เฉพาะตอนช่องกลุ่มยายังว่าง หรือยังเป็นค่าที่ระบบเลือกให้)
     const autoCat = () => {
       const sel = $('#dsm_cat'); if (!sel || (sel.value && sel.dataset.auto !== sel.value)) return;
@@ -493,6 +497,23 @@
     if (pre.length >= 8) { $('#dsm_bc').value = pre.slice(0, 14); checkDup(); setTimeout(() => $('#dsm_item').focus(), 50); }
     else if (pre.length >= 1) { $('#dsm_item').value = pre.slice(0, 7); setTimeout(() => $('#dsm_bc').focus(), 50); }
     else setTimeout(() => $('#dsm_bc').focus(), 50);
+  }
+
+  // v1.38: ปุ่มกล้องข้างช่องบาร์โค้ด (ใช้ตัวสแกนเดียวกับหน้าแรก window.PharmaxScanner)
+  function addCamButton(id, title) {
+    const el = document.getElementById(id);
+    if (!el || !window.PharmaxScanner || el.parentNode.classList.contains('dsm-camrow')) return;
+    const row = document.createElement('div'); row.className = 'dsm-camrow';
+    el.parentNode.insertBefore(row, el); row.appendChild(el);
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'dsm-cam'; b.title = title; b.setAttribute('aria-label', title);
+    b.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>';
+    b.onclick = () => window.PharmaxScanner.open(code => {
+      el.value = String(code).replace(/\D/g, '').slice(0, 14);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }, title);
+    row.appendChild(b);
   }
 
   // ดึงรายการกลุ่มยาจากชีท drugTH มาทำ dropdown (ให้ข้อมูลคงที่ ไม่ต้องพิมพ์เอง)
