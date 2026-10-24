@@ -524,7 +524,9 @@
         }
         /* v1.22: สลับเปิด/ปิดโลโก้-เวลาทำการบนฉลาก (สาขาที่ใช้สติกเกอร์ร่วมแบรนด์อื่น) */
         .label-box.hide-logo .label-logo { display: none !important; }
-        .label-box.hide-hours .label-hours-line { display: none !important; }
+        .label-box.hide-hours .label-hours-line:not(.has-phone) { display: none !important; }
+        .label-box.hide-hours .label-hours-line .hours-txt, .label-box.hide-hours .label-hours-line .ph-sep { display: none !important; }
+        .label-phone { white-space: nowrap; }
         /* v1.33: วันที่-เวลาพิมพ์ ย้ายจากมุมขวาบนลงไปบรรทัดล่างสุด (ซ้าย) คู่กับเลขเวอร์ชัน (ขวา) */
         .label-date {
             position: absolute;
@@ -1300,8 +1302,8 @@
         .hdr-sync.offline { border-color: #F2C3BE; background: #FDF2F1; color: #A3271D; }
         @keyframes hdrSpin { to { transform: rotate(360deg); } }
         .hdr-actions .btn-home { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
-        .hdr-actions .btn-feedback { background: #E8F7F1; border-color: #9FD9C6; color: #12795A; }
-        .hdr-actions .btn-feedback:hover { background: #D6F0E6; color: #0B5E45; }
+        .hdr-actions .btn-feedback { background: #E6F4FD; border-color: #8FCBF2; color: #0B6FA8; }
+        .hdr-actions .btn-feedback:hover { background: #D3ECFB; color: #075A8A; }
         .hdr-actions .btn-branch { background: #FFF4DC; border-color: #F2C76B; color: #7A5200; }
         .hdr-actions .btn-branch:hover { background: #FFEBC2; color: #5E3F00; }
         .c-form .dosage-item { text-align: center; }
@@ -1394,6 +1396,11 @@
         .scan-band .barcode-scan-group > .barcode-scan-status { grid-column: 1 / 4 !important; grid-row: 3 !important; }
         .hdr-user { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #D5DEEA; background: #fff; color: #33415A; border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 0.74rem; font-weight: 600; cursor: pointer; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
         .hdr-user.in { border-color: #B9C8E6; background: var(--brand-soft); color: var(--color-navy); }
+        .hdr-brand .hdr-user { margin-left: 6px; }
+        .hdr-user.rph-m { background: #E8F1FD; border-color: #A9C8F0; color: #1D4F91; }
+        .hdr-user.rph-f { background: #FDEAF2; border-color: #F4B3CD; color: #B0306A; }
+        .rph-pill { display: inline-block; padding: 1px 9px; border-radius: 999px; font-weight: 700; background: #E8F1FD; color: #1D4F91; }
+        .rph-pill.f { background: #FDEAF2; color: #B0306A; }
         .hdr-user .pv { background: #FDB713; color: #3B2A00; border-radius: 999px; padding: 0 7px; font-size: 0.68rem; font-weight: 800; }
 
         /* ===================== v1.38: หน้าแรกใหม่ ===================== */
@@ -1407,12 +1414,12 @@
         #home_screen.brand-on .home-title { color: #fff; font-size: 1.35rem; }
         #home_screen.brand-on .home-subtitle { color: rgba(255,255,255,0.75); font-size: 0.95rem; }
         #home_screen.list-open .home-title, #home_screen.list-open .home-subtitle { opacity: 0; max-height: 0; margin: -8px 0; }
-        .home-prompt { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; font-size: 1.45rem; font-weight: 800; color: var(--color-navy); background: #fff;
-            padding: 12px 28px; border-radius: 18px; box-shadow: 0 8px 24px rgba(22,71,142,0.12); max-height: 110px; overflow: hidden;
+        .home-prompt { display: inline-flex; align-items: baseline; gap: 6px; font-size: 1rem; font-weight: 600; color: #5A6B80; background: none;
+            padding: 2px 0; border-radius: 0; box-shadow: none; max-height: 60px; overflow: hidden; margin-top: 4px;
             transition: opacity 0.35s ease, max-height 0.5s ease, padding 0.5s ease, margin 0.5s ease; animation: promptIn 0.6s ease both; }
-        .home-prompt span { font-size: 0.85rem; font-weight: 600; color: #6B7A8F; }
+        .home-prompt span { font-size: 0.9rem; font-weight: 400; color: #7F8C9C; }
         @keyframes promptIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-        #home_screen.brand-on .home-prompt { opacity: 0; max-height: 0; padding: 0 28px; margin: -16px 0 0; animation: none; }
+        #home_screen.brand-on .home-prompt { opacity: 0; max-height: 0; padding: 0; margin: -16px 0 0; animation: none; }
         #home_screen #branch_loading_text { color: inherit; }
         #home_screen.brand-on #branch_loading_text, #home_screen.brand-on .branch-list-status { color: rgba(255,255,255,0.85); }
         .brand-logo-btn img { transition: height 0.55s cubic-bezier(.2,.8,.2,1), filter 0.5s ease, opacity 0.35s ease; }
@@ -1476,6 +1483,23 @@
             #home_screen .otp-digit { width: 76px; height: 76px; font-size: 2.8rem; border-radius: 16px; }
             #home_screen .otp-prefix { font-size: 2rem; }
         }
+
+        /* v1.38: โลโก้ลอยระหว่างหน้า + ออร่าทอง */
+        .brand-bg-layer { position: fixed; inset: 0; z-index: 9850; pointer-events: none; background: var(--hb, #16478E); }
+        .brand-bg-layer[data-home-brand="pharmax"] { --hb: #16478E; } .brand-bg-layer[data-home-brand="icare"] { --hb: #1A1290; } .brand-bg-layer[data-home-brand="superdrug"] { --hb: #00774A; }
+        .brand-picker.logos-intro .brand-logo-btn img { opacity: 0 !important; animation: none !important; }
+        .no-trans, .no-trans *, .no-trans *::before, .no-trans *::after { transition: none !important; }
+        .brand-picker .brand-logo-btn img { transition: height 0.55s cubic-bezier(.2,.8,.2,1), filter 0.5s ease, opacity 0.5s ease; }
+        #home_screen .home-title, #home_screen .home-subtitle, #home_screen .home-prompt { transition: opacity 0.5s ease, color 0.45s ease, font-size 0.45s ease, max-height 0.5s ease, margin 0.5s ease, padding 0.5s ease; }
+        #app_header_logo.logo-aura { animation: logoHeartbeat 1.1s ease-in-out 3; position: relative; z-index: 2; }
+        @keyframes logoHeartbeat {
+            0%   { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(253,183,19,0)); }
+            14%  { transform: scale(1.09); filter: drop-shadow(0 0 10px rgba(253,183,19,0.95)) drop-shadow(0 0 22px rgba(253,183,19,0.55)); }
+            28%  { transform: scale(1);    filter: drop-shadow(0 0 4px rgba(253,183,19,0.5)); }
+            42%  { transform: scale(1.06); filter: drop-shadow(0 0 9px rgba(253,183,19,0.9)) drop-shadow(0 0 18px rgba(253,183,19,0.45)); }
+            70%  { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(253,183,19,0)); }
+            100% { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(253,183,19,0)); }
+        }
         @media (max-width: 900px) { .queue-tray { position: static; } }
     </style>
 </head>
@@ -1490,7 +1514,7 @@
    
     <div class="home-title">ระบบพิมพ์ฉลากยาหลายภาษา</div>
     <div class="home-subtitle">Multi-language Medicine Label Printer</div>
-    <div class="home-prompt" id="home_prompt">👇 กรุณาเลือกร้านยาของคุณ <span>Please select your pharmacy</span></div>
+    <div class="home-prompt" id="home_prompt">กรุณาเลือกร้านยาของคุณ <span>· Please select your pharmacy</span></div>
         <!-- ⏳ แถบแสดงสถานะกำลังโหลดข้อมูลสาขา -->
     <div id="branch_loading_container" style="text-align: center; margin: 8px 0; display: none; width: 100%;">
         <div style="font-size: 0.78rem; color: var(--color-navy); font-weight: 600;" id="branch_loading_text">⏳ กำลังซิงค์รายชื่อสาขาล่าสุดจาก Google Sheet...</div>
@@ -1550,6 +1574,7 @@
         <div class="app-title">ระบบพิมพ์ฉลากยาหลายภาษา</div>
         <div class="app-subtitle">Multi-language Medicine Label Printer</div>
     </div>
+        <button type="button" id="hdr_user_btn" class="hdr-user" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openMine()" title="บัญชีผู้ใช้ · ยาที่ส่งและสถานะ">👤 เข้าสู่ระบบ</button>
     </div>
     <div class="hdr-spacer"></div>
     <div class="hdr-actions">
@@ -1558,7 +1583,6 @@
                 <span class="conn-dot" id="conn_status_dot"></span>
                 <span id="conn_status_text">กำลังเชื่อมต่อ…</span>
             </span>
-        <button type="button" id="hdr_user_btn" class="hdr-user" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openMine()" title="บัญชีผู้ใช้ · ยาที่ส่งและสถานะ">👤 เข้าสู่ระบบ</button>
         <button type="button" id="hdr_sync_btn" class="hdr-sync" onclick="PharmaxSheet.sync()" title="กดเพื่อซิงค์ฐานข้อมูลยาจาก Google Sheet อีกครั้ง"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"></path><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"></path><path d="M21 3v5h-5M3 21v-5h5"></path></svg><span id="sheet_sync_status">ฐานข้อมูลยา</span></button>
         <button type="button" class="btn-home btn-feedback" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openFeedback()" title="ส่งความคิดเห็นเกี่ยวกับข้อมูลยา/การใช้งาน (ต้องเข้าสู่ระบบ)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 9.5h8M8 12.5h5"></path></svg>Feedback</button>
         <button type="button" class="btn-home btn-branch" onclick="goHome()" title="กลับหน้าแรกเพื่อเปลี่ยนแบรนด์/สาขา"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v10h16V10"></path><path d="M3 10l2-6h14l2 6z"></path><path d="M10 20v-5h4v5"></path></svg>เปลี่ยนสาขา</button>
@@ -1579,7 +1603,7 @@
 <div class="scan-band no-print">
     <div class="scan-band-inner">
         <div class="form-group barcode-scan-group">
-            <label class="band-label" for="in_barcode_scan">ยิงบาร์โค้ด / Item No.</label>
+            <label class="band-label" for="in_barcode_scan">ยิงบาร์โค้ด หรือ กรอกรหัสสินค้า (Item No.)</label>
             <div class="barcode-scan-row">
                 <input type="text" id="in_barcode_scan" class="barcode-scan-input" placeholder="เช่น 8850123456789 หรือ 1234567"
                        inputmode="numeric" autocomplete="off"
@@ -1749,7 +1773,7 @@
     <!-- Label Preview -->
     <div class="preview-panel">
         <div class="preview-card no-print-bg">
-        <div class="preview-head no-print"><span>ตัวอย่างฉลาก 76 × 76 มม.</span></div>
+        <div class="preview-head no-print"><span>Preview ฉลากยา</span></div>
         <div class="preview-wrapper">
             <div class="label-scale-wrap">
             <div class="label-box" id="label_box">
@@ -2161,7 +2185,7 @@
         else if (vals.includes('syncing') || vals.includes('init')) level = 'syncing';
         else level = 'ok';
         dot.className = 'conn-dot ' + level;
-        if (level === 'ok') text.textContent = 'เชื่อมต่อฐานข้อมูล';
+        if (level === 'ok') text.textContent = 'Online';
         else if (level === 'syncing') text.textContent = 'กำลังเชื่อมต่อฐานข้อมูล…';
         else text.textContent = 'ออฟไลน์ - ใช้ข้อมูลสำรอง';
     }
@@ -2901,6 +2925,7 @@
                 else if (k === 'line1') idx.line1 = i;
                 else if (k === 'line2') idx.line2 = i;
                 else if (k === 'line3') idx.line3 = i;
+                else if (k === 'phone' || k === 'tel' || k === 'telephone' || k === 'phoneno') idx.phone = i;   // v1.38: เบอร์โทรสาขา (ว่าง = ไม่แสดงบนฉลาก)
             });
             return idx;
         }
@@ -2915,7 +2940,7 @@
                     brandId: g(r, 'brandId').toLowerCase(),
                     brandName: g(r, 'brandName'),
                     branchName: g(r, 'branchName'),
-                    line1: g(r, 'line1'), line2: g(r, 'line2'), line3: g(r, 'line3')
+                    line1: g(r, 'line1'), line2: g(r, 'line2'), line3: g(r, 'line3'), phone: g(r, 'phone')
                 }))
                 .filter(b => b.branchCode);
         }
@@ -3398,6 +3423,16 @@
         return { pharmacyLine1: name, pharmacyLine2: '', pharmacyLine3: '' };
     }
 
+    // v1.38: เบอร์โทรสาขา (คอลัมน์ phone ในแท็บ branchesTH) → ต่อท้ายบรรทัดเวลาทำการ · ว่าง = ไม่แสดง
+    function branchPhone(code) {
+        const row = (typeof BranchDirectory !== 'undefined') ? BranchDirectory.findRow(code) : null;
+        return String((row && row.phone) || (BRANCHES[code] && BRANCHES[code].phone) || '').trim();
+    }
+    function hoursLineHtml(hoursText, phone, lang) {
+        const h = hoursText ? '<span class="hours-txt">' + escapeHtml(hoursText) + '</span>' : '';
+        if (!phone) return h;
+        return h + '<span class="label-phone">' + (h ? '<span class="ph-sep"> · </span>' : '') + (lang === 'th' ? 'โทร. ' : 'Tel. ') + escapeHtml(phone) + '</span>';
+    }
     function applyLanguageToLabel() {
         const t = UI_TEXT[currentLang];
         updateBrandLogo();
@@ -3421,10 +3456,18 @@
             pharm4El.style.display = 'none';
         }
         // v1.22: ระบุว่าบรรทัดไหนคือ "เวลาทำการ" เพื่อให้ปุ่มซ่อน/แสดงเวลาทำการทำงานถูกบรรทัด
-        pharm3El.classList.remove('label-hours-line');
-        pharm4El.classList.remove('label-hours-line');
+        pharm3El.classList.remove('label-hours-line', 'has-phone');
+        pharm4El.classList.remove('label-hours-line', 'has-phone');
         const hoursKey = getHoursLineKey(branchText);
-        (hoursKey === 'pharmacyLine4' ? pharm4El : pharm3El).classList.add('label-hours-line');
+        const hoursEl = (hoursKey === 'pharmacyLine4' ? pharm4El : pharm3El);
+        hoursEl.classList.add('label-hours-line');
+        const _phone = branchPhone(currentBranch);
+        if (_phone) {   // v1.38
+            hoursEl.innerHTML = hoursLineHtml(branchText[hoursKey] || '', _phone, currentLang);
+            hoursEl.style.display = ''; hoursEl.classList.add('has-phone');
+        } else if (branchText[hoursKey]) {
+            hoursEl.innerHTML = hoursLineHtml(branchText[hoursKey], '', currentLang);
+        }
         // v1.22: สลับเปิด/ปิดโลโก้-เวลาทำการตามตัวเลือกที่เภสัชกรกดไว้
         const labelBoxEl = document.getElementById('label_box');
         if (labelBoxEl) {
@@ -3692,30 +3735,86 @@
         }
     }
 
-    // v1.38: เข้าสาขาแบบมี transition — พื้นสีแบรนด์ + โลโก้ + ชื่อสาขา แล้วค่อยเฟดเข้าหน้าสร้างฉลาก
+    // v1.38: เข้าสาขา — โลโก้ค่อยๆ หดและลอยไปมุมซ้ายบน (ตำแหน่งโลโก้ในหน้าสร้างฉลาก) แล้วมีออร่าสีทองเต้นเป็นจังหวะหัวใจ
+    //        เปลี่ยนสาขา — ย้อนกลับ: โลโก้จากมุมซ้ายบนลอยลงมากลางจอ แล้วโลโก้แบรนด์อื่นค่อยๆ ปรากฏ
     let _entering = false;
-    function enterBranch(code) {
+    const _reduceMotion = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+    function _flyClone(img, from, to, fromFilter, toFilter, ms) {
+        const c = img.cloneNode(true);
+        c.removeAttribute('id');
+        Object.assign(c.style, { position: 'fixed', left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px',
+            margin: '0', zIndex: '9900', transformOrigin: '0 0', pointerEvents: 'none', objectFit: 'contain', maxWidth: 'none', filter: fromFilter || 'none' });
+        document.body.appendChild(c);
+        const sx = to.width / from.width, sy = to.height / from.height;
+        const anim = c.animate([
+            { transform: 'translate(0px, 0px) scale(1, 1)', filter: fromFilter || 'none' },
+            { transform: 'translate(' + (to.left - from.left) + 'px, ' + (to.top - from.top) + 'px) scale(' + sx + ', ' + sy + ')', filter: toFilter || 'none' }
+        ], { duration: ms, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'forwards' });
+        return { el: c, done: anim.finished.catch(() => {}) };
+    }
+    function _brandBgLayer(brand) {
+        const d = document.createElement('div');
+        d.className = 'brand-bg-layer';
+        d.setAttribute('data-home-brand', brand);
+        document.body.appendChild(d);
+        return d;
+    }
+    function pulseHeaderLogo() {
+        const h = document.getElementById('app_header_logo'); if (!h) return;
+        h.classList.remove('logo-aura'); void h.offsetWidth; h.classList.add('logo-aura');
+        setTimeout(() => h.classList.remove('logo-aura'), 3400);
+    }
+    async function enterBranch(code) {
         if (_entering) return; _entering = true;
-        const ov = document.getElementById('enter_overlay');
         const brand = currentHomeBrand || getBrandForBranch(code) || 'pharmax';
-        const row = BranchDirectory.findRow(code);
-        const src = document.querySelector('.brand-logo-btn.active img') || document.querySelector('.brand-logo-btn img');
-        ov.setAttribute('data-home-brand', brand);
-        document.getElementById('eo_logo').className = 'eo-logo eo-' + brand;
-        document.getElementById('eo_logo').innerHTML = src ? '<img src="' + src.src + '" alt="">' : '';
-        document.getElementById('eo_text').innerHTML = '<b>' + escapeHtml((row && row.branchName) || code) + '</b><span>' + escapeHtml(code) + ' · กำลังเปิดหน้าสร้างฉลาก…</span>';
-        ov.classList.remove('leave'); ov.classList.add('show');
-        setTimeout(() => {
-            selectBranch(code);
-            requestAnimationFrame(() => { ov.classList.add('leave'); });
-            setTimeout(() => { ov.classList.remove('show', 'leave'); _entering = false; const bc = document.getElementById('in_barcode_scan'); if (bc) bc.focus(); }, 650);
-        }, 900);
+        const srcImg = document.querySelector('.brand-logo-btn.active img');
+        if (!srcImg || typeof srcImg.animate !== 'function' || _reduceMotion()) {
+            selectBranch(code); pulseHeaderLogo(); _entering = false; return;
+        }
+        const from = srcImg.getBoundingClientRect();
+        const fromFilter = getComputedStyle(srcImg).filter;
+        const bg = _brandBgLayer(brand);                 // พื้นสีแบรนด์ค้างไว้ระหว่างสลับหน้า แล้วค่อยเฟดหาย
+        selectBranch(code);                              // แสดงหน้าสร้างฉลากด้านหลัง (ใช้วัดตำแหน่งโลโก้ปลายทาง)
+        const target = document.getElementById('app_header_logo');
+        target.style.visibility = 'hidden';
+        await new Promise(r => requestAnimationFrame(r));
+        const to = target.getBoundingClientRect();
+        const fly = _flyClone(srcImg, from, to, fromFilter, 'none', 950);
+        bg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 750, delay: 200, easing: 'ease', fill: 'forwards' });
+        await fly.done;
+        target.style.visibility = '';
+        fly.el.remove(); bg.remove();
+        pulseHeaderLogo();
+        _entering = false;
+        const bc = document.getElementById('in_barcode_scan'); if (bc) bc.focus();
     }
 
-    function goHome() {
-        document.getElementById('app_screen').style.display = 'none';
-        document.getElementById('home_screen').style.display = 'flex';
-        goBackToBrandPicker(); // กลับไปหน้าเลือกแบรนด์เสมอ ให้ผู้ใช้เลือกสาขาใหม่ได้ถูกต้อง (เผื่อแบรนด์/สาขาถูกแก้ในชีทระหว่างใช้งาน)
+    async function goHome() {
+        const h = document.getElementById('app_header_logo');
+        const app = document.getElementById('app_screen'), home = document.getElementById('home_screen');
+        const brand = getBrandForBranch(currentBranch) || 'pharmax';
+        const canAnim = h && typeof h.animate === 'function' && !_reduceMotion() && app.style.display !== 'none';
+        const from = canAnim ? h.getBoundingClientRect() : null;
+        const picker = document.getElementById('brand_picker');
+        if (canAnim) { picker.classList.add('no-trans', 'logos-intro'); home.classList.add('no-trans'); }   // จัดตำแหน่งปลายทางทันที (ไม่รอ transition) เพื่อวัดตำแหน่งให้ตรง
+        app.style.display = 'none';
+        home.style.display = 'flex';
+        goBackToBrandPicker(); // กลับไปหน้าเลือกแบรนด์เสมอ ให้ผู้ใช้เลือกสาขาใหม่ได้ถูกต้อง
+        const section = document.getElementById('home_branch_section'); if (section && canAnim) section.style.display = 'none';
+        if (!canAnim) return;
+        void home.offsetHeight;
+        const targetImg = document.querySelector('.brand-logo-btn[data-brand="' + brand + '"] img');
+        if (!targetImg) return;
+        picker.classList.add('logos-intro');             // ซ่อนโลโก้ทั้ง 3 ไว้ก่อน → โลโก้ที่ลอยลงมาถึงแล้วค่อยแสดงทั้งหมด
+        home.classList.add('home-intro');
+        await new Promise(r => requestAnimationFrame(r));
+        const to = targetImg.getBoundingClientRect();
+        picker.classList.remove('no-trans'); home.classList.remove('no-trans');
+        const fly = _flyClone(h, from, to, 'none', 'none', 900);
+        await fly.done;
+        picker.classList.remove('logos-intro');
+        home.classList.remove('home-intro');
+        setTimeout(() => fly.el.remove(), 60);
     }
 
     // v1.18: เติมโลโก้สีเต็มของ iCare / Super Drug ในหน้าแรก + เก็บโลโก้สี Pharmax ไว้ใน BRAND_LOGOS_COLOR (ไม่ต้องฝัง base64 ซ้ำ)
@@ -3820,6 +3919,7 @@
     function rphText() { return _rph && _rph.name && _rph.license ? 'เภสัชกรผู้จ่ายยา: ' + _rph.name + ' (ภ.' + _rph.license + ')' : ''; }
     function saveRph() { try { _rph ? localStorage.setItem(RPH_KEY, JSON.stringify(_rph)) : localStorage.removeItem(RPH_KEY); } catch (e) {} }
     function rphNameCache() { try { return JSON.parse(localStorage.getItem(RPH_NAMES_KEY) || '{}'); } catch (e) { return {}; } }
+    function rphPill(name) { name = String(name || ''); return '<span class="rph-pill' + (/^ภญ/.test(name.trim()) ? ' f' : '') + '">' + escapeHtml(name) + '</span>'; }   // v1.38: ภก. ฟ้า · ภญ. ชมพู
     function setRphStatus(html, color) { const el = document.getElementById('rph_status'); if (el) { el.innerHTML = html; el.style.color = color || ''; } }
     function clearRphLicense() {
         _rph = null; saveRph();
@@ -3837,7 +3937,7 @@
             return;
         }
         const cached = rphNameCache()[lic];
-        if (cached) { _rph = { license: lic, name: cached }; saveRph(); updateLabel(); setRphStatus('✅ ' + escapeHtml(cached), '#1a7a3a'); }
+        if (cached) { _rph = { license: lic, name: cached }; saveRph(); updateLabel(); setRphStatus('✅ ' + rphPill(cached), '#1a7a3a'); }
         else setRphStatus('🔎 กำลังค้นชื่อจากสภาเภสัชกรรม…', '#555');
         try {
             const url = await webAppUrlForTranslate();
@@ -3848,7 +3948,7 @@
             if (d.ok && d.found && d.name) {
                 const m = rphNameCache(); m[lic] = d.name; try { localStorage.setItem(RPH_NAMES_KEY, JSON.stringify(m)); } catch (e) {}
                 _rph = { license: lic, name: d.name }; saveRph(); updateLabel();
-                setRphStatus('✅ ' + escapeHtml(d.name) + (d.expired ? ' <b style="color:#b3261e">⚠ ใบอนุญาตหมดอายุ ' + escapeHtml(d.expiry || '') + '</b>' : ''), '#1a7a3a');
+                setRphStatus('✅ ' + rphPill(d.name) + (d.expired ? ' <b style="color:#b3261e">⚠ ใบอนุญาตหมดอายุ ' + escapeHtml(d.expiry || '') + '</b>' : ''), '#1a7a3a');
             } else if (d.ok && !d.found) {
                 _rph = null; saveRph(); updateLabel();
                 setRphStatus('❌ ไม่พบเลขที่ใบอนุญาต ' + lic + ' ในทะเบียนสภาเภสัชกรรม', '#b3261e');
@@ -3866,7 +3966,7 @@
             if (!el || !_rph || !_rph.license) return;
             el.value = _rph.license;
             document.getElementById('rph_clear_btn').style.display = '';
-            setRphStatus('✅ ' + escapeHtml(_rph.name || ''), '#1a7a3a');
+            setRphStatus('✅ ' + rphPill(_rph.name || ''), '#1a7a3a');
         };
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
     })();
@@ -6108,8 +6208,9 @@
                     <div class="label-header">
                         <span>${branchText.pharmacyLine1}</span><br>
                         <div class="sub-header">${branchText.pharmacyLine2}</div>
-                        <div class="sub-header ${hoursKey === 'pharmacyLine3' ? 'label-hours-line' : ''}">${branchText.pharmacyLine3 || ''}</div>
-                        <div class="sub-header ${hoursKey === 'pharmacyLine4' ? 'label-hours-line' : ''}">${branchText.pharmacyLine4 || ''}</div>
+                        ${(() => { const ph = branchPhone(currentBranch);   /* v1.38: เวลาทำการ + เบอร์โทร (ถ้ามี) */
+                            const line = k => hoursKey === k ? `<div class="sub-header label-hours-line ${ph ? 'has-phone' : ''}">${hoursLineHtml(branchText[k] || '', ph, lang)}</div>` : `<div class="sub-header">${escapeHtml(branchText[k] || '')}</div>`;
+                            return line('pharmacyLine3') + line('pharmacyLine4'); })()}
                     </div>
                     ${item.patientName ? `<div class="label-row" style="align-items: center;"><span class="label-title">${patientTitle(lang)} <span class="thai-text">(ชื่อผู้ใช้ยา)</span>:</span><div class="label-value" style="white-space: normal; text-transform: uppercase;">${escapeHtml(item.patientName)}</div></div>` : ''}
                     <div class="label-row" style="align-items: center;">
@@ -6849,7 +6950,7 @@ window.PrintLog = (function () {
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {

@@ -138,9 +138,12 @@
   function updateUserChip() {
     const b = document.getElementById('hdr_user_btn'); if (!b) return;
     let n = 0; try { n = PharmaxSheet.privateCount(); } catch (e) {}
+    b.classList.remove('rph-m', 'rph-f');
     if (session) {
       b.classList.add('in');
-      b.innerHTML = '👤 ' + esc(session.name || session.empId) + (n ? ' <span class="pv" title="ยาที่ส่งแล้วยังรออนุมัติ — ใช้พิมพ์ได้เฉพาะบัญชีนี้">🔒 ' + n + '</span>' : '');
+      const nm = String(session.name || '').trim();
+      if (/^ภญ/.test(nm)) b.classList.add('rph-f'); else if (/^ภก/.test(nm)) b.classList.add('rph-m');   // v1.38: ภก. = ฟ้า · ภญ. = ชมพู
+      b.innerHTML = '👤 ' + esc(nm || session.empId) + (session.license ? ' (ภ.' + esc(session.license) + ')' : '') + (n ? ' <span class="pv" title="ยาที่ส่งแล้วยังรออนุมัติ — ใช้พิมพ์ได้เฉพาะบัญชีนี้">🔒 ' + n + '</span>' : '');
       b.title = 'บัญชี ' + session.empId + ' · กดเพื่อดูรายการของฉัน / ออกจากระบบ' + (n ? ' · มียารออนุมัติ ' + n + ' รายการ (ใช้พิมพ์ได้เฉพาะบัญชีนี้)' : '');
     } else { b.classList.remove('in'); b.textContent = '👤 เข้าสู่ระบบ'; b.title = 'เข้าสู่ระบบเพื่อเพิ่มยา / ใช้ยาที่ส่งแล้วระหว่างรออนุมัติ'; }
   }
@@ -151,7 +154,13 @@
     if (_privBusy) return; _privBusy = true;
     const r = await api(Object.assign({ action: 'myDrugs' }, auth()));
     _privBusy = false;
-    if (r && r.ok) setP(r.drugs || []);
+    if (r && r.ok) {
+      if (r.me && session && (r.me.license !== session.license || (r.me.name && r.me.name !== session.name))) {
+        session.license = r.me.license || ''; if (r.me.name) session.name = r.me.name;
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      }
+      setP(r.drugs || []);
+    }
     else if (r && ['invalid', 'pending', 'rejected', 'locked', 'expired'].indexOf(r.error) >= 0) { session = null; sessionStorage.removeItem(SESSION_KEY); setP([]); }
     else updateUserChip();
   }
@@ -188,7 +197,7 @@
       b.disabled = false; b.textContent = 'เข้าสู่ระบบ';
       if (!r.ok) return setMsg(r.error === 'pending' || r.error === 'reset_pending' ? 'warn' : 'err', r.message || 'เข้าสู่ระบบไม่สำเร็จ');
       if (!r.token) return setMsg('err', 'เซิร์ฟเวอร์ยังเป็นเวอร์ชันเก่า กรุณาแจ้งแอดมินให้ Deploy Code.gs ใหม่');
-      session = { empId: r.empId, token: r.token, name: r.name };
+      session = { empId: r.empId, token: r.token, name: r.name, license: r.license || '' };
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
       refreshPrivate();
       const nx = afterLogin; afterLogin = null;
