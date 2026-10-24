@@ -131,7 +131,33 @@
   const openMine = () => { afterLogin = viewMine; overlay.classList.add('open'); session ? viewMine() : viewLogin(); };
   const close = () => overlay.classList.remove('open');
   fab.addEventListener('click', open);
-  window.PharmaxDrugSubmit = { open: open, openFeedback: openFeedback, openMine: openMine, webAppUrl: WEB_APP_URL };
+  window.PharmaxDrugSubmit = { open: open, openFeedback: openFeedback, openMine: openMine, webAppUrl: WEB_APP_URL,
+    token: () => (session && session.token) || '', user: () => session ? { empId: session.empId, name: session.name } : null, refreshMine: () => refreshPrivate() };
+
+  // ---------- v1.38: ยาที่ฉันส่งและยังรออนุมัติ → ใช้พิมพ์ฉลากได้ทันทีเฉพาะบัญชีนี้ (ต้องล็อกอิน) ----------
+  function updateUserChip() {
+    const b = document.getElementById('hdr_user_btn'); if (!b) return;
+    let n = 0; try { n = PharmaxSheet.privateCount(); } catch (e) {}
+    if (session) {
+      b.classList.add('in');
+      b.innerHTML = '👤 ' + esc(session.name || session.empId) + (n ? ' <span class="pv" title="ยาที่ส่งแล้วยังรออนุมัติ — ใช้พิมพ์ได้เฉพาะบัญชีนี้">🔒 ' + n + '</span>' : '');
+      b.title = 'บัญชี ' + session.empId + ' · กดเพื่อดูรายการของฉัน / ออกจากระบบ' + (n ? ' · มียารออนุมัติ ' + n + ' รายการ (ใช้พิมพ์ได้เฉพาะบัญชีนี้)' : '');
+    } else { b.classList.remove('in'); b.textContent = '👤 เข้าสู่ระบบ'; b.title = 'เข้าสู่ระบบเพื่อเพิ่มยา / ใช้ยาที่ส่งแล้วระหว่างรออนุมัติ'; }
+  }
+  let _privBusy = false;
+  async function refreshPrivate() {
+    const setP = list => { try { PharmaxSheet.setPrivate(list); } catch (e) {} updateUserChip(); };
+    if (!session) return setP([]);
+    if (_privBusy) return; _privBusy = true;
+    const r = await api(Object.assign({ action: 'myDrugs' }, auth()));
+    _privBusy = false;
+    if (r && r.ok) setP(r.drugs || []);
+    else if (r && ['invalid', 'pending', 'rejected', 'locked', 'expired'].indexOf(r.error) >= 0) { session = null; sessionStorage.removeItem(SESSION_KEY); setP([]); }
+    else updateUserChip();
+  }
+  const _bootPriv = () => { updateUserChip(); if (session) refreshPrivate(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(_bootPriv, 300)); else setTimeout(_bootPriv, 300);
+  setInterval(() => { if (session && !document.hidden) refreshPrivate(); }, 5 * 60 * 1000);   // อนุมัติแล้ว → ยาย้ายไปอยู่ใน drugTH (หายจากรายการส่วนตัว)
   overlay.addEventListener('mousedown', e => { if (e.target === overlay) close(); });
   const head = t => '<h3><span>' + t + '</span><button class="dsm-x" type="button" data-close>×</button></h3>';
   overlay.addEventListener('click', e => { if (e.target.hasAttribute('data-close')) close(); });
@@ -164,6 +190,7 @@
       if (!r.token) return setMsg('err', 'เซิร์ฟเวอร์ยังเป็นเวอร์ชันเก่า กรุณาแจ้งแอดมินให้ Deploy Code.gs ใหม่');
       session = { empId: r.empId, token: r.token, name: r.name };
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      refreshPrivate();
       const nx = afterLogin; afterLogin = null;
       (nx || viewForm)();
     };
@@ -392,7 +419,7 @@
   function wireWho() {
     $('#dsm_out').onclick = () => {
       if (session && session.token) api({ action: 'logout', token: session.token });   // ไม่ต้องรอผล
-      session = null; sessionStorage.removeItem(SESSION_KEY); afterLogin = null; viewLogin();
+      session = null; sessionStorage.removeItem(SESSION_KEY); afterLogin = null; refreshPrivate(); viewLogin();
     };
     $('#dsm_tofb').onclick = viewFeedback;
     $('#dsm_mine').onclick = viewMine;
@@ -412,7 +439,7 @@
       '<div class="dsm-hint">' + esc(x.date) + (x.barcode ? ' · บาร์โค้ด ' + esc(x.barcode) : '') + '</div>' + (extra || '') +
       (x.note ? '<div class="dsm-note">💬 แอดมิน: ' + esc(x.note) + '</div>' : '') + '</div>';
     body().innerHTML = head('📋 รายการของฉัน') + whoLine() +
-      sec('💊 ยาที่ส่งเพิ่ม', r.drugs || [], x => item(x)) +
+      sec('💊 ยาที่ส่งเพิ่ม', r.drugs || [], x => item(x, x.status === 'รออนุมัติ' ? '<div class="dsm-hint" style="color:#7a5b00">🔒 ระหว่างรออนุมัติ ใช้พิมพ์ฉลากได้เฉพาะบัญชีนี้</div>' : '')) +
       sec('✏️ คำขอแก้ไข', r.edits || [], x => item(x, (x.fields && x.fields.length ? '<div class="dsm-hint">ขอแก้: ' + esc(x.fields.join(', ')) + '</div>' : '') +
         (x.comment ? '<div class="dsm-hint" style="white-space:pre-wrap">' + esc(x.comment) + '</div>' : ''))) +
       sec('💬 ความคิดเห็น', r.feedback || [], x => item(x, '<div class="dsm-hint" style="white-space:pre-wrap">' + esc(x.comment) + '</div>')) +
@@ -420,7 +447,7 @@
     wireWho();
   }
   function authFail(r) {   // รหัสผ่าน/สถานะผู้ใช้ใช้ไม่ได้แล้ว -> กลับหน้าเข้าสู่ระบบ
-    if (['invalid', 'pending', 'rejected', 'locked', 'expired'].indexOf(r.error) >= 0) { session = null; sessionStorage.removeItem(SESSION_KEY); viewLogin(msg('err', r.message)); return true; }
+    if (['invalid', 'pending', 'rejected', 'locked', 'expired'].indexOf(r.error) >= 0) { session = null; sessionStorage.removeItem(SESSION_KEY); refreshPrivate(); viewLogin(msg('err', r.message)); return true; }
     return false;
   }
 
@@ -622,7 +649,8 @@
       if (authFail(r)) return;
       return setMsg('err', r.message || 'ส่งไม่สำเร็จ');
     }
-    done('✅ ส่งข้อมูลแล้ว', 'กรุณารอการตรวจสอบข้อมูล หากข้อมูลถูกต้อง จะสามารถใช้บาร์โค้ดยานี้ได้โดยอัตโนมัติ');
+    refreshPrivate();
+    done('✅ ส่งข้อมูลแล้ว', 'ระหว่างรอแอดมินตรวจ <b>คุณใช้ยานี้พิมพ์ฉลากได้ทันที</b> (เฉพาะบัญชีนี้ และต้องเข้าสู่ระบบค้างไว้) — ยิงบาร์โค้ดหรือพิมพ์ชื่อยาในหน้าหลักได้เลย · เมื่อแอดมินอนุมัติ ทุกคนจะใช้ได้');
   }
 
   function done(title, text) {

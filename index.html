@@ -602,6 +602,9 @@
         /* v1.38: จัดข้อความชิดขอบซ้าย-ขวาเท่ากันทุกบรรทัด (justify) — บรรทัดสุดท้ายของแต่ละย่อหน้าชิดต้นบรรทัดตามปกติ */
         .label-block, .label-value { text-align: justify; text-justify: auto; }
         .label-box.rtl-mode .label-block, .label-box.rtl-mode .label-value { text-align: justify; }
+        /* ชื่อยา/ชื่อผู้ใช้ยา/ชนิด/เวลา (บรรทัดสั้น) ไม่ต้องกระจาย — ไม่งั้นชื่อยาที่ขึ้น 2 บรรทัดจะมีช่องว่างห่างผิดปกติ */
+        .label-row .label-value { text-align: left; }
+        .label-box.rtl-mode .label-row .label-value { text-align: right; }
         /* ภาษาที่ไม่เว้นวรรคระหว่างคำ (ไทย/พม่า/เขมร) → กระจายระยะระหว่างตัวอักษรแทน ไม่ให้ช่องว่างไปกองอยู่ที่วรรคเดียว */
         .label-box[data-lang="th"] .label-block, .label-box[data-lang="th"] .label-value,
         .label-box[data-lang="my"] .label-block, .label-box[data-lang="my"] .label-value,
@@ -1288,6 +1291,7 @@
         .flag-it { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect x=%220.00%22 width=%2210.05%22 height=%2220%22 fill=%22%23009246%22/%3E%3Crect x=%2210.00%22 width=%2210.05%22 height=%2220%22 fill=%22%23fff%22/%3E%3Crect x=%2220.00%22 width=%2210.05%22 height=%2220%22 fill=%22%23CE2B37%22/%3E%3C/svg%3E"); }
         .flag-de { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect y=%220.00%22 width=%2230%22 height=%226.72%22 fill=%22%23000%22/%3E%3Crect y=%226.67%22 width=%2230%22 height=%226.72%22 fill=%22%23DD0000%22/%3E%3Crect y=%2213.33%22 width=%2230%22 height=%226.72%22 fill=%22%23FFCE00%22/%3E%3C/svg%3E"); }
         .flag-in { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect y=%220.00%22 width=%2230%22 height=%226.72%22 fill=%22%23FF9933%22/%3E%3Crect y=%226.67%22 width=%2230%22 height=%226.72%22 fill=%22%23fff%22/%3E%3Crect y=%2213.33%22 width=%2230%22 height=%226.72%22 fill=%22%23138808%22/%3E%3Ccircle cx=%2215%22 cy=%2210%22 r=%222.6%22 fill=%22none%22 stroke=%22%23000080%22 stroke-width=%220.5%22/%3E%3Cpath d=%22M15,10 L17.40,10.00%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.32,10.62%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.08,11.20%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.70,11.70%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.20,12.08%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.62,12.32%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.00,12.40%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L14.38,12.32%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.80,12.08%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.30,11.70%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.92,11.20%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.68,10.62%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.60,10.00%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.68,9.38%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.92,8.80%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.30,8.30%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.80,7.92%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L14.38,7.68%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.00,7.60%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.62,7.68%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.20,7.92%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.70,8.30%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.08,8.80%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.32,9.38%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Ccircle cx=%2215%22 cy=%2210%22 r=%220.5%22 fill=%22%23000080%22/%3E%3C/svg%3E"); }
+        .flag-th { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect width=%2230%22 height=%2220%22 fill=%22%23A51931%22/%3E%3Crect y=%223.33%22 width=%2230%22 height=%2213.34%22 fill=%22%23F4F5F8%22/%3E%3Crect y=%226.67%22 width=%2230%22 height=%226.66%22 fill=%22%232D2A4A%22/%3E%3C/svg%3E"); }
         .lang-btn { display: inline-flex; align-items: center; }
         /* v1.38: ปุ่มหัวเว็บ · ตารางขนาดยากึ่งกลาง · ป้ายไม่บังคับกรอก */
         .hdr-sync { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #CFE3D8; background: #F1FAF5; color: #1F6B47; border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 0.74rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
@@ -1355,7 +1359,11 @@
         .queue-tray .btn-row { flex: 0 0 auto; }
         .queue-tray #btn_batch_print { white-space: nowrap; padding: 9px 18px !important; width: auto !important; }
         /* v1.38: ปุ่มภาษาขนาดเท่ากัน + ลากจัดลำดับ */
-        .scan-band .lang-switch { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 5px; }
+        .lang-group { container-type: inline-size; }
+        .scan-band .lang-switch { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; }   /* 16 ภาษา = 8 + 8 พอดี */
+        .scan-band .lang-btn .th-tag { margin-left: 4px; opacity: 0.8; }
+        @container (max-width: 1040px) { .scan-band .lang-btn .th-tag { display: none; } }
+        @container (max-width: 560px) { .scan-band .lang-switch { grid-template-columns: repeat(4, minmax(0, 1fr)); } .scan-band .lang-btn .th-tag { display: none; } }
         .scan-band .lang-btn { font-size: 0.72rem; padding-right: 4px; }
         .scan-band .barcode-scan-group { flex: 0 1 470px; }
         .scan-band .lang-btn { width: 100%; justify-content: flex-start; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 30px; }
@@ -1384,6 +1392,90 @@
         .scan-band .barcode-cam-btn { grid-column: 2; grid-row: 2; height: 40px; width: 46px; }
         .scan-band .barcode-scan-go-btn { grid-column: 3; grid-row: 2; height: 40px; }
         .scan-band .barcode-scan-group > .barcode-scan-status { grid-column: 1 / 4 !important; grid-row: 3 !important; }
+        .hdr-user { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #D5DEEA; background: #fff; color: #33415A; border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 0.74rem; font-weight: 600; cursor: pointer; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+        .hdr-user.in { border-color: #B9C8E6; background: var(--brand-soft); color: var(--color-navy); }
+        .hdr-user .pv { background: #FDB713; color: #3B2A00; border-radius: 999px; padding: 0 7px; font-size: 0.68rem; font-weight: 800; }
+
+        /* ===================== v1.38: หน้าแรกใหม่ ===================== */
+        #home_screen { position: fixed; inset: 0; min-height: 0; height: 100vh; height: 100dvh; overflow: hidden; padding: 24px; gap: 16px; justify-content: center;
+            background: #F4F7FB; transition: background-color 0.55s ease; z-index: 1; }
+        #home_screen[data-home-brand="pharmax"], .enter-overlay[data-home-brand="pharmax"] { --hb: #16478E; }
+        #home_screen[data-home-brand="icare"], .enter-overlay[data-home-brand="icare"] { --hb: #1A1290; }
+        #home_screen[data-home-brand="superdrug"], .enter-overlay[data-home-brand="superdrug"] { --hb: #00774A; }
+        #home_screen.brand-on { background: var(--hb); }
+        #home_screen .home-title, #home_screen .home-subtitle { transition: color 0.45s ease, font-size 0.45s ease, opacity 0.4s ease, max-height 0.5s ease, margin 0.5s ease; max-height: 80px; overflow: hidden; }
+        #home_screen.brand-on .home-title { color: #fff; font-size: 1.35rem; }
+        #home_screen.brand-on .home-subtitle { color: rgba(255,255,255,0.75); font-size: 0.95rem; }
+        #home_screen.list-open .home-title, #home_screen.list-open .home-subtitle { opacity: 0; max-height: 0; margin: -8px 0; }
+        .home-prompt { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; font-size: 1.45rem; font-weight: 800; color: var(--color-navy); background: #fff;
+            padding: 12px 28px; border-radius: 18px; box-shadow: 0 8px 24px rgba(22,71,142,0.12); max-height: 110px; overflow: hidden;
+            transition: opacity 0.35s ease, max-height 0.5s ease, padding 0.5s ease, margin 0.5s ease; animation: promptIn 0.6s ease both; }
+        .home-prompt span { font-size: 0.85rem; font-weight: 600; color: #6B7A8F; }
+        @keyframes promptIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        #home_screen.brand-on .home-prompt { opacity: 0; max-height: 0; padding: 0 28px; margin: -16px 0 0; animation: none; }
+        #home_screen #branch_loading_text { color: inherit; }
+        #home_screen.brand-on #branch_loading_text, #home_screen.brand-on .branch-list-status { color: rgba(255,255,255,0.85); }
+        .brand-logo-btn img { transition: height 0.55s cubic-bezier(.2,.8,.2,1), filter 0.5s ease, opacity 0.35s ease; }
+        .brand-picker.brand-selected .brand-logo-btn.active, .brand-picker.brand-selected .brand-logo-btn.active:hover { transform: none; max-width: 560px; background: none; }
+        .brand-picker.brand-selected .brand-logo-btn.active img { height: 120px; max-width: 460px; }
+        .brand-picker.brand-selected .brand-logo-btn.brand-pharmax.active { background: #fff; border-radius: 28px; padding: 18px 34px; box-shadow: 0 14px 34px rgba(0,0,0,0.25); }
+        .brand-picker.brand-selected .brand-logo-btn.brand-superdrug.active img { filter: brightness(0) invert(1); }
+        #home_screen.list-open .brand-picker.brand-selected .brand-logo-btn.active img { height: 64px; }
+        #home_screen.list-open .brand-picker.brand-selected .brand-logo-btn.brand-pharmax.active { padding: 10px 22px; border-radius: 20px; }
+        .brand-picker { transition: padding 0.5s ease, gap 0.5s ease; }
+        .brand-picker.brand-selected { gap: 0; }
+        #home_screen.brand-on .brand-back-btn { color: rgba(255,255,255,0.9); }
+        #home_screen.brand-on .home-branch-label { color: #fff; transition: opacity 0.4s ease, max-height 0.5s ease, margin 0.5s ease; max-height: 60px; overflow: hidden; }
+        #home_screen.list-open .home-branch-label { opacity: 0; max-height: 0; margin: 0; }
+        /* ช่องรหัสสาขาแบบ OTP — สี่เหลี่ยมจัตุรัสใหญ่ ตัวเลขเต็มช่อง */
+        #home_screen .otp-label { font-size: 1.15rem; font-weight: 700; }
+        #home_screen.brand-on .otp-label { color: rgba(255,255,255,0.92); }
+        #home_screen .otp-input-row { gap: 14px; }
+        #home_screen .otp-prefix { font-size: 3.2rem; font-weight: 800; letter-spacing: 0.02em; transition: font-size 0.45s ease; }
+        #home_screen.brand-on .otp-prefix { color: #fff; }
+        #home_screen .otp-digit-group { gap: 16px; }
+        #home_screen .otp-digit { width: 118px; height: 118px; aspect-ratio: 1 / 1; font-size: 4.4rem; line-height: 1; font-weight: 800; text-align: center; padding: 0;
+            border-radius: 22px; border: 3px solid var(--color-navy); background: #fff; color: var(--hb, var(--color-navy)); caret-color: var(--hb, var(--color-navy));
+            box-shadow: 0 10px 24px rgba(0,0,0,0.18); transition: width 0.45s ease, height 0.45s ease, font-size 0.45s ease, box-shadow 0.2s ease, transform 0.15s ease; }
+        #home_screen.brand-on .otp-digit { border-color: #fff; }
+        #home_screen .otp-digit:focus { outline: none; box-shadow: 0 0 0 6px rgba(253,183,19,0.9), 0 10px 24px rgba(0,0,0,0.2); transform: translateY(-2px); }
+        #home_screen.list-open .otp-digit { width: 82px; height: 82px; font-size: 3rem; border-radius: 18px; }
+        #home_screen.list-open .otp-prefix { font-size: 2.3rem; }
+        #home_screen .otp-error { background: #fff; color: #B3261E; padding: 7px 14px; border-radius: 10px; font-size: 0.9rem; max-width: 460px; }
+        #home_screen.brand-on .branch-list-toggle-btn { color: #fff; font-size: 0.95rem; }
+        /* รายการสาขา: เปิด/ปิดแบบลื่น ไม่ทำให้หน้าเลื่อน (เลื่อนเฉพาะในกล่องถ้ายาวมาก) */
+        #home_screen .branch-switch { display: flex !important; flex-wrap: wrap; justify-content: center; gap: 10px; max-height: 0; opacity: 0; overflow: hidden;
+            pointer-events: none; transform: translateY(16px); transition: max-height 0.55s ease, opacity 0.4s ease, transform 0.5s ease; max-width: 1100px; margin: 0 auto; }
+        #home_screen .branch-switch.show { max-height: 46vh; opacity: 1; overflow-y: auto; pointer-events: auto; transform: none; padding: 6px; }
+        #home_screen.brand-on .branch-btn { background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.55); color: #fff; font-size: 0.95rem; padding: 10px 18px; border-radius: 12px; }
+        #home_screen.brand-on .branch-btn:hover { background: rgba(255,255,255,0.24); }
+        #home_screen.brand-on .branch-btn.active { background: #fff; color: var(--hb); }
+        #home_branch_section.show { max-height: 100vh; }
+        /* transition ก่อนเข้าหน้าสร้างฉลาก */
+        .enter-overlay { position: fixed; inset: 0; z-index: 9800; background: var(--hb, #16478E); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0s linear 0.3s; color: #fff; text-align: center; }
+        .enter-overlay.show { opacity: 1; visibility: visible; transition: opacity 0.3s ease; }
+        .enter-overlay.leave { opacity: 0; transition: opacity 0.6s ease; }
+        .eo-logo { transform: scale(0.8); opacity: 0; transition: transform 0.7s cubic-bezier(.2,.8,.2,1), opacity 0.4s ease; }
+        .enter-overlay.show .eo-logo { transform: scale(1); opacity: 1; }
+        .eo-logo img { height: 110px; width: auto; display: block; }
+        .eo-logo.eo-pharmax { background: #fff; border-radius: 28px; padding: 18px 34px; }
+        .eo-logo.eo-superdrug img { filter: brightness(0) invert(1); }
+        .eo-text { display: flex; flex-direction: column; gap: 4px; }
+        .eo-text b { font-size: 1.6rem; }
+        .eo-text span { font-size: 0.95rem; opacity: 0.8; }
+        .eo-bar { width: 220px; height: 4px; background: rgba(255,255,255,0.25); border-radius: 999px; overflow: hidden; }
+        .eo-bar span { display: block; height: 100%; width: 0; background: #fff; border-radius: 999px; }
+        .enter-overlay.show .eo-bar span { animation: eoBar 0.9s ease forwards; }
+        @keyframes eoBar { to { width: 100%; } }
+        @media (max-height: 760px) {
+            .brand-picker.brand-selected .brand-logo-btn.active img { height: 90px; }
+            #home_screen .otp-digit { width: 96px; height: 96px; font-size: 3.6rem; }
+        }
+        @media (max-width: 560px) {
+            #home_screen .otp-digit { width: 76px; height: 76px; font-size: 2.8rem; border-radius: 16px; }
+            #home_screen .otp-prefix { font-size: 2rem; }
+        }
         @media (max-width: 900px) { .queue-tray { position: static; } }
     </style>
 </head>
@@ -1393,10 +1485,12 @@
 <!-- ============================= -->
 <!-- HOME SCREEN                   -->
 <!-- ============================= -->
+<div id="enter_overlay" class="enter-overlay no-print" aria-hidden="true"><div class="eo-logo" id="eo_logo"></div><div class="eo-text" id="eo_text"></div><div class="eo-bar"><span></span></div></div>
 <div id="home_screen" class="no-print">
    
     <div class="home-title">ระบบพิมพ์ฉลากยาหลายภาษา</div>
     <div class="home-subtitle">Multi-language Medicine Label Printer</div>
+    <div class="home-prompt" id="home_prompt">👇 กรุณาเลือกร้านยาของคุณ <span>Please select your pharmacy</span></div>
         <!-- ⏳ แถบแสดงสถานะกำลังโหลดข้อมูลสาขา -->
     <div id="branch_loading_container" style="text-align: center; margin: 8px 0; display: none; width: 100%;">
         <div style="font-size: 0.78rem; color: var(--color-navy); font-weight: 600;" id="branch_loading_text">⏳ กำลังซิงค์รายชื่อสาขาล่าสุดจาก Google Sheet...</div>
@@ -1464,6 +1558,7 @@
                 <span class="conn-dot" id="conn_status_dot"></span>
                 <span id="conn_status_text">กำลังเชื่อมต่อ…</span>
             </span>
+        <button type="button" id="hdr_user_btn" class="hdr-user" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openMine()" title="บัญชีผู้ใช้ · ยาที่ส่งและสถานะ">👤 เข้าสู่ระบบ</button>
         <button type="button" id="hdr_sync_btn" class="hdr-sync" onclick="PharmaxSheet.sync()" title="กดเพื่อซิงค์ฐานข้อมูลยาจาก Google Sheet อีกครั้ง"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"></path><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"></path><path d="M21 3v5h-5M3 21v-5h5"></path></svg><span id="sheet_sync_status">ฐานข้อมูลยา</span></button>
         <button type="button" class="btn-home btn-feedback" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openFeedback()" title="ส่งความคิดเห็นเกี่ยวกับข้อมูลยา/การใช้งาน (ต้องเข้าสู่ระบบ)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 9.5h8M8 12.5h5"></path></svg>Feedback</button>
         <button type="button" class="btn-home btn-branch" onclick="goHome()" title="กลับหน้าแรกเพื่อเปลี่ยนแบรนด์/สาขา"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v10h16V10"></path><path d="M3 10l2-6h14l2 6z"></path><path d="M10 20v-5h4v5"></path></svg>เปลี่ยนสาขา</button>
@@ -1503,6 +1598,7 @@
         <div class="lang-group">
             <div class="band-label lang-head"><span>ภาษาฉลาก (Label Language)</span><span class="lang-tools"><button type="button" id="lang_sort_btn" class="lang-sort-btn" onclick="LangOrder.toggle()" title="ลากปุ่มภาษาเพื่อจัดลำดับ — ระบบจำไว้ในเครื่องนี้">⇅ จัดลำดับ</button><button type="button" id="lang_reset_btn" class="lang-sort-btn" onclick="LangOrder.reset()" hidden>คืนค่าเดิม</button></span></div>
             <div class="lang-switch" id="lang_switch">
+                <button type="button" class="lang-btn" data-lang="th" onclick="setLanguage('th')"><span class="lang-flag flag-th" aria-hidden="true"></span>ไทย Thai</button>
                 <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')"><span class="lang-flag flag-gb" aria-hidden="true"></span>English อังกฤษ</button>
                 <button type="button" class="lang-btn" data-lang="ja" onclick="setLanguage('ja')"><span class="lang-flag flag-jp" aria-hidden="true"></span>日本語 ญี่ปุ่น</button>
                 <button type="button" class="lang-btn" data-lang="ko" onclick="setLanguage('ko')"><span class="lang-flag flag-kr" aria-hidden="true"></span>한국어 เกาหลี</button>
@@ -2114,7 +2210,7 @@
             [/พร้อมอาหาร|พร้อมมื้อ/, 'withMeal']
         ];
 
-        let state = { drugs: [], byKey: new Map(), byBarcode: new Map(), byItemNo: new Map(), tr: {} };   // tr[lang][drugKey] = { drugType, meal, ..., advice }
+        let state = { drugs: [], priv: [], byKey: new Map(), byBarcode: new Map(), byItemNo: new Map(), tr: {} };   // v1.38: priv = ยาที่ฉันส่งและยังรออนุมัติ (เห็นเฉพาะตอนล็อกอิน · ไม่เก็บลงแคช)   // tr[lang][drugKey] = { drugType, meal, ..., advice }
         const langFetched = new Set();
         const langInflight = new Map();
         let syncPromise = null;
@@ -2163,7 +2259,7 @@
             state.byKey = new Map();
             state.byBarcode = new Map();
             state.byItemNo = new Map();
-            state.drugs.forEach(se => {
+            state.drugs.concat(state.priv || []).forEach(se => {   // ยาในชีทมาก่อน (อนุมัติแล้ว = ใช้ข้อมูลจริง)
                 if (!state.byKey.has(se.key)) state.byKey.set(se.key, se);
                 // v1.24: สร้างดัชนีค้นหาด้วย Barcode No. / Item No. (ถ้าชีทมีคอลัมน์นี้แล้ว)
                 if (se.barcodeNo && !state.byBarcode.has(se.barcodeNo)) state.byBarcode.set(se.barcodeNo, se);
@@ -2362,7 +2458,7 @@
             });
             addedCandidates = [];
             const seen = new Set(presetNameCandidates.map(x => x.toLowerCase()));
-            state.drugs.forEach(se => {
+            state.drugs.concat(state.priv || []).forEach(se => {
                 const low = se.name.toLowerCase();
                 if (seen.has(low)) return;
                 seen.add(low);
@@ -2522,8 +2618,18 @@
             sync();  // v1.13: ซิงค์เบื้องหลัง ไม่บล็อกการเปิดเว็บ
         }
 
+        // v1.38: ยารออนุมัติของผู้ใช้ที่ล็อกอินอยู่ (drug-submit.js เรียกหลังล็อกอิน/ส่งยา/ออกจากระบบ)
+        function setPrivate(list) {
+            state.priv = (Array.isArray(list) ? list : []).map(r => { const e = makeEntry(r); if (e) { e._private = true; e._submitted = r.date || ''; } return e; }).filter(Boolean);
+            rebuildIndex();
+            applyToUI();
+            const el = document.getElementById('in_drug_name');
+            if (el && el.value) { try { updateLabel(); } catch (e) {} }
+        }
+        const isPrivate = name => { const se = find(name); return !!(se && se._private); };
         return {
-            init, sync, find, findByCode, overlay, applySheetOnly, whenReady,
+            init, sync, find, findByCode, overlay, applySheetOnly, whenReady, setPrivate, isPrivate,
+            privateCount: () => (state.priv || []).length,
             ensureLang: lang => loadLang(lang),
             fetchTab: fetchTab, // v1.10: ใช้ร่วมกับ ClinicalSheet
             overrideDrugType, overrideMeal, overrideDose, overrideLine, overrideLineInfo,
@@ -3400,13 +3506,15 @@
                 btn.className = 'branch-btn';
                 btn.dataset.branch = b.branchCode;
                 btn.textContent = b.branchName || b.branchCode;
-                btn.onclick = () => selectBranch(b.branchCode);
+                btn.onclick = () => enterBranch(b.branchCode);
                 wrap.appendChild(btn);
             });
     }
 
     function selectBrand(brand) {
         currentHomeBrand = brand;
+        const hs = document.getElementById('home_screen');   // v1.38: พื้นหลังทึบสีแบรนด์ + โลโก้ขยายขึ้นด้านบน
+        hs.setAttribute('data-home-brand', brand); hs.classList.add('brand-on'); hs.classList.remove('list-open');
         const picker = document.getElementById('brand_picker');
         picker.classList.add('brand-selected');
         document.querySelectorAll('.brand-logo-btn').forEach(b => b.classList.toggle('active', b.dataset.brand === brand));
@@ -3422,6 +3530,8 @@
 
     function goBackToBrandPicker() {
         currentHomeBrand = null;
+        const hs = document.getElementById('home_screen');
+        hs.classList.remove('brand-on', 'list-open'); hs.removeAttribute('data-home-brand');
         const picker = document.getElementById('brand_picker');
         picker.classList.remove('brand-selected');
         document.querySelectorAll('.brand-logo-btn').forEach(b => b.classList.remove('active'));
@@ -3506,6 +3616,7 @@
         clearBranchOtpDigits();
         if (errEl) errEl.style.display = 'none';
         if (listEl) listEl.classList.remove('show');
+        document.getElementById('home_screen').classList.remove('list-open');
         if (toggleBtn) toggleBtn.textContent = '📋 แสดงรายการสาขาทั้งหมด';
         updateOtpPrefixLabel(brand);
         const first = document.getElementById(OTP_DIGIT_IDS[0]);
@@ -3543,6 +3654,7 @@
         const toggleBtn = document.getElementById('branch_list_toggle_btn');
         if (!listEl) return;
         listEl.classList.toggle('show', visible);
+        document.getElementById('home_screen').classList.toggle('list-open', visible);   // v1.38: ดันโลโก้/ช่องรหัสขึ้น เปิดพื้นที่ให้รายการสาขา (ไม่เลื่อนหน้าจอ)
         if (toggleBtn) toggleBtn.textContent = visible ? '📋 ซ่อนรายการสาขา' : '📋 แสดงรายการสาขาทั้งหมด';
     }
 
@@ -3567,8 +3679,8 @@
             return m && m[1].padStart(3, '0') === padded;
         });
         if (matches.length === 1) {
-            selectBranch(matches[0].branchCode);
-            clearBranchOtpDigits();
+            enterBranch(matches[0].branchCode);   // v1.38: มี transition ก่อนเข้าหน้าสร้างฉลาก
+            setTimeout(clearBranchOtpDigits, 900);
         } else if (matches.length > 1) {
             if (errEl) { errEl.textContent = 'พบรหัสสาขาตรงกันมากกว่า 1 สาขา กรุณาเลือกจากรายการด้านล่าง'; errEl.style.display = ''; }
             setBranchListVisible(true);
@@ -3578,6 +3690,26 @@
                 errEl.style.display = '';
             }
         }
+    }
+
+    // v1.38: เข้าสาขาแบบมี transition — พื้นสีแบรนด์ + โลโก้ + ชื่อสาขา แล้วค่อยเฟดเข้าหน้าสร้างฉลาก
+    let _entering = false;
+    function enterBranch(code) {
+        if (_entering) return; _entering = true;
+        const ov = document.getElementById('enter_overlay');
+        const brand = currentHomeBrand || getBrandForBranch(code) || 'pharmax';
+        const row = BranchDirectory.findRow(code);
+        const src = document.querySelector('.brand-logo-btn.active img') || document.querySelector('.brand-logo-btn img');
+        ov.setAttribute('data-home-brand', brand);
+        document.getElementById('eo_logo').className = 'eo-logo eo-' + brand;
+        document.getElementById('eo_logo').innerHTML = src ? '<img src="' + src.src + '" alt="">' : '';
+        document.getElementById('eo_text').innerHTML = '<b>' + escapeHtml((row && row.branchName) || code) + '</b><span>' + escapeHtml(code) + ' · กำลังเปิดหน้าสร้างฉลาก…</span>';
+        ov.classList.remove('leave'); ov.classList.add('show');
+        setTimeout(() => {
+            selectBranch(code);
+            requestAnimationFrame(() => { ov.classList.add('leave'); });
+            setTimeout(() => { ov.classList.remove('show', 'leave'); _entering = false; const bc = document.getElementById('in_barcode_scan'); if (bc) bc.focus(); }, 650);
+        }, 900);
     }
 
     function goHome() {
@@ -4228,6 +4360,10 @@
                 }
             });
         }
+        try {
+            const dn = document.getElementById('in_drug_name').value;
+            if (dn && PharmaxSheet.isPrivate(dn)) items.unshift({ cls: 'warn', text: '🔒 ยานี้ <b>ยังรอแอดมินอนุมัติ</b> — พิมพ์ได้เฉพาะบัญชีที่ส่งข้อมูล (ต้องเข้าสู่ระบบ) · ตรวจข้อมูลบนฉลากให้ถูกต้องก่อนพิมพ์' });
+        } catch (e) {}
         if (currentLang && currentLang !== 'th') {
             const all = _glossMiss.ind.concat(_glossMiss.adv);
             const pend = all.filter(m => m.src === 'glossaryPending');
@@ -4379,7 +4515,26 @@
         document.getElementById('btn_retry_adv').classList.remove('show');
 
         clearFormDraft(); // v1.24: ล้างฟอร์มเอง -> ไม่ต้องเก็บ draft ไว้กู้คืนอีกต่อไป
+        // v1.38: Esc = กลับเหมือนเปิดหน้าใหม่ — ล้างช่องบาร์โค้ด, สถานะพบ/ไม่พบ, ปุ่มเพิ่มยาสีแดง, ช่องเลือกโรค, รายการแนะนำ, คัดกรองกลุ่มพิเศษ
+        try {
+            if (indAbortController) indAbortController.abort();
+            if (advAbortController) advAbortController.abort();
+            const bc = document.getElementById('in_barcode_scan'); if (bc) bc.value = '';
+            if (typeof _barcodeLookupTimer !== 'undefined') clearTimeout(_barcodeLookupTimer);
+            setBarcodeStatus('', '');
+            clearAddDrugBtnAlert();
+            window._pharmaxNotFoundCode = '';
+            if (window.Regimen) window.Regimen.hide();
+            ['drug_popup_list', 'ind_popup_list', 'adv_popup_list'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+            ['ghost_drug_name', 'ghost_indication', 'ghost_advice'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+            const ha = document.getElementById('high_alert_warning'); if (ha) ha.style.display = 'none';
+            if (typeof clinResetProfile === 'function') clinResetProfile();
+            _glossMiss.ind = []; _glossMiss.adv = [];
+            const pv = document.querySelector('.preview-panel'); if (pv) pv.scrollTop = 0;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (e) { console.warn('[clearAll]', e); }
         updateLabel();
+        const bc2 = document.getElementById('in_barcode_scan'); if (bc2) setTimeout(() => bc2.focus(), 0);   // พร้อมยิงบาร์โค้ดตัวถัดไป
     }
 
     function applyPreset(name) {
@@ -4611,7 +4766,9 @@
                 bed: document.getElementById('qty_bed').value
             },
             indicationText: document.getElementById('in_indication').value,
-            adviceText: document.getElementById('in_advice').value
+            adviceText: document.getElementById('in_advice').value,
+            regimen: (function () { const sel = document.getElementById('sel_regimen'), box = document.getElementById('regimen_box');   // v1.38: โรคที่เลือก (ไว้บันทึกสถิติ)
+                return (sel && box && box.style.display !== 'none' && sel.value !== '') ? (sel.options[sel.selectedIndex] || {}).text || '' : ''; })()
         };
     }
 
@@ -6049,6 +6206,7 @@
             recordPrintStatistics(item.drugName, currentBranch);
             pushPrintHistory(item);
         });
+        PrintLog.send(validQueue, 'batch', printThaiExtra);   // v1.38: บันทึกการพิมพ์ลงชีท (แยกสาขา)
         saveQueueSnapshot(validQueue, 'printed');
 
         window.print();
@@ -6109,6 +6267,7 @@
         // บันทึกประวัติและสถิติ (v1.8: ย้ายมาหลังผ่านการตรวจสอบ เพื่อไม่ให้นับเมื่อยกเลิกพิมพ์)
         recordPrintStatistics(currentItem.drugName, currentBranch);
         pushPrintHistory(currentItem);
+        PrintLog.send([currentItem], 'single', printThaiExtra);   // v1.38
         clearFormDraft(); // v1.24: พิมพ์สำเร็จแล้ว -> ข้อมูลถูกบันทึกในประวัติแล้ว ไม่ต้องเก็บ draft ไว้กู้คืนอีก
 
         window.print();
@@ -6243,13 +6402,23 @@
 
     // v1.19: เช็ค/ดึงข้อมูลจาก Google Sheet ซ้ำเป็นระยะแบบเรียลไทม์ (ยา + สาขา/ที่อยู่)
     //  เพื่อให้ป้าย "สถานะการเชื่อมต่อ" ที่ header ตรงกับความเป็นจริง ณ ขณะนั้นเสมอ ไม่ใช่แค่ตอนเปิดหน้าครั้งแรก
-    setInterval(() => {
-        PharmaxSheet.sync();
-        Regimen.sync();   // v1.37
-        BranchDirectory.load().then(() => {
-            if (currentHomeBrand) renderBranchButtons(currentHomeBrand); // รีเฟรชรายชื่อสาขาที่กำลังดูอยู่ให้ตรงชีทล่าสุดด้วย
-        });
-    }, 60000);
+    // v1.38: ปรับรอบดึงข้อมูลให้พอดี — ไม่เปลืองโควตา Google และหยุดดึงตอนแท็บถูกซ่อน/ย่อ
+    //  ยา + วิธีใช้ตามโรค: ทุก 3 นาที · glossary: ทุก 10 นาที (+ ดึงทันทีเมื่อเจอบรรทัดที่ไม่มีในแคช) · รายชื่อสาขา: ทุก 30 นาที
+    //  กลับมาเปิดแท็บ (หรือเปิดเครื่องจากพัก) → ดึงทันทีถ้าข้อมูลเก่ากว่า 1 นาที · ปุ่ม "ยา N รายการ" มุมขวาบน = ดึงทันที
+    const REFRESH = { drugs: 3 * 60000, glossary: 10 * 60000, branches: 30 * 60000 };
+    const _lastRun = { drugs: Date.now(), glossary: Date.now(), branches: Date.now() };
+    function refreshTick(force) {
+        if (document.hidden) return;
+        const now = Date.now();
+        if (force || now - _lastRun.drugs >= REFRESH.drugs) { _lastRun.drugs = now; PharmaxSheet.sync(); Regimen.sync(); }
+        if (now - _lastRun.glossary >= REFRESH.glossary) { _lastRun.glossary = now; Glossary.sync(); }
+        if (now - _lastRun.branches >= REFRESH.branches) {
+            _lastRun.branches = now;
+            BranchDirectory.load().then(() => { if (currentHomeBrand) renderBranchButtons(currentHomeBrand); });
+        }
+    }
+    setInterval(() => refreshTick(false), 30000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - _lastRun.drugs > 60000) refreshTick(true); });
     updateLabel();
     performTranslateInd();
     performTranslateAdv();
@@ -6446,10 +6615,22 @@ window.LangOrder = (function () {
         const b = box(); if (!b || !Array.isArray(order)) return;
         const map = {}; btns().forEach(x => { map[x.dataset.lang] = x; });
         order.forEach(l => { if (map[l]) { b.appendChild(map[l]); delete map[l]; } });
-        Object.keys(map).forEach(l => b.appendChild(map[l]));   // ภาษาใหม่ที่ยังไม่อยู่ในลำดับที่จำไว้ → ต่อท้าย
+        // ภาษาใหม่ที่ยังไม่อยู่ในลำดับที่จำไว้ (เช่น ไทย ที่เพิ่มทีหลัง) → แทรกตามตำแหน่งเดิมของมัน
+        (defaultOrder || []).forEach((l, i) => { if (!map[l]) return; const ref = b.children[i] || null; b.insertBefore(map[l], ref); delete map[l]; });
+        Object.keys(map).forEach(l => b.appendChild(map[l]));
     }
     function init() {
         if (!box()) return;
+        // แยกคำไทยท้ายปุ่มเป็น <span class="th-tag"> (ซ่อนได้เมื่อพื้นที่แคบ ให้ 16 ปุ่มอยู่ 2 แถวเสมอ)
+        btns().forEach(b => {
+            const tn = Array.from(b.childNodes).filter(n => n.nodeType === 3 && n.textContent.trim()).pop();
+            if (!tn || b.querySelector('.th-tag')) return;
+            const m = tn.textContent.match(/^(.*?)\s+(\S+)\s*$/);
+            if (!m) return;
+            tn.textContent = m[1];
+            const sp = document.createElement('span'); sp.className = 'th-tag'; sp.textContent = m[2];
+            b.appendChild(sp);
+        });
         defaultOrder = btns().map(b => b.dataset.lang);
         btns().forEach(b => { if (!b.title) b.title = b.textContent.trim(); });   // ชื่อเต็มเมื่อชี้ (ถ้าปุ่มแคบจนตัดคำ)
         try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) apply(o); } catch (e) {}
@@ -6494,6 +6675,58 @@ window.LangOrder = (function () {
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
     return { toggle: toggle, reset: reset };
+})();
+</script>
+
+
+<!-- v1.38: บันทึกการพิมพ์ฉลาก → Apps Script (ไฟล์ลับ แท็บ printLog_<สาขา>) · ส่งไม่สำเร็จจะเก็บไว้ในเครื่องแล้วส่งซ้ำ -->
+<script>
+window.PrintLog = (function () {
+    const KEY = 'pharmax_printlog_outbox_v1';
+    const optText = (selId, val) => { const o = document.querySelector('#' + selId + ' option[value="' + String(val).replace(/"/g, '\\"') + '"]'); return o ? o.textContent.replace(/\s*\(.*\)\s*$/, '').trim() : String(val || ''); };
+    const device = () => { const u = navigator.userAgent; const kind = /iPad|Tablet|Android(?!.*Mobile)/i.test(u) ? 'tablet' : /Mobi|iPhone|Android/i.test(u) ? 'mobile' : 'desktop';
+        const br = /Edg\//.test(u) ? 'Edge' : /Chrome\//.test(u) ? 'Chrome' : /Safari\//.test(u) ? 'Safari' : /Firefox\//.test(u) ? 'Firefox' : 'other'; return kind + '/' + br; };
+    const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } };
+    const store = q => { try { localStorage.setItem(KEY, JSON.stringify(q.slice(-200))); } catch (e) {} };
+    async function post(payload) {
+        const url = window.PharmaxDrugSubmit && PharmaxDrugSubmit.webAppUrl; if (!url) throw new Error('no url');
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload), keepalive: true });
+        const j = await res.json(); if (!j || !j.ok) throw new Error((j && j.error) || 'fail');
+    }
+    let flushing = false;
+    async function flush() {
+        if (flushing) return; flushing = true;
+        let q = load();
+        while (q.length) {
+            try { await post(q[0]); q.shift(); store(q); } catch (e) { break; }
+        }
+        flushing = false;
+    }
+    function send(items, mode, thaiExtra) {
+        try {
+            if (!items || !items.length || typeof currentBranch === 'undefined' || !currentBranch) return;
+            const th = (typeof getBranchText === 'function' && getBranchText(currentBranch, 'th')) || {};
+            const rph = (typeof _rph !== 'undefined' && _rph && typeof rphText === 'function' && rphText()) ? _rph : null;
+            const tok = window.PharmaxDrugSubmit && PharmaxDrugSubmit.token ? PharmaxDrugSubmit.token() : '';
+            const lang = typeof currentLang !== 'undefined' ? currentLang : '';
+            const payload = {
+                action: 'logPrint', token: tok || undefined, branch: currentBranch, branchName: th.pharmacyLine1 || '',
+                brand: (typeof getBrandForBranch === 'function' && getBrandForBranch(currentBranch)) || '', mode: mode, device: device(),
+                rphLicense: rph ? rph.license : '', rphName: rph ? rph.name : '',
+                items: items.map(it => {
+                    const se = PharmaxSheet.find(it.drugName);
+                    return { lang: lang, drug: it.drugName, barcode: se ? (se.barcodeNo || '') : '', drugType: optText('sel_drug_type', it.drugType), meal: it.meal ? optText('sel_meal', it.meal) : '',
+                        morning: it.dose && it.dose.morning, noon: it.dose && it.dose.noon, evening: it.dose && it.dose.evening, bed: it.dose && it.dose.bed,
+                        patient: it.patientName || '', thaiCopy: !!(thaiExtra && lang !== 'th'), pending: !!(se && se._private), regimen: it.regimen || '' };
+                })
+            };
+            const q = load(); q.push(payload); store(q);
+            flush();
+        } catch (e) { console.warn('[PrintLog]', e); }
+    }
+    window.addEventListener('online', flush);
+    setTimeout(flush, 8000);
+    return { send: send, flush: flush, pending: () => load().length };
 })();
 </script>
 
@@ -6616,7 +6849,7 @@ window.LangOrder = (function () {
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
