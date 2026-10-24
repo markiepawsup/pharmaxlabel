@@ -599,6 +599,13 @@
             overflow-wrap: break-word;
             word-break: break-word;
         }
+        /* v1.38: จัดข้อความชิดขอบซ้าย-ขวาเท่ากันทุกบรรทัด (justify) — บรรทัดสุดท้ายของแต่ละย่อหน้าชิดต้นบรรทัดตามปกติ */
+        .label-block, .label-value { text-align: justify; text-justify: auto; }
+        .label-box.rtl-mode .label-block, .label-box.rtl-mode .label-value { text-align: justify; }
+        /* ภาษาที่ไม่เว้นวรรคระหว่างคำ (ไทย/พม่า/เขมร) → กระจายระยะระหว่างตัวอักษรแทน ไม่ให้ช่องว่างไปกองอยู่ที่วรรคเดียว */
+        .label-box[data-lang="th"] .label-block, .label-box[data-lang="th"] .label-value,
+        .label-box[data-lang="my"] .label-block, .label-box[data-lang="my"] .label-value,
+        .label-box[data-lang="km"] .label-block, .label-box[data-lang="km"] .label-value { text-justify: inter-character; }
         /* เฉพาะภาษาจีน (ตัวย่อ/ตัวเต็ม) และญี่ปุ่น ให้ลดน้ำหนักฟอนต์รายละเอียดลงให้อ่านง่ายขึ้น (ไม่รวมเกาหลี) */
         /* v1.35: ฉลากภาษาไทย ไม่ต้องมีคำไทยในวงเล็บซ้ำ (เช่น "ชื่อยา (ชื่อยา)") */
         .label-box[data-lang="th"] .thai-text { display: none; }
@@ -3466,10 +3473,14 @@
         const sheetDrugName = document.getElementById('in_drug_name').value;
         document.getElementById('out_drug_type').innerText = PharmaxSheet.overrideDrugType(typeKey, sheetDrugName, currentLang) || Glossary.lookupOption('type', typeKey, currentLang) || UI_TEXT[currentLang].drugTypes[typeKey] || "";
 
-        renderDoseCell(document.getElementById('tbl_morning'), getDosageText('qty_morning'));
-        renderDoseCell(document.getElementById('tbl_noon'), getDosageText('qty_noon'));
-        renderDoseCell(document.getElementById('tbl_evening'), getDosageText('qty_evening'));
-        renderDoseCell(document.getElementById('tbl_bed'), getDosageText('qty_bed'));
+        const _doses = ['qty_morning', 'qty_noon', 'qty_evening', 'qty_bed'].map(getDosageText);
+        renderDoseCell(document.getElementById('tbl_morning'), _doses[0]);
+        renderDoseCell(document.getElementById('tbl_noon'), _doses[1]);
+        renderDoseCell(document.getElementById('tbl_evening'), _doses[2]);
+        renderDoseCell(document.getElementById('tbl_bed'), _doses[3]);
+        // v1.38: ไม่ได้กรอกเลยทั้ง 4 ช่อง → ซ่อนตารางเวลาทั้งตาราง (ประหยัดพื้นที่) · กรอกอย่างน้อย 1 ช่อง → แสดง + ถมดำช่องที่ว่างเหมือนเดิม
+        const _tt = document.querySelector('#label_box .time-table');
+        if (_tt) _tt.style.display = _doses.every(d => d === 'X') ? 'none' : '';
 
         let mealKey = document.getElementById('sel_meal').value;
         document.getElementById('out_meal').innerText = mealKey ? (PharmaxSheet.overrideMeal(mealKey, sheetDrugName, currentLang) || Glossary.lookupOption('meal', mealKey, currentLang) || UI_TEXT[currentLang].mealTimes[mealKey] || "-") : "-";
@@ -5625,7 +5636,7 @@
                         <span class="label-title">${t.type} <span class="thai-text">(ชนิด)</span>:</span>
                         <span class="label-value" style="white-space: nowrap;">${typeText}</span>
                     </div>
-                    <table class="time-table">
+                    ${[m, n, e, b].every(d => d === 'X') ? '' : `<table class="time-table">
                         <tr>
                             <th style="width: 25%;">${t.morning} <span class="thai-text">(เช้า)</span></th>
                             <th style="width: 25%;">${t.noon} <span class="thai-text">(กลางวัน)</span></th>
@@ -5635,7 +5646,7 @@
                         <tr>
                             ${doseCellHtml(m)}${doseCellHtml(n)}${doseCellHtml(e)}${doseCellHtml(b)}
                         </tr>
-                    </table>
+                    </table>`}
                     <div class="label-row" style="border:none;">
                         <span class="label-title">${t.time} <span class="thai-text">(เวลา)</span>:</span>
                         <span class="label-value" style="white-space: nowrap;">${mealText}</span>
@@ -6037,7 +6048,7 @@
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
