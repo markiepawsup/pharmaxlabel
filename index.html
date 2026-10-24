@@ -1,4 +1,4 @@
-<!-- Pharmax multi-language label printer (v1.36 — เลขบนฉลากมาจาก APP_VERSION ใน data.js). Built for Pharmax Pharmacy by Mark Sirikorn. Unauthorized copying/redistribution of this file is prohibited. Requires data.js (same folder) for BRANCHES, UI_TEXT, indicationsDB, advicesDB, DRUG_PRESETS, DRUG_REFERENCE_DB, CATEGORY_DEFAULTS, etc. -->
+<!-- Pharmax multi-language label printer (v1.38 — เลขบนฉลากมาจาก APP_VERSION ใน data.js). Built for Pharmax Pharmacy by Mark Sirikorn. Unauthorized copying/redistribution of this file is prohibited. Requires data.js (same folder) for BRANCHES, UI_TEXT, indicationsDB, advicesDB, DRUG_PRESETS, DRUG_REFERENCE_DB, CATEGORY_DEFAULTS, etc. -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1139,7 +1139,13 @@
         #fab_print:hover { filter: brightness(1.12); }
         #fab_print:active { transform: scale(.97); }
         @media print { #fab_print { display: none !important; visibility: hidden !important; } }
-    </style>
+    
+    /* v1.37: วิธีใช้ยาตามโรค */
+    .regimen-box { margin-top: 8px; padding: 8px 10px; border: 2px solid #f0ad4e; border-radius: 8px; background: #fff8ec; }
+    .regimen-box label { margin-bottom: 4px; }
+    .regimen-box select { width: 100%; font-weight: 600; }
+    .regimen-box.chosen { border-color: #27ae60; background: #eefaf2; }
+</style>
 </head>
 <body onclick="closeAllPopups(event)">
 <div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;" data-credit="Mark Sirikorn / Mark Rx Mobile"></div>
@@ -1321,6 +1327,11 @@
                 <input type="text" id="in_drug_name" placeholder="เช่น Paracetamol, Amoxicillin..." oninput="this.classList.remove('field-invalid'); updateLabel(); handleDrugNameInput();" autocomplete="off">
             </div>
             <div id="drug_popup_list" class="smart-popup-list" style="display: none;"></div>
+            <!-- v1.37: วิธีใช้ยาตามโรค (แท็บ diseaseRegimen ใน Google Sheet) — แสดงเฉพาะยาที่มีวิธีใช้ต่างกันตามโรค -->
+            <div id="regimen_box" class="regimen-box no-print" style="display:none;">
+                <label for="sel_regimen">🩺 ใช้รักษาโรค: <span class="hint" id="regimen_hint">ยานี้วิธีใช้ต่างกันตามโรค — เลือกแล้วระบบเติมขนาดยา เวลา สรรพคุณ และคำแนะนำให้</span></label>
+                <select id="sel_regimen" onchange="Regimen.apply(this.value)"></select>
+            </div>
             <div id="drug_warning_panel" class="no-print" style="display:none;"></div>
             <div id="clinical_safety_panel" class="no-print" style="display:none;"></div>
             <div class="clin-btn-row no-print">
@@ -1744,7 +1755,7 @@
     // v1.30: สร้างตัวเลือกชนิดยา/เวลาใช้ยาจาก data.js (ต้องรันก่อนสคริปต์หลัก)
     (function () {
         const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-        if (typeof DRUG_TYPE_GROUPS === 'undefined' || typeof MEAL_OPTIONS === 'undefined') { console.error('data.js เป็นรุ่นเก่า — กรุณาอัปโหลด data.js v1.36 คู่กับ index.html'); return; }
+        if (typeof DRUG_TYPE_GROUPS === 'undefined' || typeof MEAL_OPTIONS === 'undefined') { console.error('data.js เป็นรุ่นเก่า — กรุณาอัปโหลด data.js v1.37 คู่กับ index.html'); return; }
         const t = document.getElementById('sel_drug_type'), m = document.getElementById('sel_meal');
         if (t) t.innerHTML = DRUG_TYPE_GROUPS.map(g => '<optgroup label="' + esc(g.label) + '">' +
             g.options.map(o => '<option value="' + esc(o.value) + '">' + esc(o.label) + '</option>').join('') + '</optgroup>').join('');
@@ -2153,6 +2164,7 @@
             $('in_indication').value = '';
             $('in_advice').value = '';
             overlay(se);
+            if (window.Regimen) window.Regimen.show(se, true);   // v1.37: ยาที่มีวิธีใช้ต่างกันตามโรค → แสดงช่องเลือกโรค
             updateLabel();
             performTranslateInd();
             performTranslateAdv();
@@ -2348,6 +2360,135 @@
         return { sync, whenReady, lookup, lookupOption, size: () => Object.keys(map).length };
     })();
     setTimeout(() => Glossary.sync(), 0);
+
+    // ==========================================================================
+    // v1.37: วิธีใช้ยาตามโรค — แท็บ diseaseRegimen ในไฟล์ druginfo (แก้ในชีทได้เลย ไม่ต้องแก้โค้ด)
+    //  คอลัมน์: drugName | matchText | disease | meal | morning | noon | evening | bed | indication_th | advice_th | status | note
+    //  - drugName = ชื่อยาตรงกับ drugTH (ใช้กับยาตัวนั้นตัวเดียว) หรือชื่อสามัญตัวพิมพ์ใหญ่ เช่น ACICLOVIR (ใช้กับทุกยี่ห้อที่มีตัวยานี้ตัวเดียว)
+    //    ถ้ายามีแถวที่ใส่ชื่อตรงตัว → ใช้เฉพาะแถวชื่อตรงตัว ไม่เอาแถวชื่อสามัญมาปน
+    //  - matchText = (ไม่บังคับ) ชื่อยา/ชนิดยาต้องมีคำนี้ เช่น "400" หรือ "เม็ด" · หลายคำคั่นด้วย , = มีคำใดคำหนึ่งก็พอ
+    //  - ช่องที่เว้นว่าง = ใช้ค่าเดิมของยาใน drugTH · ขนาดยา 4 ช่อง: ถ้ากรอกช่องใดช่องหนึ่ง = ใช้ทั้ง 4 ช่องตามแถวนี้
+    //  - status: ว่าง หรือ "ใช้งาน" = แสดง · "รอตรวจ" / "ปิด" = ไม่แสดงในหน้าพิมพ์ฉลาก
+    // ==========================================================================
+    window.Regimen = (() => {
+        const TAB = 'diseaseRegimen', KEY = 'pharmax_regimen_v1';
+        const SLOTS = ['morning', 'noon', 'evening', 'bed'];
+        let rows = [], inflight = null, cur = null;   // cur = { se, list }
+        const nn = v => String(v == null ? '' : v).toUpperCase().replace(/\s+/g, ' ').trim();
+        const nt = v => String(v == null ? '' : v).replace(/\r/g, '').trim();
+        const $ = id => document.getElementById(id);
+        function colsOf(headers) {
+            const c = {};
+            headers.forEach((h, i) => {
+                const k = String(h == null ? '' : h).toLowerCase().replace(/[^a-z0-9฀-๿]/g, '');
+                let f = null;
+                if (k === 'drugname' || k === 'ชื่อยา' || k === 'drug') f = 'drug';
+                else if (k.indexOf('match') === 0 || k === 'เงื่อนไข') f = 'match';
+                else if (k.indexOf('disease') === 0 || k === 'โรค') f = 'disease';
+                else if (k.indexOf('meal') === 0) f = 'meal';
+                else if (SLOTS.some(x => k.indexOf(x) === 0)) f = SLOTS.find(x => k.indexOf(x) === 0);
+                else if (k.indexOf('indication') === 0) f = 'indication';
+                else if (k.indexOf('advice') === 0) f = 'advice';
+                else if (k.indexOf('status') === 0 || k === 'สถานะ') f = 'status';
+                if (f && c[f] === undefined) c[f] = i;
+            });
+            return c;
+        }
+        function parse(headers, data) {
+            const c = colsOf(headers);
+            if (c.drug === undefined || c.disease === undefined) return null;   // แท็บยังไม่มี (gviz ส่งแท็บแรกกลับมา) → ไม่ใช้
+            const g = (r, f) => c[f] === undefined ? '' : nt(r[c[f]]);
+            return data.map(r => ({
+                drug: g(r, 'drug'), match: g(r, 'match'), disease: g(r, 'disease'), meal: g(r, 'meal'),
+                morning: g(r, 'morning'), noon: g(r, 'noon'), evening: g(r, 'evening'), bed: g(r, 'bed'),
+                indication: g(r, 'indication'), advice: g(r, 'advice'), status: g(r, 'status')
+            })).filter(r => r.drug && r.disease && (!r.status || /^ใช้/.test(r.status)));
+        }
+        function loadCache() { try { const x = JSON.parse(localStorage.getItem(KEY) || 'null'); if (x && Array.isArray(x.rows)) rows = x.rows; } catch (e) {} }
+        function sync() {
+            if (inflight) return inflight;
+            inflight = PharmaxSheet.fetchTab(TAB).then(({ headers, rows: data }) => {
+                const r = parse(headers, data);
+                rows = r || [];
+                try { localStorage.setItem(KEY, JSON.stringify({ ts: Date.now(), rows: rows })); } catch (e) {}
+                if (cur && cur.se) show(cur.se, true);   // ชีทเปลี่ยน → อัปเดตรายการของยาที่เลือกอยู่
+            }).catch(e => console.warn('[Regimen] load failed:', e && e.message)).then(() => { inflight = null; });
+            return inflight;
+        }
+        // ชื่อสามัญของยา: ข้อความในวงเล็บท้ายชื่อ หรือทั้งชื่อ (ถ้าไม่มีวงเล็บ)
+        const genericOf = name => (typeof genericPartOf === 'function' ? genericPartOf(name) : nn(name));
+        // ชื่อสามัญสะกดได้หลายแบบ (INN vs USAN) — ให้นับเป็นตัวยาเดียวกัน เช่น ชีทเขียน ACICLOVIR แต่ drugTH เขียน "COVIR (ACYCLOVIR 400 MG)"
+        const SPELL = [[/\bVALACYCLOVIR\b/g, 'VALACICLOVIR'], [/\bACYCLOVIR\b/g, 'ACICLOVIR'], [/\bC[AE]PHALEXIN\b/g, 'CEFALEXIN'],
+            [/\bSULPHAMETHOXAZOLE\b/g, 'SULFAMETHOXAZOLE'], [/\bAMOXYCILLIN\b/g, 'AMOXICILLIN'], [/\bBALCOFEN\b/g, 'BACLOFEN']];
+        const inn = s => SPELL.reduce((t, p) => t.replace(p[0], p[1]), nn(s));
+        function genericHit(key, se) {
+            const g = inn(genericOf(se.name)), k = inn(key);
+            if (!k || !g) return false;
+            if (g === k) return true;
+            // "ACICLOVIR 400 MG" (ชื่อยาไม่มีวงเล็บ) ก็นับว่าเป็นตัวยาเดียวกัน — แต่ "AMOXICILLIN + CLAVULANIC ACID" ไม่นับเป็น AMOXICILLIN
+            return g.indexOf(k + ' ') === 0 && /^[\d.,\s]*(MG|G|MCG|µG|IU|%|มก|กรัม)?\b/i.test(g.slice(k.length + 1)) && !/[+\/]/.test(g);
+        }
+        function matchOk(r, se) {
+            if (!r.match) return true;
+            const hay = nn(se.name + ' ' + (se.drugType || ''));
+            return r.match.split(',').map(nn).filter(Boolean).some(w => hay.indexOf(w) >= 0);
+        }
+        function forDrug(se) {
+            if (!se || !se.name) return [];
+            const n = nn(se.name);
+            const exact = rows.filter(r => nn(r.drug) === n && matchOk(r, se));
+            if (exact.length) return exact;
+            return rows.filter(r => genericHit(r.drug, se) && matchOk(r, se));
+        }
+        function hide() {
+            cur = null;
+            const box = $('regimen_box'); if (box) { box.style.display = 'none'; box.classList.remove('chosen'); }
+        }
+        function show(se, keep) {
+            const list = forDrug(se);
+            if (!list.length) return hide();
+            const sel = $('sel_regimen'), box = $('regimen_box');
+            if (!sel || !box) return;
+            const prev = keep && cur && cur.se && cur.se.key === se.key ? sel.value : '';
+            cur = { se: se, list: list };
+            sel.innerHTML = '<option value="">— วิธีใช้ทั่วไป (ตามข้อมูลหลักของยา) —</option>' +
+                list.map((r, i) => '<option value="' + i + '">' + escapeHtml(r.disease) + '</option>').join('');
+            sel.value = prev && list[+prev] ? prev : '';
+            box.classList.toggle('chosen', !!sel.value);
+            $('regimen_hint').textContent = 'ยานี้มีวิธีใช้ต่างกันตามโรค ' + list.length + ' แบบ — เลือกแล้วระบบเติมขนาดยา เวลา สรรพคุณ และคำแนะนำให้';
+            box.style.display = '';
+        }
+        // เลือกโรค → เติมฟอร์มจากข้อมูลหลักของยาก่อน แล้วทับด้วยช่องที่กรอกไว้ในแถวโรคนั้น
+        function apply(v) {
+            if (!cur || !cur.se) return;
+            const se = cur.se, r = v === '' ? null : cur.list[+v];
+            PharmaxSheet.applySheetOnly(se);       // คืนค่าตาม drugTH (เรียก show() ใหม่ → เก็บค่าที่เลือกไว้ด้านล่าง)
+            const sel = $('sel_regimen'); if (sel) sel.value = r ? String(v) : '';
+            $('regimen_box').classList.toggle('chosen', !!r);
+            if (!r) return;
+            if (r.meal) {
+                const k = typeof termKeyOf === 'function' ? termKeyOf('meal', r.meal) : '';
+                if (k && $('sel_meal').querySelector('option[value="' + k + '"]')) $('sel_meal').value = k;
+                else console.warn('[Regimen] เวลาใช้ยา "' + r.meal + '" ไม่มีในตัวเลือก — ใช้ค่าเดิม');
+            }
+            if (SLOTS.some(x => r[x])) SLOTS.forEach(x => { $('qty_' + x).value = r[x]; });
+            if (r.indication) $('in_indication').value = r.indication;
+            if (r.advice) $('in_advice').value = r.advice;
+            updateLabel();
+            performTranslateInd();
+            performTranslateAdv();
+            if (typeof checkHighAlertDose === 'function') checkHighAlertDose();
+            if (typeof clinicalCheckOnSelect === 'function') clinicalCheckOnSelect();
+        }
+        // ชื่อยาในช่องเปลี่ยนไปจากยาที่เลือก → ซ่อนช่องเลือกโรค
+        function check() {
+            if (!cur) return;
+            const el = $('in_drug_name');
+            if (el && nn(el.value) !== nn(cur.se.name)) hide();
+        }
+        function init() { loadCache(); sync(); }
+        return { init, sync, show, hide, apply, check, forDrug, current: () => cur, debug: () => rows };
+    })();
 
     // ==========================================================================
     // BRANCH DIRECTORY (v1.18) - ดึงรายชื่อสาขา + แบรนด์ + ที่อยู่สดจาก Google Sheet
@@ -2639,6 +2780,7 @@
         if (sheetEntry) {
             PharmaxSheet.applySheetOnly(sheetEntry);   // ล้างฟอร์มแล้วเติมจาก Sheet ล้วนๆ (Sheet มาก่อนเสมอ)
         } else {
+            if (window.Regimen) window.Regimen.hide();   // v1.37
             const matched = DRUG_PRESETS.find(p => p.name.toUpperCase() === full.toUpperCase());
             if (matched) applyPreset(matched.name);
             else {
@@ -3309,6 +3451,7 @@
     })();
 
     function updateLabel() {
+        if (window.Regimen) window.Regimen.check();   // v1.37: เปลี่ยนชื่อยาแล้ว → ซ่อนช่องเลือกโรค
         stampCurrentDate();
         document.getElementById('out_drug_name').innerText = document.getElementById('in_drug_name').value.toUpperCase();
         const _pn = getPatientName();
@@ -5749,6 +5892,7 @@
     document.getElementById('in_drug_name').addEventListener('change', () => clinicalCheckOnSelect()); // v1.9: พิมพ์ชื่อยาเสร็จ (ออกจากช่อง)
     loadQueueFromStorage();  // v1.8: คืนคิวที่ค้างอยู่กลับมาหลังรีเฟรช/ปิดหน้าเว็บ (ฟังก์ชันมีอยู่เดิมแต่ไม่เคยถูกเรียก)
     ClinicalSheet.init(); // v1.10: ฐานข้อมูลคัดกรองจากแท็บ clinicalSafety / clinicalDose
+    Regimen.init(); // v1.37: วิธีใช้ยาตามโรค (แท็บ diseaseRegimen)
     PharmaxSheet.init(); // v1.7: โหลดแคช Sheet + ซิงค์เบื้องหลัง (data.js ทำงานได้ทันทีโดยไม่รอ)
     initHomeScreen(); // v1.18: โหลดรายชื่อสาขา+แบรนด์จาก Google Sheet สดทุกครั้งที่เปิด/รีเฟรชหน้า
     initLabelQuickControlsUI(); // v1.22: คืนค่าปุ่มปรับขนาดฟอนต์/ซ่อนโลโก้-เวลาทำการ ตามที่เคยเลือกไว้
@@ -5759,6 +5903,7 @@
     //  เพื่อให้ป้าย "สถานะการเชื่อมต่อ" ที่ header ตรงกับความเป็นจริง ณ ขณะนั้นเสมอ ไม่ใช่แค่ตอนเปิดหน้าครั้งแรก
     setInterval(() => {
         PharmaxSheet.sync();
+        Regimen.sync();   // v1.37
         BranchDirectory.load().then(() => {
             if (currentHomeBrand) renderBranchButtons(currentHomeBrand); // รีเฟรชรายชื่อสาขาที่กำลังดูอยู่ให้ตรงชีทล่าสุดด้วย
         });
@@ -5892,7 +6037,7 @@
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
