@@ -1354,6 +1354,36 @@
         .queue-tray .batch-queue-section { padding: 7px 20px; }
         .queue-tray .btn-row { flex: 0 0 auto; }
         .queue-tray #btn_batch_print { white-space: nowrap; padding: 9px 18px !important; width: auto !important; }
+        /* v1.38: ปุ่มภาษาขนาดเท่ากัน + ลากจัดลำดับ */
+        .scan-band .lang-switch { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 5px; }
+        .scan-band .lang-btn { font-size: 0.72rem; padding-right: 4px; }
+        .scan-band .barcode-scan-group { flex: 0 1 470px; }
+        .scan-band .lang-btn { width: 100%; justify-content: flex-start; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 30px; }
+        .lang-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .lang-tools { display: inline-flex; gap: 6px; }
+        .lang-sort-btn { border: 1px solid rgba(255,255,255,0.45); background: transparent; color: #fff; border-radius: 7px; padding: 1px 9px; font: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; }
+        .lang-sort-btn:hover { background: rgba(255,255,255,0.14); }
+        .lang-sort-btn.on { background: #FDB713; border-color: #FDB713; color: #3B2A00; }
+        .lang-switch.sorting .lang-btn { cursor: grab; touch-action: none; border-style: dashed; user-select: none; }
+        .lang-switch.sorting .lang-btn.dragging { opacity: 0.35; }
+        .lang-ghost { position: fixed; z-index: 10060; pointer-events: none; opacity: 0.92; transform: rotate(-2deg); box-shadow: 0 8px 20px rgba(0,0,0,0.35); }
+        /* ปุ่ม X ล้างช่องขนาดยา = สีแดง */
+        .quick-chip.chip-clear { border-color: #D9534F !important; color: #C0392B !important; background: #FFF4F3 !important; font-weight: 700; }
+        .quick-chip.chip-clear:hover { background: #FDE3E1 !important; }
+        /* ซ่อนวันที่-เวลา + ปุ่ม 3 ปุ่มกว้างเท่าปุ่มเพิ่มเข้าคิว/พิมพ์ทันที */
+        .label-box.hide-date .label-date { display: none !important; }
+        .preview-card .label-quick-controls { width: calc(76mm * var(--preview-scale)); max-width: 100%; display: block; }
+        .preview-card .label-toggle-group { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: 100%; }
+        .preview-card .label-toggle-btn { width: 100%; padding: 6px 4px; text-align: center; overflow: hidden; text-overflow: ellipsis; }
+        /* ปุ่ม "ไม่พบยา?" กว้างพอดีตั้งแต่ปุ่มกล้องถึงปุ่มค้นหา (ปุ่มค้นหายืดตาม) */
+        .scan-band .barcode-scan-group { display: grid; grid-template-columns: minmax(0, 1fr) 46px auto; column-gap: 8px; row-gap: 0; align-items: end; }
+        .scan-band .barcode-scan-group > label { grid-column: 1; grid-row: 1; }
+        .scan-band #dsm_open_btn { grid-column: 2 / 4 !important; grid-row: 1 !important; justify-self: stretch; text-align: center; white-space: nowrap; }
+        .scan-band .barcode-scan-group > .barcode-scan-row { display: contents; }
+        .scan-band .barcode-scan-input { grid-column: 1; grid-row: 2; width: 100%; }
+        .scan-band .barcode-cam-btn { grid-column: 2; grid-row: 2; height: 40px; width: 46px; }
+        .scan-band .barcode-scan-go-btn { grid-column: 3; grid-row: 2; height: 40px; }
+        .scan-band .barcode-scan-group > .barcode-scan-status { grid-column: 1 / 4 !important; grid-row: 3 !important; }
         @media (max-width: 900px) { .queue-tray { position: static; } }
     </style>
 </head>
@@ -1471,7 +1501,7 @@
         
         </div>
         <div class="lang-group">
-            <div class="band-label">ภาษาฉลาก (Label Language)</div>
+            <div class="band-label lang-head"><span>ภาษาฉลาก (Label Language)</span><span class="lang-tools"><button type="button" id="lang_sort_btn" class="lang-sort-btn" onclick="LangOrder.toggle()" title="ลากปุ่มภาษาเพื่อจัดลำดับ — ระบบจำไว้ในเครื่องนี้">⇅ จัดลำดับ</button><button type="button" id="lang_reset_btn" class="lang-sort-btn" onclick="LangOrder.reset()" hidden>คืนค่าเดิม</button></span></div>
             <div class="lang-switch" id="lang_switch">
                 <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')"><span class="lang-flag flag-gb" aria-hidden="true"></span>English อังกฤษ</button>
                 <button type="button" class="lang-btn" data-lang="ja" onclick="setLanguage('ja')"><span class="lang-flag flag-jp" aria-hidden="true"></span>日本語 ญี่ปุ่น</button>
@@ -1714,6 +1744,7 @@
             <div class="label-toggle-group" role="group" aria-label="สลับโลโก้/เวลาทำการ">
                 <button type="button" id="toggle_logo_btn" class="label-toggle-btn" onclick="toggleLabelLogo()" title="ซ่อน/แสดงโลโก้บนฉลาก สำหรับสาขาที่ใช้สติกเกอร์ร่วมกับแบรนด์อื่นในเครือ">🖼️ ซ่อนโลโก้</button>
                 <button type="button" id="toggle_hours_btn" class="label-toggle-btn" onclick="toggleLabelHours()" title="ซ่อน/แสดงบรรทัดเวลาทำการบนฉลาก">🕐 ซ่อนเวลาทำการ</button>
+                <button type="button" id="toggle_date_btn" class="label-toggle-btn" onclick="toggleLabelDate()" title="ซ่อน/แสดงวันที่-เวลาที่พิมพ์บนฉลาก">📅 ซ่อนวันที่-เวลา</button>
             </div>
         </div>
 
@@ -3292,6 +3323,7 @@
         if (labelBoxEl) {
             labelBoxEl.classList.toggle('hide-logo', _labelLogoHidden);
             labelBoxEl.classList.toggle('hide-hours', _labelHoursHidden);
+            labelBoxEl.classList.toggle('hide-date', _labelDateHidden);   // v1.38
         }
         document.getElementById('lbl_title_drug').innerText = t.drug;
         document.getElementById('lbl_title_patient').innerText = patientTitle(currentLang);
@@ -4048,6 +4080,18 @@
     let _labelLogoHidden = (function () {
         try { return localStorage.getItem('pharmax_label_logo_hidden') === '1'; } catch (e) { return false; }
     })();
+    // v1.38: ซ่อนวันที่-เวลาที่พิมพ์บนฉลาก (จำไว้ในเครื่อง)
+    let _labelDateHidden = (function () {
+        try { return localStorage.getItem('pharmax_label_date_hidden') === '1'; } catch (e) { return false; }
+    })();
+    function toggleLabelDate() {
+        _labelDateHidden = !_labelDateHidden;
+        try { localStorage.setItem('pharmax_label_date_hidden', _labelDateHidden ? '1' : '0'); } catch (e) { /* ignore */ }
+        const btn = document.getElementById('toggle_date_btn');
+        if (btn) btn.classList.toggle('active', _labelDateHidden);
+        if (typeof applyLanguageToLabel === 'function') applyLanguageToLabel();
+        fitLabelToBox();
+    }
     let _labelHoursHidden = (function () {
         try { return localStorage.getItem('pharmax_label_hours_hidden') === '1'; } catch (e) { return false; }
     })();
@@ -4094,6 +4138,8 @@
         if (btnLogo) btnLogo.classList.toggle('active', _labelLogoHidden);
         const btnHours = document.getElementById('toggle_hours_btn');
         if (btnHours) btnHours.classList.toggle('active', _labelHoursHidden);
+        const btnDate = document.getElementById('toggle_date_btn');
+        if (btnDate) btnDate.classList.toggle('active', _labelDateHidden);
     }
 
     function measureMinFontPt(box) {
@@ -4788,7 +4834,7 @@
         const container = document.getElementById('quick_dosage_chips');
         if (!container) return;
         container.innerHTML = QUICK_DOSAGE_CHIPS.map(val =>
-            `<button type="button" class="quick-chip" onclick="applyQuickDosageChip('${val.replace(/'/g, "\\'")}')">${escapeHtml(val)}</button>`
+            `<button type="button" class="quick-chip${val === 'X' ? ' chip-clear' : ''}" onclick="applyQuickDosageChip('${val.replace(/'/g, "\\'")}')" ${val === 'X' ? 'title="ล้างช่องที่เลือก (ไม่ใช้ยามื้อนี้)"' : ''}>${val === 'X' ? '✕ ล้างช่อง' : escapeHtml(val)}</button>`
         ).join('');
     }
 
@@ -5893,7 +5939,7 @@
         // v1.22: ใส่คลาสซ่อนโลโก้/เวลาทำการ และระบุบรรทัดเวลาทำการให้ตรงกับพรีวิว (line4 ถ้ามี ไม่งั้น line3)
         const hoursKey = getHoursLineKey(branchText);
         const _rphT = rphText();
-        const boxExtraClasses = [(_labelLogoHidden ? 'hide-logo' : ''), (_labelHoursHidden ? 'hide-hours' : ''), (_rphT ? 'has-dispenser' : '')].filter(Boolean).join(' ');
+        const boxExtraClasses = [(_labelLogoHidden ? 'hide-logo' : ''), (_labelHoursHidden ? 'hide-hours' : ''), (_labelDateHidden ? 'hide-date' : ''), (_rphT ? 'has-dispenser' : '')].filter(Boolean).join(' ');
         return `
             <div class="batch-label-page">
                 <div class="label-box batch-box-item ${lang === 'ar' ? 'rtl-mode' : ''} ${boxExtraClasses}" data-lang="${lang}">
@@ -6386,6 +6432,70 @@ function openBarcodeCamera() {
 }
 </script>
 
+
+<!-- v1.38: จัดลำดับปุ่มภาษาเอง (ลากวาง ใช้ได้ทั้งเมาส์และนิ้ว) — จำไว้ใน localStorage ของเครื่องนี้ -->
+<script>
+window.LangOrder = (function () {
+    const KEY = 'pharmax_lang_order_v1';
+    const box = () => document.getElementById('lang_switch');
+    let sorting = false, drag = null, ghost = null, defaultOrder = null;
+    const btns = () => Array.from(box().querySelectorAll('.lang-btn'));
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(btns().map(b => b.dataset.lang))); } catch (e) {} };
+    function apply(order) {
+        const b = box(); if (!b || !Array.isArray(order)) return;
+        const map = {}; btns().forEach(x => { map[x.dataset.lang] = x; });
+        order.forEach(l => { if (map[l]) { b.appendChild(map[l]); delete map[l]; } });
+        Object.keys(map).forEach(l => b.appendChild(map[l]));   // ภาษาใหม่ที่ยังไม่อยู่ในลำดับที่จำไว้ → ต่อท้าย
+    }
+    function init() {
+        if (!box()) return;
+        defaultOrder = btns().map(b => b.dataset.lang);
+        btns().forEach(b => { if (!b.title) b.title = b.textContent.trim(); });   // ชื่อเต็มเมื่อชี้ (ถ้าปุ่มแคบจนตัดคำ)
+        try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) apply(o); } catch (e) {}
+        box().addEventListener('click', e => { if (sorting) { e.preventDefault(); e.stopPropagation(); } }, true);   // โหมดจัดลำดับ: กดแล้วไม่เปลี่ยนภาษา
+        box().addEventListener('pointerdown', down);
+    }
+    function toggle() {
+        sorting = !sorting;
+        box().classList.toggle('sorting', sorting);
+        const sb = document.getElementById('lang_sort_btn');
+        sb.classList.toggle('on', sorting); sb.textContent = sorting ? '✓ เสร็จ' : '⇅ จัดลำดับ';
+        document.getElementById('lang_reset_btn').hidden = !sorting;
+        if (!sorting) save();
+    }
+    function reset() { try { localStorage.removeItem(KEY); } catch (e) {} if (defaultOrder) apply(defaultOrder); }
+    function down(e) {
+        if (!sorting) return;
+        const b = e.target.closest('.lang-btn'); if (!b) return;
+        e.preventDefault();
+        const r = b.getBoundingClientRect();
+        drag = { el: b, dx: e.clientX - r.left, dy: e.clientY - r.top };
+        ghost = b.cloneNode(true); ghost.classList.add('lang-ghost'); ghost.style.width = r.width + 'px'; ghost.style.height = r.height + 'px';
+        document.body.appendChild(ghost); moveGhost(e);
+        b.classList.add('dragging');
+        window.addEventListener('pointermove', move); window.addEventListener('pointerup', up, { once: true }); window.addEventListener('pointercancel', up, { once: true });
+    }
+    function moveGhost(e) { ghost.style.left = (e.clientX - drag.dx) + 'px'; ghost.style.top = (e.clientY - drag.dy) + 'px'; }
+    function move(e) {
+        if (!drag) return;
+        moveGhost(e);
+        const t = document.elementFromPoint(e.clientX, e.clientY);
+        const over = t && t.closest && t.closest('#lang_switch .lang-btn');
+        if (!over || over === drag.el) return;
+        const r = over.getBoundingClientRect(), after = (e.clientX - r.left) > r.width / 2;
+        box().insertBefore(drag.el, after ? over.nextSibling : over);
+    }
+    function up() {
+        window.removeEventListener('pointermove', move);
+        if (ghost) ghost.remove(); ghost = null;
+        if (drag) drag.el.classList.remove('dragging');
+        drag = null; save();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    return { toggle: toggle, reset: reset };
+})();
+</script>
+
 <!-- ปุ่มพิมพ์ด่วนแบบลอย: อยู่นอก .app-container และถูกซ่อนทั้งด้วย CSS @media print + JS (beforeprint) -->
 <button type="button" id="fab_print" class="no-print" onclick="printSingleCurrentItem()" title="พิมพ์ฉลากยาปัจจุบันทันที">🖨️ พิมพ์ฉลากนี้ทันที</button>
 <script>
@@ -6505,7 +6615,7 @@ function openBarcodeCamera() {
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
