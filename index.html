@@ -1153,6 +1153,145 @@
     .regimen-box select { width: 100%; font-weight: 600; }
     .regimen-box.chosen { border-color: #27ae60; background: #eefaf2; }
 </style>
+
+    <!-- ===================================================================== -->
+    <!-- v1.38: หน้าทำฉลากแบบ C (Scan-first) + ธีมสีตามแบรนด์ที่เลือก            -->
+    <!-- ===================================================================== -->
+    <style>
+        :root { --brand-soft: #EAF1FA; --brand-ink: #0F2F5E; --c-line: #D7E0EB; --c-text: #1B2533; --c-muted: #5A6779; }
+        body[data-brand="icare"] { --color-navy: #1A1290; --primary-color: #1A1290; --color-green: #E07400; --accent-color: #E07400; --brand-soft: #ECEBFA; --brand-ink: #110B66; }
+        body[data-brand="superdrug"] { --color-navy: #00774A; --primary-color: #00774A; --color-green: #B87A00; --accent-color: #B87A00; --brand-soft: #E6F4EC; --brand-ink: #004D30; }
+        body[data-brand="icare"] .brand-bar { background: linear-gradient(90deg, #1A1290 0 70%, #F28000 70% 100%); }
+        body[data-brand="superdrug"] .brand-bar { background: #00774A; }
+
+        #app_screen { background: #F4F7FB; min-height: 100vh; color: var(--c-text); }
+        @media screen and (min-width: 1400px) { .app-container { zoom: 1; } #app_screen { zoom: 1.08; } }
+        @media print { #app_screen { zoom: 1 !important; background: none; } .scan-band, .queue-tray, .no-print { display: none !important; } }
+
+        /* header */
+        .app-header { justify-content: flex-start; gap: 14px; padding: 8px 20px; flex-wrap: wrap; box-shadow: none; border-bottom: 1px solid #E3EAF3; }
+        .hdr-brand { display: flex; align-items: center; gap: 12px; }
+        .app-header img#app_header_logo { height: 34px; width: auto; max-width: 150px; object-fit: contain; }
+        .app-header .app-title { font-size: 0.95rem; color: var(--color-navy); }
+        .hdr-spacer { flex: 1 1 auto; }
+        .hdr-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .hdr-actions .current-branch-badge { font-size: 0.8rem; padding: 5px 12px; background: var(--color-navy); }
+        .hdr-actions .btn-home { border-width: 1px; border-color: var(--c-line); color: var(--c-muted); padding: 6px 12px; font-size: 0.78rem; border-radius: 8px; }
+        .hdr-actions .btn-home:hover { background: var(--brand-soft); color: var(--color-navy); }
+        .brand-bar { height: 3px; }
+
+        /* scan band */
+        .scan-band { background: var(--color-navy); color: #fff; }
+        .scan-band-inner { max-width: 1500px; margin: 0 auto; padding: 12px 20px 14px; display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-start; }
+        .scan-band .barcode-scan-group { flex: 0 1 440px; min-width: 280px; background: none; border: none; padding: 0; margin: 0; }
+        .band-label, .scan-band .barcode-scan-group > label { display: block; color: rgba(255,255,255,0.82); font-size: 0.74rem; font-weight: 600; margin: 0 0 5px; }
+        .scan-band .barcode-scan-input { height: 42px; font-size: 1.05rem; border: none; border-radius: 10px; padding: 0 14px; }
+        .scan-band .barcode-scan-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(253,183,19,0.75); }
+        .scan-band .barcode-scan-go-btn { background: var(--color-green); border: none; border-radius: 10px; padding: 0 20px; }
+        body[data-brand="pharmax"] .scan-band .barcode-scan-go-btn, body:not([data-brand]) .scan-band .barcode-scan-go-btn { background: #04B085; }
+        .scan-band .barcode-scan-status { background: rgba(255,255,255,0.95); border-radius: 8px; padding: 5px 10px; margin-top: 6px; font-size: 0.8rem; }
+        .scan-band #dsm_open_btn { margin-top: 6px !important; padding: 4px 10px !important; font-size: 0.74rem !important; background: rgba(255,255,255,0.12) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.5) !important; }
+        .lang-group { flex: 1 1 520px; min-width: 0; }
+        .scan-band .lang-switch { gap: 5px; }
+        .scan-band .lang-btn { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.38); padding: 4px 10px; font-size: 0.76rem; border-radius: 8px; }
+        .scan-band .lang-btn:hover { background: rgba(255,255,255,0.14); }
+        .scan-band .lang-btn.active { background: #fff; color: var(--color-navy); border-color: #fff; }
+        .scan-band .lang-btn .th-tag { opacity: 0.75; }
+
+        /* main grid */
+        .app-container { max-width: 1500px; margin: 14px auto; gap: 20px; padding: 0 20px; align-items: flex-start; }
+        .control-panel { flex: 1.15; gap: 10px; }
+        .c-form { padding: 16px 18px 12px; border-radius: 14px; }
+        .c-form .form-group { margin-bottom: 10px; }
+        .c-form label { font-size: 0.76rem; color: var(--c-muted); margin-bottom: 3px; }
+        .c-form label .hint { display: none; }
+        .c-form input[type="text"], .c-form select, .c-form textarea { border: 1px solid var(--c-line); border-radius: 8px; padding: 7px 10px; font-size: 0.9rem; }
+        .c-form input[type="text"]:focus, .c-form select:focus, .c-form textarea:focus { outline: none; border-color: var(--color-navy); box-shadow: 0 0 0 3px var(--brand-soft); }
+        .c-form .ghost-overlay { border-radius: 8px; padding: 7px 10px; font-size: 0.9rem; border-color: var(--c-line); }
+        .c-row { display: flex; flex-wrap: wrap; gap: 0 14px; }
+        .c-row > .form-group { flex: 1 1 240px; min-width: 0; }
+        .c-row-drug > .form-group { flex: 1 1 340px; }
+        .c-form #in_drug_name, .c-form #ghost_drug_name { font-size: 1.12rem; font-weight: 700; padding: 8px 12px; height: 44px; }
+        .c-form #in_drug_name { color: var(--color-navy); }
+        .c-row-drug .regimen-box { flex: 0 1 330px; min-width: 240px; margin: 0 0 10px; padding: 6px 10px 8px; border-radius: 10px; align-self: flex-start; }
+        .c-row-drug .regimen-box label { color: #8a5a00; font-weight: 700; }
+        .c-row-drug .regimen-box label .hint { display: inline; font-weight: 400; }
+        .c-row-drug .regimen-box.chosen label { color: #1a7a3a; }
+        .c-warn-row:empty { display: none; }
+        .c-warn-row { margin: -4px 0 8px; }
+        .c-warn-row .clin-btn-row { margin-top: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .c-warn-row .clin-open-btn { width: auto; padding: 4px 12px; font-size: 0.74rem; border-radius: 8px; }
+        .c-warn-row .patient-profile-summary { margin-top: 0; flex: 1 1 200px; }
+        #in_rph_license { max-width: 120px !important; }
+        .c-form .form-group[style*="gap: 20px"] { gap: 14px !important; }
+
+        /* dose grid = หน้าตาเหมือนตารางบนฉลาก (ช่องว่าง = ถมดำ) */
+        .c-form .dosage-grid { gap: 0; padding: 0; background: #fff; border: 2px solid var(--c-text); border-radius: 10px; overflow: hidden; }
+        .c-form .dosage-item { border-right: 2px solid var(--c-text); padding: 5px 6px 6px; transition: background 0.12s ease; }
+        .c-form .dosage-item:last-child { border-right: none; }
+        .c-form .dosage-item label { color: var(--c-text); font-weight: 700; font-size: 0.78rem; margin-bottom: 1px; }
+        .c-form .dosage-item input[type="text"] { border: none; box-shadow: none; background: transparent; font-size: 1.05rem; font-weight: 700; padding: 3px 4px; }
+        .c-form .dosage-item:has(input:placeholder-shown):not(:has(input:focus)) { background: var(--c-text); }
+        .c-form .dosage-item:has(input:placeholder-shown):not(:has(input:focus)) label { color: #fff; }
+        .c-form .dosage-item input::placeholder { color: #8C97A8; font-weight: 400; font-size: 0.8rem; }
+        .c-form .quick-chip-row { margin-top: 7px; }
+        .c-form .quick-chip { border-radius: 8px; padding: 4px 10px; font-size: 0.76rem; }
+        .c-tools { margin-top: 2px; }
+        .c-tools > summary { font-size: 0.76rem; color: var(--c-muted); cursor: pointer; padding: 4px 0; }
+        .c-tools .form-group { margin-top: 8px; }
+
+        /* preview */
+        .preview-panel { flex: 1; top: 10px; }
+        .preview-card { width: 100%; background: #fff; border: 1px solid var(--card-border); border-radius: 14px; padding: 12px 14px 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: var(--card-shadow); }
+        .preview-head { width: 100%; font-size: 0.8rem; font-weight: 700; color: var(--color-navy); }
+        .preview-card .preview-wrapper { padding: 16px 12px; border-radius: 12px; box-shadow: none; background: #E9EFF6; }
+        .preview-card .c4-block { width: calc(76mm * var(--preview-scale)); max-width: 100%; margin-top: 0; }
+        .preview-card .c4-step { display: none; }
+        .preview-card .c4-main-actions { margin-top: 0; }
+        .preview-card .c4-btn { border-radius: 12px; padding: 9px 6px; }
+        .preview-card .label-quick-controls, .preview-card .label-check-panel { margin-top: 0; }
+        .quick-queue-widget { display: none !important; }   /* คิวแสดงที่ถาดด้านล่างแทน */
+
+        /* queue tray (sticky bottom) */
+        .queue-tray { position: sticky; bottom: 0; z-index: 50; background: rgba(255,255,255,0.97); border-top: 1px solid #E3EAF3; box-shadow: 0 -4px 16px rgba(20,40,70,0.06); }
+        .queue-tray .batch-queue-section { max-width: 1500px; margin: 0 auto; padding: 10px 20px; border: none; border-radius: 0; background: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+        .queue-tray .batch-queue-title { margin: 0; gap: 8px; flex: 0 0 auto; }
+        .queue-tray .queue-cards-container { flex: 1 1 360px; min-width: 0; flex-direction: row; overflow-x: auto; overflow-y: hidden; max-height: none; margin: 0; padding-bottom: 2px; }
+        .queue-tray .queue-card { flex: 0 0 auto; max-width: 300px; padding: 6px 10px; }
+        .queue-tray .queue-empty-msg { padding: 7px 12px; flex: 1 1 auto; text-align: left; }
+        .queue-tray .btn-row { margin-top: 0 !important; flex: 0 0 240px; }
+        .queue-tray #btn_batch_print { padding: 10px !important; border-radius: 10px; }
+        .queue-tray details.c4-more { flex: 0 0 auto; font-size: 0.74rem; margin: 0; }
+        .queue-tray details.c4-more > summary { cursor: pointer; color: var(--c-muted); }
+        .queue-tray .batch-queue-section > div[style*="text-align: center"] { margin-top: 0 !important; flex: 0 0 auto; }
+        .queue-tray .btn-start-over-safe { width: auto; padding: 4px 10px; font-size: 0.72rem; }
+        #app_screen > .app-footer { max-width: 1500px; margin: 0 auto; border-top: none !important; padding: 6px 20px 10px !important; }
+        .queue-tray .queue-card-dose, .queue-tray .queue-card-drug { white-space: nowrap; }
+        .queue-tray .queue-card-info { gap: 8px; }
+        #fab_print { display: none !important; }   /* มีปุ่ม "พิมพ์ทันที" ใต้ฉลากแล้ว (Ctrl+P ยังใช้ได้) */
+        @media screen and (max-height: 960px) and (min-width: 901px) { :root { --preview-scale: 1.22; } }
+        @media screen and (max-height: 800px) and (min-width: 901px) { :root { --preview-scale: 1.08; } }
+        /* v1.38: บีบให้อยู่ในหน้าเดียว */
+        @media screen and (min-width: 1400px) { #app_screen { zoom: 1.04; } }
+        .scan-band-inner { padding: 9px 20px 11px; }
+        .scan-band .barcode-scan-group { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; align-items: end; }
+        .scan-band .barcode-scan-group > label { grid-column: 1; grid-row: 1; }
+        .scan-band .barcode-scan-group > .barcode-scan-row { grid-column: 1 / span 2; grid-row: 2; }
+        .scan-band .barcode-scan-group > .barcode-scan-status { grid-column: 1 / span 2; grid-row: 3; }
+        .scan-band #dsm_open_btn { grid-column: 2; grid-row: 1; margin: 0 0 5px !important; padding: 2px 9px !important; }
+        .scan-band .barcode-scan-input { height: 40px; }
+        .c-row-text > .form-group { flex: 1 1 300px; }
+        .c-row-2 > .form-group { flex: 1 1 200px; }
+        .clin-inline { margin: 0 0 0 auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .c-row-2 .clin-open-btn { width: auto; padding: 4px 12px; font-size: 0.74rem; border-radius: 8px; }
+        .c-row-2 .patient-profile-summary { margin-top: 0; flex: 1 1 200px; }
+        .c-form .dosage-item { padding: 3px 6px 4px; }
+        .c-form .dosage-item input[type="text"] { padding: 1px 4px; }
+        .queue-tray .batch-queue-section { padding: 7px 20px; }
+        .queue-tray .btn-row { flex: 0 0 auto; }
+        .queue-tray #btn_batch_print { white-space: nowrap; padding: 9px 18px !important; width: auto !important; }
+        @media (max-width: 900px) { .queue-tray { position: static; } }
+    </style>
 </head>
 <body onclick="closeAllPopups(event)">
 <div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;" data-credit="Mark Sirikorn / Mark Rx Mobile"></div>
@@ -1217,10 +1356,22 @@
 <!-- ============================= -->
 <div id="app_screen">
 <header class="app-header no-print">
-    <img src="data:image/png;base64,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" alt="Pharmax">
+    <div class="hdr-brand">
+    <img id="app_header_logo" src="data:image/png;base64,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" alt="Pharmax">
     <div>
         <div class="app-title">ระบบพิมพ์ฉลากยาหลายภาษา</div>
         <div class="app-subtitle">Multi-language Medicine Label Printer</div>
+    </div>
+    </div>
+    <div class="hdr-spacer"></div>
+    <div class="hdr-actions">
+            <span class="current-branch-badge" id="current_branch_badge"></span>
+            <span class="conn-status-badge" id="conn_status_badge" title="สถานะการเชื่อมต่อฐานข้อมูล (ยา/สาขา/ที่อยู่) แบบเรียลไทม์">
+                <span class="conn-dot" id="conn_status_dot"></span>
+                <span id="conn_status_text">กำลังเชื่อมต่อ…</span>
+            </span>
+        <button type="button" class="btn-home btn-feedback" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openFeedback()" title="ส่งความคิดเห็นเกี่ยวกับข้อมูลยา/การใช้งาน (ต้องเข้าสู่ระบบ)">Feedback</button>
+        <button type="button" class="btn-home" onclick="goHome()" title="กลับหน้าแรกเพื่อเปลี่ยนแบรนด์/สาขา">เปลี่ยนสาขา</button>
     </div>
 </header>
 <div class="brand-bar no-print"></div>
@@ -1234,29 +1385,27 @@
     </div>
 </div>
 
-<div class="app-container">
-    <div class="control-panel no-print">
-        <div class="top-bar-row">
-            <div style="display:flex; align-items:center; gap:6px;">
-                <button type="button" class="btn-home" onclick="goHome()">🏠 หน้าแรก (เปลี่ยนสาขา)</button>
-                <button type="button" class="btn-home btn-feedback" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openFeedback()" title="ส่งความคิดเห็นเกี่ยวกับข้อมูลยา/การใช้งาน (ต้องเข้าสู่ระบบ)">💬 Feedback</button>
-
+<!-- v1.38 (แบบ C): แถบสแกนบาร์โค้ด + เลือกภาษาฉลาก -->
+<div class="scan-band no-print">
+    <div class="scan-band-inner">
+        <div class="form-group barcode-scan-group">
+            <label class="band-label" for="in_barcode_scan">ยิงบาร์โค้ด / Item No.</label>
+            <div class="barcode-scan-row">
+                <input type="text" id="in_barcode_scan" class="barcode-scan-input" placeholder="เช่น 8850123456789 หรือ 1234567"
+                       inputmode="numeric" autocomplete="off"
+                       oninput="handleBarcodeInput()"
+                       onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitBarcodeLookup(); }">
+                <button type="button" class="barcode-scan-go-btn" onclick="submitBarcodeLookup()">ค้นหา</button>
             </div>
-            <span class="current-branch-badge" id="current_branch_badge"></span>
-            <span class="conn-status-badge" id="conn_status_badge" title="สถานะการเชื่อมต่อฐานข้อมูล (ยา/สาขา/ที่อยู่) แบบเรียลไทม์">
-                <span class="conn-dot" id="conn_status_dot"></span>
-                <span id="conn_status_text">กำลังเชื่อมต่อ…</span>
-            </span>
+            <div id="barcode_scan_status" class="barcode-scan-status" style="display:none;"></div>
+            <button type="button" id="dsm_open_btn" class="no-print" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.open(window._pharmaxNotFoundCode || ''); clearAddDrugBtnAlert();"
+                    style="margin-top:8px;background:#fff;color:#04B085;border:2px solid #04B085;border-radius:8px;padding:6px 12px;font-weight:700;font-family:inherit;font-size:.8rem;cursor:pointer;">
+                ➕ ไม่พบยา? เพิ่มข้อมูลยาใหม่
+            </button>
+        
         </div>
-
-        <div id="translate_warning" class="no-print" style="display:none;">
-            ⚠️ แปลภาษาไม่สำเร็จ (อาจเพราะไม่มีอินเทอร์เน็ต หรือเครือข่ายบล็อก) — ข้อความยังเป็นภาษาไทยอยู่บนฉลาก กด "ลองแปลใหม่" หรือตรวจสอบอินเทอร์เน็ตก่อนพิมพ์
-        </div>
-
-        <div class="ui-card">
-            <h3 class="ui-card-title"><span class="ui-card-num">1</span> ข้อมูลพื้นฐาน ชื่อยา และสรรพคุณ (Basic Info, Drug Name &amp; Indication)</h3>
-            <div class="form-group">
-            <label>ภาษาฉลาก (Label Language):</label>
+        <div class="lang-group">
+            <div class="band-label">ภาษาฉลาก (Label Language)</div>
             <div class="lang-switch" id="lang_switch">
                 <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">English อังกฤษ</button>
                 <button type="button" class="lang-btn" data-lang="ja" onclick="setLanguage('ja')">日本語 ญี่ปุ่น</button>
@@ -1275,58 +1424,17 @@
                 <button type="button" class="lang-btn" data-lang="hi" onclick="setLanguage('hi')">हिन्दी ฮินดี</button>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="form-group" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
-            <div style="flex: 1; min-width: 160px;">
-                <label>ประวัติการพิมพ์ล่าสุด: <span class="hint">เลือกเพื่อพิมพ์ซ้ำ</span></label>
-                <select id="history_select" onchange="if(this.value !== '') restoreHistoryItem(parseInt(this.value,10)); this.selectedIndex = 0;">
-                    <option value="">🔽 ยังไม่มีประวัติการพิมพ์</option>
-                </select>
-            </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label>ฐานข้อมูลยา:</label>
-                <div style="display: flex; gap: 6px; align-items: center;">
-                    <button type="button" class="quick-chip" onclick="PharmaxSheet.sync()" title="คลิกเพื่อซิงค์ฐานข้อมูลยาอีกครั้ง" style="flex: 0 0 auto; padding: 5px 10px;">🔄 ซิงค์ตอนนี้</button>
-                    <span id="sheet_sync_status" style="font-size: 0.72rem; color: #555; line-height: 1.3;"></span>
-                </div>
-            </div>
+<div class="app-container">
+    <div class="control-panel no-print">
+        <div id="translate_warning" class="no-print" style="display:none;">
+            ⚠️ แปลภาษาไม่สำเร็จ (อาจเพราะไม่มีอินเทอร์เน็ต หรือเครือข่ายบล็อก) — ข้อความยังเป็นภาษาไทยอยู่บนฉลาก กด "ลองแปลใหม่" หรือตรวจสอบอินเทอร์เน็ตก่อนพิมพ์
         </div>
 
-        <div class="form-group barcode-scan-group">
-            <label>🔍 ยิง Barcode หรือใส่รหัสสินค้า (Item No.): <span class="hint">รองรับทั้ง Barcode 13 หลัก และรหัสสินค้า 7 หลัก - พิมพ์/ยิงแล้วกด Enter</span></label>
-            <div class="barcode-scan-row">
-                <input type="text" id="in_barcode_scan" class="barcode-scan-input" placeholder="เช่น 8850123456789 หรือ 1234567"
-                       inputmode="numeric" autocomplete="off"
-                       oninput="handleBarcodeInput()"
-                       onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitBarcodeLookup(); }">
-                <button type="button" class="barcode-scan-go-btn" onclick="submitBarcodeLookup()">ค้นหา</button>
-            </div>
-            <div id="barcode_scan_status" class="barcode-scan-status" style="display:none;"></div>
-            <button type="button" id="dsm_open_btn" class="no-print" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.open(window._pharmaxNotFoundCode || ''); clearAddDrugBtnAlert();"
-                    style="margin-top:8px;background:#fff;color:#04B085;border:2px solid #04B085;border-radius:8px;padding:6px 12px;font-weight:700;font-family:inherit;font-size:.8rem;cursor:pointer;">
-                ➕ ไม่พบยา? เพิ่มข้อมูลยาใหม่
-            </button>
-        
-        </div>
-
-        <div class="form-group">
-            <label>👤 ชื่อผู้ใช้ยา (ภาษาอังกฤษ): <span class="hint">พิมพ์ชื่อ-สกุลเป็นภาษาอังกฤษ ระบบแปลงเป็นตัวพิมพ์ใหญ่ให้เอง · เว้นว่าง = ไม่แสดงบนฉลาก</span></label>
-            <input type="text" id="in_patient_name" placeholder="เช่น SOMCHAI JAIDEE" maxlength="40" autocomplete="off" autocapitalize="characters" spellcheck="false"
-                   oninput="onPatientNameInput(this, event)" oncompositionend="onPatientNameInput(this)">
-            <div id="patient_name_hint" class="hint" style="display:none; color:#c0392b;">⚠️ รับเฉพาะตัวอักษรภาษาอังกฤษ (A-Z) — ตัวอักษรอื่นถูกลบออกให้แล้ว</div>
-        </div>
-
-        <!-- v1.34: เภสัชกรผู้จ่ายยา (ไม่บังคับ) — ใส่เลขใบอนุญาต 5 หลัก ระบบค้นชื่อจากเว็บสภาเภสัชกรรมให้ · จำไว้ในเครื่องนี้ -->
-        <div class="form-group">
-            <label>⚕️ เลขที่ใบอนุญาตเภสัชกรผู้จ่ายยา: <span class="hint">ไม่บังคับ · ใส่เลข 5 หลัก ระบบค้นชื่อจากสภาเภสัชกรรมให้ และจำไว้ในเครื่องนี้</span></label>
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <input type="text" id="in_rph_license" inputmode="numeric" maxlength="5" placeholder="เช่น 41618" autocomplete="off" style="max-width:140px;"
-                       oninput="onRphLicenseInput(this)">
-                <button type="button" id="rph_clear_btn" class="no-print" onclick="clearRphLicense()" title="ล้าง" style="display:none; border:1px solid #ccc; background:#fff; border-radius:6px; padding:4px 10px; cursor:pointer;">✕ ล้าง</button>
-                <span id="rph_status" class="hint" style="font-size:.85em;"></span>
-            </div>
-        </div>
-
+        <div class="ui-card c-form">
+            <div class="c-row c-row-drug">
         <div class="form-group">
             <label>ชื่อยา (Generic name / Trade name): <span class="hint">พิมพ์แล้วเลือกจากรายการ หรือกด Tab/Space เพื่อรับคำแนะนำอัตโนมัติ</span></label>
             <div class="ghost-wrap">
@@ -1334,20 +1442,42 @@
                 <input type="text" id="in_drug_name" placeholder="เช่น Paracetamol, Amoxicillin..." oninput="this.classList.remove('field-invalid'); updateLabel(); handleDrugNameInput();" autocomplete="off">
             </div>
             <div id="drug_popup_list" class="smart-popup-list" style="display: none;"></div>
-            <!-- v1.37: วิธีใช้ยาตามโรค (แท็บ diseaseRegimen ใน Google Sheet) — แสดงเฉพาะยาที่มีวิธีใช้ต่างกันตามโรค -->
+        </div>
             <div id="regimen_box" class="regimen-box no-print" style="display:none;">
                 <label for="sel_regimen">🩺 ใช้รักษาโรค: <span class="hint" id="regimen_hint">ยานี้วิธีใช้ต่างกันตามโรค — เลือกแล้วระบบเติมขนาดยา เวลา สรรพคุณ และคำแนะนำให้</span></label>
                 <select id="sel_regimen" onchange="Regimen.apply(this.value)"></select>
             </div>
+            </div>
+            <div class="c-warn-row">
             <div id="drug_warning_panel" class="no-print" style="display:none;"></div>
             <div id="clinical_safety_panel" class="no-print" style="display:none;"></div>
-            <div class="clin-btn-row no-print">
+
+            </div>
+
+            <div class="c-row c-row-2">
+        <div class="form-group">
+            <label>👤 ชื่อผู้ใช้ยา (ภาษาอังกฤษ): <span class="hint">พิมพ์ชื่อ-สกุลเป็นภาษาอังกฤษ ระบบแปลงเป็นตัวพิมพ์ใหญ่ให้เอง · เว้นว่าง = ไม่แสดงบนฉลาก</span></label>
+            <input type="text" id="in_patient_name" placeholder="เช่น SOMCHAI JAIDEE" maxlength="40" autocomplete="off" autocapitalize="characters" spellcheck="false"
+                   oninput="onPatientNameInput(this, event)" oncompositionend="onPatientNameInput(this)">
+            <div id="patient_name_hint" class="hint" style="display:none; color:#c0392b;">⚠️ รับเฉพาะตัวอักษรภาษาอังกฤษ (A-Z) — ตัวอักษรอื่นถูกลบออกให้แล้ว</div>
+        </div>
+        <div class="form-group">
+            <label>⚕️ เลขที่ใบอนุญาตเภสัชกรผู้จ่ายยา: <span class="hint">ไม่บังคับ · ใส่เลข 5 หลัก ระบบค้นชื่อจากสภาเภสัชกรรมให้ และจำไว้ในเครื่องนี้</span></label>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input type="text" id="in_rph_license" inputmode="numeric" maxlength="5" placeholder="เช่น 41618" autocomplete="off" style="max-width:140px;"
+                       oninput="onRphLicenseInput(this)">
+                <button type="button" id="rph_clear_btn" class="no-print" onclick="clearRphLicense()" title="ล้าง" style="display:none; border:1px solid #ccc; background:#fff; border-radius:6px; padding:4px 10px; cursor:pointer;">✕ ล้าง</button>
+                <span id="rph_status" class="hint" style="font-size:.85em;"></span>
+            <div class="clin-btn-row clin-inline no-print">
                 <button type="button" class="quick-chip clin-open-btn" onclick="openSpecialPopModal()">⚠️ คัดกรองกลุ่มพิเศษ / แพ้ยา / โรคไต / เด็ก</button>
                 <div id="patient_profile_summary" class="patient-profile-summary"></div>
             </div>
-        </div>
 
-        <!-- Smart Indication Field (Textarea + Popup Autocomplete) -->
+            </div>
+        </div>
+            </div>
+
+            <div class="c-row c-row-text">
         <div class="form-group">
             <label>สรรพคุณ (Indication): <span class="hint">พิมพ์ค้นหาจะมีรายการเด้งขึ้นมาให้เลือก หรือพิมพ์เพิ่มเองได้อิสระ</span> <button type="button" id="btn_retry_ind" class="btn-retry-translate" onclick="performTranslateInd()">🔄 ลองแปลใหม่</button></label>
             <div class="ghost-wrap">
@@ -1356,10 +1486,16 @@
             </div>
             <div id="ind_popup_list" class="smart-popup-list" style="display: none;"></div>
         </div>
-        </div><!-- /ui-card: Card 1 -->
+        <div class="form-group">
+            <label>คำแนะนำเพิ่มเติม (Additional Advice): <span class="hint">พิมพ์ค้นหาจะมีรายการเด้งขึ้นมาให้เลือก หรือพิมพ์เพิ่มเองได้</span> <button type="button" id="btn_retry_adv" class="btn-retry-translate" onclick="performTranslateAdv()">🔄 ลองแปลใหม่</button></label>
+            <div class="ghost-wrap">
+                <div class="ghost-overlay ghost-overlay-textarea" id="ghost_advice" aria-hidden="true"></div>
+                <textarea id="in_advice" rows="2" placeholder="พิมพ์คำแนะนำ เช่น ง่วงนอน, ทานน้ำมากๆ..." oninput="handleSmartInput('adv')" autocomplete="off"></textarea>
+            </div>
+            <div id="adv_popup_list" class="smart-popup-list" style="display: none;"></div>
+        </div>
+            </div>
 
-        <div class="ui-card">
-            <h3 class="ui-card-title"><span class="ui-card-num">2</span> ขนาดยาและเวลา (Dosage &amp; Timing)</h3>
             <div class="form-group" style="display: flex; gap: 20px;">
             <div style="flex: 1;">
                 <label>ประเภทของยา (Dosage Form):</label>
@@ -1378,10 +1514,10 @@
         <div class="form-group">
             <label>ปริมาณการใช้ยา <span class="hint">(เว้นว่างไว้จะขึ้น X อัตโนมัติ | <b>ไม่ต้องพิมพ์หน่วยภาษาไทยในฉลาก</b> | กด <kbd>Enter</kbd> เพื่อเลื่อนช่องถัดไป)</span>:</label>
             <div class="dosage-grid">
-                <div class="dosage-item"><label>เช้า</label><input type="text" id="qty_morning" list="dose_options" autocomplete="off" placeholder="" oninput="updateLabel()"></div>
-                <div class="dosage-item"><label>กลางวัน</label><input type="text" id="qty_noon" list="dose_options" autocomplete="off" placeholder="" oninput="updateLabel()"></div>
-                <div class="dosage-item"><label>เย็น</label><input type="text" id="qty_evening" list="dose_options" autocomplete="off" placeholder="" oninput="updateLabel()"></div>
-                <div class="dosage-item"><label>ก่อนนอน</label><input type="text" id="qty_bed" list="dose_options" autocomplete="off" placeholder="" oninput="updateLabel()"></div>
+                <div class="dosage-item"><label>เช้า</label><input type="text" id="qty_morning" list="dose_options" autocomplete="off" placeholder="ไม่ใช้" oninput="updateLabel()"></div>
+                <div class="dosage-item"><label>กลางวัน</label><input type="text" id="qty_noon" list="dose_options" autocomplete="off" placeholder="ไม่ใช้" oninput="updateLabel()"></div>
+                <div class="dosage-item"><label>เย็น</label><input type="text" id="qty_evening" list="dose_options" autocomplete="off" placeholder="ไม่ใช้" oninput="updateLabel()"></div>
+                <div class="dosage-item"><label>ก่อนนอน</label><input type="text" id="qty_bed" list="dose_options" autocomplete="off" placeholder="ไม่ใช้" oninput="updateLabel()"></div>
             </div>
 
             <div id="high_alert_warning" class="high-alert-warning" style="display:none;">
@@ -1391,46 +1527,26 @@
             <div class="quick-chip-row" id="quick_dosage_chips"></div>
             <div class="quick-chip-row quick-chip-row-freq" id="quick_freq_shortcuts"></div>
         </div>
-        </div><!-- /ui-card: Card 2 -->
 
-        <div class="ui-card">
-            <h3 class="ui-card-title"><span class="ui-card-num">3</span> คำแนะนำและคำเตือน (Advice &amp; Warnings)</h3>
-            <!-- Smart Advice Field (Textarea + Popup Autocomplete) -->
-        <div class="form-group">
-            <label>คำแนะนำเพิ่มเติม (Additional Advice): <span class="hint">พิมพ์ค้นหาจะมีรายการเด้งขึ้นมาให้เลือก หรือพิมพ์เพิ่มเองได้</span> <button type="button" id="btn_retry_adv" class="btn-retry-translate" onclick="performTranslateAdv()">🔄 ลองแปลใหม่</button></label>
-            <div class="ghost-wrap">
-                <div class="ghost-overlay ghost-overlay-textarea" id="ghost_advice" aria-hidden="true"></div>
-                <textarea id="in_advice" rows="2" placeholder="พิมพ์คำแนะนำ เช่น ง่วงนอน, ทานน้ำมากๆ..." oninput="handleSmartInput('adv')" autocomplete="off"></textarea>
+
+
+            <details class="c4-more c-tools no-print">
+                <summary>เครื่องมือเสริม: ประวัติการพิมพ์ · ซิงค์ฐานข้อมูลยา · ชุดยาโปรด · ล้างฟอร์ม</summary>
+        <div class="form-group" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 1; min-width: 160px;">
+                <label>ประวัติการพิมพ์ล่าสุด: <span class="hint">เลือกเพื่อพิมพ์ซ้ำ</span></label>
+                <select id="history_select" onchange="if(this.value !== '') restoreHistoryItem(parseInt(this.value,10)); this.selectedIndex = 0;">
+                    <option value="">🔽 ยังไม่มีประวัติการพิมพ์</option>
+                </select>
             </div>
-            <div id="adv_popup_list" class="smart-popup-list" style="display: none;"></div>
-        </div>
-        </div><!-- /ui-card: Card 3 -->
-
-        <div class="ui-card">
-            <h3 class="ui-card-title"><span class="ui-card-num">4</span> การดำเนินการและคิวพิมพ์ (Action &amp; Batch Queue)</h3>
-            <!-- ===== ส่วน A: ออกฉลากยาตัวนี้ (ปุ่มหลักมี 2 ปุ่มเท่านั้น) ===== -->
-            <div class="c4-block">
-                <div class="c4-step">ยาตัวนี้ต้องการทำอะไร?</div>
-                <div class="c4-main-actions">
-                    <button type="button" class="btn-action-primary c4-btn" onclick="addCurrentItemToQueue()">
-                        <span class="c4-btn-main">➕ เพิ่มเข้าคิว</span>
-                        <span class="c4-btn-sub">สะสมหลายตัว แล้วพิมพ์ทีเดียว</span>
-                    </button>
-                    <button type="button" class="btn-action-secondary c4-btn" onclick="printSingleCurrentItem()">
-                        <span class="c4-btn-main">🖨️ พิมพ์ทันที</span>
-                        <span class="c4-btn-sub">เฉพาะฉลากตัวนี้</span>
-                    </button>
+            <div style="flex: 1; min-width: 200px;">
+                <label>ฐานข้อมูลยา:</label>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <button type="button" class="quick-chip" onclick="PharmaxSheet.sync()" title="คลิกเพื่อซิงค์ฐานข้อมูลยาอีกครั้ง" style="flex: 0 0 auto; padding: 5px 10px;">🔄 ซิงค์ตอนนี้</button>
+                    <span id="sheet_sync_status" style="font-size: 0.72rem; color: #555; line-height: 1.3;"></span>
                 </div>
-                <label class="print-thai-toggle no-print">
-                    <input type="checkbox" id="chk_print_thai_extra">
-                    🖨️ พิมพ์ฉลากภาษาไทยเพิ่มด้วย (Print Thai Copy)
-                </label>
-                <div class="hint" style="text-align:center;">เลือกเครื่องพิมพ์ที่ชื่อ "Label"</div>
             </div>
-
-            <!-- ===== เครื่องมือเสริม (พับเก็บไว้ ไม่ให้รก) ===== -->
-            <details class="c4-more no-print">
-                <summary>⭐ เครื่องมือเสริม: ชุดยาโปรด / ล้างฟอร์ม</summary>
+        </div>
                 <div class="form-group" style="margin-top: 8px;">
                     <div style="display: flex; gap: 6px;">
                         <select id="favorite_preset_select" onchange="if(this.value) applyFavoritePreset(this.value); this.selectedIndex = 0;" style="flex: 1;">
@@ -1443,53 +1559,13 @@
                     <button class="btn-clear" onclick="clearCurrentForm()" style="flex:1;">🗑️ ล้างฟอร์มปัจจุบัน (Clear)</button>
                 </div>
             </details>
-
-            <!-- ===== ส่วน B: คิวรอพิมพ์ ===== -->
-            <div class="batch-queue-section no-print">
-                <div class="batch-queue-title">
-                    <span>📌 คิวรอพิมพ์ (Batch Queue)</span>
-                    <span id="queue_count_badge" style="background:var(--color-navy); color:#fff; padding:2px 8px; border-radius:10px; font-size:0.75rem;">0 รายการ</span>
-                </div>
-
-                <div id="queue_cards_container" class="queue-cards-container">
-                    <div class="queue-empty-msg">ยังไม่มียาในคิว — กด "➕ เพิ่มเข้าคิว" ด้านบนเพื่อสะสมรายการ</div>
-                </div>
-
-                <!-- ปุ่มพิมพ์หลัก อยู่ใต้รายการคิว -->
-                <div class="btn-row" style="margin-top: 10px;">
-                    <button class="btn-action-primary" id="btn_batch_print" onclick="safeBatchPrint()" style="width: 100%; padding: 12px; font-size: 0.95rem;">🖨️ พิมพ์ทั้งหมดในคิว (Batch Print)</button>
-                </div>
-
-                <!-- กู้คืนคิว: พับเก็บไว้ (ใช้เฉพาะตอนกระดาษหมด/เครื่องพิมพ์ค้าง/กดล้างผิด) -->
-                <details class="c4-more no-print">
-                    <summary>🕘 เรียกคิวที่เพิ่งพิมพ์/ล้างกลับมา</summary>
-                    <div class="queue-recovery no-print" style="border:none; background:none; padding:6px 0 0;">
-                        <div class="queue-recovery-row">
-                            <select id="queue_history_select" onchange="if (this.value !== '') restoreQueueFromHistory(parseInt(this.value, 10)); this.selectedIndex = 0;">
-                                <option value="">🔽 ยังไม่มีคิวที่พิมพ์/ล้างไปแล้ว</option>
-                            </select>
-                            <button type="button" class="quick-chip" id="btn_reprint_last_queue" onclick="reprintLastQueue()" style="border-color: var(--color-navy); color: var(--color-navy); font-weight: 700;" disabled>🖨️ พิมพ์ซ้ำคิวล่าสุด</button>
-                        </div>
-                    </div>
-                </details>
-
-                <!-- ปุ่มล้างคิว อยู่ล่างสุด กดยากโดยตั้งใจ -->
-                <div style="margin-top: 10px; text-align: center;">
-                    <button type="button" class="btn-start-over-safe" onclick="startOverQueue()">🔄 เริ่มใหม่ / ล้างคิวทั้งหมด</button>
-                </div>
-            </div>
-        </div><!-- /ui-card: Card 4 -->
-
-        <!-- 📝 เครดิตผู้สร้างและหมายเลขเวอร์ชันมุมล่างสุดของจอฝั่งซ้าย -->
-        <div class="app-footer no-print" style="margin-top: 16px; border-top: 1px solid #eee; padding-top: 8px;">
-            Pharmax Pharmacy &middot; ระบบพิมพ์ฉลากยาหลายภาษา &middot; Created by Mark Rx Mobile &middot; <span id="footer_version"></span>
-            <a href="#" class="footer-admin-link" onclick="openAdminPage(); return false;" title="Admin">Admin</a>
         </div>
     </div>
 
     <!-- Label Preview -->
     <div class="preview-panel">
-        <h2 class="no-print" style="width: 100%; border-bottom: 2px solid var(--color-navy);">Preview</h2>
+        <div class="preview-card no-print-bg">
+        <div class="preview-head no-print"><span>ตัวอย่างฉลาก 76 × 76 มม.</span></div>
         <div class="preview-wrapper">
             <div class="label-scale-wrap">
             <div class="label-box" id="label_box">
@@ -1557,7 +1633,25 @@
             </div>
         </div>
 
-        <!-- v1.22: ปรับขนาดฟอนต์ด่วน + สลับโลโก้/เวลาทำการ ก่อนพิมพ์ -->
+            <div class="c4-block">
+                <div class="c4-step">ยาตัวนี้ต้องการทำอะไร?</div>
+                <div class="c4-main-actions">
+                    <button type="button" class="btn-action-primary c4-btn" onclick="addCurrentItemToQueue()">
+                        <span class="c4-btn-main">➕ เพิ่มเข้าคิว</span>
+                        <span class="c4-btn-sub">สะสมหลายตัว แล้วพิมพ์ทีเดียว</span>
+                    </button>
+                    <button type="button" class="btn-action-secondary c4-btn" onclick="printSingleCurrentItem()">
+                        <span class="c4-btn-main">🖨️ พิมพ์ทันที</span>
+                        <span class="c4-btn-sub">เฉพาะฉลากตัวนี้</span>
+                    </button>
+                </div>
+                <label class="print-thai-toggle no-print">
+                    <input type="checkbox" id="chk_print_thai_extra">
+                    🖨️ พิมพ์ฉลากภาษาไทยเพิ่มด้วย (Print Thai Copy)
+                </label>
+                <div class="hint" style="text-align:center;">เลือกเครื่องพิมพ์ที่ชื่อ "Label"</div>
+            </div>
+
         <div class="label-quick-controls no-print">
             <div class="label-toggle-group" role="group" aria-label="สลับโลโก้/เวลาทำการ">
                 <button type="button" id="toggle_logo_btn" class="label-toggle-btn" onclick="toggleLabelLogo()" title="ซ่อน/แสดงโลโก้บนฉลาก สำหรับสาขาที่ใช้สติกเกอร์ร่วมกับแบรนด์อื่นในเครือ">🖼️ ซ่อนโลโก้</button>
@@ -1565,10 +1659,9 @@
             </div>
         </div>
 
-        <!-- v1.8: แผงตรวจสอบฉลาก (ข้อความล้น / ย่อถึงขั้นต่ำ / ขนาดยาแปลไม่ครบ) -->
         <div id="label_check_panel" class="label-check-panel no-print" style="display:none;"></div>
+        </div>
 
-        <!-- ⚡ Quick Queue Widget (แสดงสรุปคิวฝั่งขวาแบบ Real-time) -->
         <div class="quick-queue-widget no-print">
             <div class="quick-widget-title">
                 <span>⚡ สรุปคิวฉลากด่วน (Quick Queue)</span>
@@ -1584,6 +1677,49 @@
         </div>
     </div>
 </div>
+
+<!-- v1.38 (แบบ C): ถาดคิวพิมพ์ด้านล่าง -->
+<div class="queue-tray no-print">
+            <div class="batch-queue-section no-print">
+                <div class="batch-queue-title">
+                    <span>📌 คิวรอพิมพ์ (Batch Queue)</span>
+                    <span id="queue_count_badge" style="background:var(--color-navy); color:#fff; padding:2px 8px; border-radius:10px; font-size:0.75rem;">0 รายการ</span>
+                </div>
+
+                <div id="queue_cards_container" class="queue-cards-container">
+                    <div class="queue-empty-msg">ยังไม่มียาในคิว — กด "➕ เพิ่มเข้าคิว" ด้านบนเพื่อสะสมรายการ</div>
+                </div>
+
+                <!-- ปุ่มพิมพ์หลัก อยู่ใต้รายการคิว -->
+                <div class="btn-row" style="margin-top: 10px;">
+                    <button class="btn-action-primary" id="btn_batch_print" onclick="safeBatchPrint()" style="width: 100%; padding: 12px; font-size: 0.95rem;">🖨️ พิมพ์ทั้งหมดในคิว (Batch Print)</button>
+                </div>
+
+                <!-- กู้คืนคิว: พับเก็บไว้ (ใช้เฉพาะตอนกระดาษหมด/เครื่องพิมพ์ค้าง/กดล้างผิด) -->
+                <details class="c4-more no-print">
+                    <summary>🕘 เรียกคิวที่เพิ่งพิมพ์/ล้างกลับมา</summary>
+                    <div class="queue-recovery no-print" style="border:none; background:none; padding:6px 0 0;">
+                        <div class="queue-recovery-row">
+                            <select id="queue_history_select" onchange="if (this.value !== '') restoreQueueFromHistory(parseInt(this.value, 10)); this.selectedIndex = 0;">
+                                <option value="">🔽 ยังไม่มีคิวที่พิมพ์/ล้างไปแล้ว</option>
+                            </select>
+                            <button type="button" class="quick-chip" id="btn_reprint_last_queue" onclick="reprintLastQueue()" style="border-color: var(--color-navy); color: var(--color-navy); font-weight: 700;" disabled>🖨️ พิมพ์ซ้ำคิวล่าสุด</button>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- ปุ่มล้างคิว อยู่ล่างสุด กดยากโดยตั้งใจ -->
+                <div style="margin-top: 10px; text-align: center;">
+                    <button type="button" class="btn-start-over-safe" onclick="startOverQueue()">🔄 เริ่มใหม่ / ล้างคิวทั้งหมด</button>
+                </div>
+            </div>
+</div>
+
+        <div class="app-footer no-print" style="margin-top: 16px; border-top: 1px solid #eee; padding-top: 8px;">
+            Pharmax Pharmacy &middot; ระบบพิมพ์ฉลากยาหลายภาษา &middot; Created by Mark Rx Mobile &middot; <span id="footer_version"></span>
+            <a href="#" class="footer-admin-link" onclick="openAdminPage(); return false;" title="Admin">Admin</a>
+        </div>
+
 
 <!-- ============================= -->
 <!-- MODALS (Help & Cheat Sheet)   -->
@@ -2981,7 +3117,20 @@
     }
 
     // v1.18: สลับโลโก้ขาวดำบนหัวฉลาก (.label-logo) ตามแบรนด์ของสาขาที่เลือกอยู่ (Pharmax / iCare / Super Drug)
+    // v1.38: โลโก้หัวเว็บ + ธีมสีหน้าเว็บ เปลี่ยนตามแบรนด์ของสาขาที่เลือก (Pharmax / iCare / Super Drug)
+    let _hdrPharmaxLogo = null;
+    function applyBrandTheme(brand) {
+        brand = brand || 'pharmax';
+        document.body.setAttribute('data-brand', brand);
+        const h = document.getElementById('app_header_logo');
+        if (!h) return;
+        if (_hdrPharmaxLogo === null) _hdrPharmaxLogo = h.src;
+        const src = brand === 'pharmax' ? _hdrPharmaxLogo : (BRAND_LOGOS_COLOR[brand] || _hdrPharmaxLogo);
+        if (src && h.src !== src) h.src = src;
+        h.alt = (typeof BRAND_DISPLAY_NAMES !== 'undefined' && BRAND_DISPLAY_NAMES[brand]) || 'Pharmax';
+    }
     function updateBrandLogo() {
+        try { applyBrandTheme(getBrandForBranch(currentBranch)); } catch (e) {}
         if (BRAND_LOGOS.pharmax === null) {
             // เก็บ base64 เดิมของโลโก้ Pharmax (ฝังอยู่ใน src ของ img ตั้งแต่ต้น) ไว้ใช้สลับกลับ โดยไม่ต้องฝังซ้ำใน data.js
             const defaultImg = document.getElementById('label_logo_img');
@@ -3591,27 +3740,27 @@
         // medical_glossary มาก่อน: แท็บภาษาในชีทเป็นสูตร GOOGLETRANSLATE (เครื่องแปล) ส่วน glossary คือคำที่คนคัดไว้
         if (lang !== 'th') await Glossary.whenReady(3000);
         const glossaryText = Glossary.lookup(text, lang);
-        if (glossaryText) return { text: glossaryText, failed: false };
+        if (glossaryText) return { text: glossaryText, failed: false, source: 'glossary' };
 
-        if (sheetInfo && sheetInfo.trusted) return { text: sheetInfo.text, failed: false };
+        if (sheetInfo && sheetInfo.trusted) return { text: sheetInfo.text, failed: false, source: 'sheet' };
 
         let verified = findVerified(text, db, lang);
-        if (verified) return { text: verified, failed: false };
+        if (verified) return { text: verified, failed: false, source: 'dict' };
 
-        if (sheetInfo) return { text: sheetInfo.text, failed: false };
+        if (sheetInfo) return { text: sheetInfo.text, failed: false, source: 'sheetAuto' };
 
         if (lang === 'ja' && /[　-〿぀-ゟ゠-ヿ＀-￯一-龯★-☆←-↕※]/.test(text)) {
             return { text, failed: false };
         }
 
         const ck = cacheKey(text, lang);
-        if (translationCache.has(ck)) return { text: translationCache.get(ck), failed: false };
+        if (translationCache.has(ck)) return { text: translationCache.get(ck), failed: false, source: 'live' };
 
         for (const provider of TRANSLATE_PROVIDERS) {
             if (signal && signal.aborted) throw new DOMException('Aborted', 'AbortError');
             try {
                 let result = await provider.fn(text, lang, signal);
-                if (result) { saveToCache(ck, result); return { text: result, failed: false }; }
+                if (result) { saveToCache(ck, result); return { text: result, failed: false, source: 'live' }; }
             } catch (e) {
                 // เช็คเฉพาะตอนที่ signal จากภายนอกถูกยกเลิกจริงๆ (เช่นพิมพ์บรรทัดใหม่ทับ) ถึงจะหยุดเลย -
                 // ถ้าเป็นแค่ timeout ภายในของผู้ให้บริการรายนี้ (ไม่ใช่ signal ภายนอก) ให้ไปลองผู้ให้บริการถัดไปต่อ
@@ -3624,6 +3773,9 @@
     }
 
     let translateFailed = { ind: false, adv: false };
+    // v1.38: เก็บบรรทัดที่ "ไม่พบใน medical_glossary" ไว้แสดงใต้พรีวิว — จะได้รู้ว่าคำแปลไหนมาจากชีทภาษา/แปลสด แล้วเพิ่มเข้า glossary
+    const _glossMiss = { ind: [], adv: [] };
+    const GLOSS_SRC_TEXT = { sheet: 'แท็บภาษา (คนตรวจแล้ว)', dict: 'พจนานุกรมใน data.js', sheetAuto: 'แท็บภาษา (GOOGLETRANSLATE)', live: 'แปลสด' };
     function updateTranslateWarning(field, failed) {
         translateFailed[field] = failed;
         let banner = document.getElementById('translate_warning');
@@ -3645,6 +3797,7 @@
         let rawText = document.getElementById('in_indication').value;
         if (!rawText.trim()) {
             document.getElementById('out_indication').innerText = "";
+            _glossMiss.ind = [];
             updateTranslateWarning('ind', false);
             fitLabelToBox();
             return;
@@ -3654,11 +3807,13 @@
         let lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
         let outLines = [];
         let anyFailed = false;
+        const missGloss = [];   // v1.38: บรรทัดที่ไม่ได้มาจาก medical_glossary
         try {
             for (let line of lines) {
                 let result = await translateLine(line, currentLang, indicationsDB, controller.signal, document.getElementById('in_drug_name').value);
                 outLines.push(result.text);
                 if (result.failed) anyFailed = true;
+                if (result.source && result.source !== 'glossary') missGloss.push({ th: line, src: result.source });
             }
         } catch (e) {
             if (e.name === 'AbortError') return;
@@ -3666,6 +3821,7 @@
         }
         if (controller.signal.aborted) return;   // v1.35: มีการเปลี่ยนยา/ภาษาระหว่างแปล → ห้ามเขียนผลของยาตัวเก่าทับ
         document.getElementById('out_indication').innerText = outLines.join(', ');
+        _glossMiss.ind = missGloss;
         updateTranslateWarning('ind', anyFailed);
         fitLabelToBox();
     }
@@ -3678,6 +3834,7 @@
         let rawText = document.getElementById('in_advice').value;
         if (!rawText.trim()) {
             document.getElementById('out_advice').innerText = "";
+            _glossMiss.adv = [];
             updateTranslateWarning('adv', false);
             fitLabelToBox();
             return;
@@ -3687,11 +3844,13 @@
         let lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
         let outLines = [];
         let anyFailed = false;
+        const missGloss = [];   // v1.38: บรรทัดที่ไม่ได้มาจาก medical_glossary
         try {
             for (let line of lines) {
                 let result = await translateLine(line, currentLang, advicesDB, controller.signal, document.getElementById('in_drug_name').value);
                 outLines.push(result.text);
                 if (result.failed) anyFailed = true;
+                if (result.source && result.source !== 'glossary') missGloss.push({ th: line, src: result.source });
             }
         } catch (e) {
             if (e.name === 'AbortError') return;
@@ -3699,6 +3858,7 @@
         }
         if (controller.signal.aborted) return;   // v1.35: มีการเปลี่ยนยา/ภาษาระหว่างแปล → ห้ามเขียนผลของยาตัวเก่าทับ
         document.getElementById('out_advice').innerText = outLines.join(', ');
+        _glossMiss.adv = missGloss;
         updateTranslateWarning('adv', anyFailed);
         fitLabelToBox();
     }
@@ -3915,6 +4075,13 @@
                     items.push({ cls: 'warn', text: '⚠️ ขนาดยาช่อง "' + names[id] + '" (' + escapeHtml(raw) + ') ยังมีคำภาษาไทยที่ระบบแปลหน่วยไม่ได้ — ใช้รูปแบบ ตัวเลข + หน่วย เช่น 1 เม็ด, 1.5 เม็ด, 2 ช้อนชาครึ่ง, 5 มล.' });
                 }
             });
+        }
+        if (currentLang && currentLang !== 'th') {
+            const miss = _glossMiss.ind.concat(_glossMiss.adv);
+            if (miss.length) {
+                items.push({ cls: 'info', text: '📘 ' + miss.length + ' บรรทัดไม่พบใน medical_glossary (ใช้คำแปลจากแหล่งอื่น) — เพิ่มข้อความไทยนี้เข้า glossary เพื่อให้ใช้คำแปลที่คัดไว้:' +
+                    '<ul style="margin:3px 0 0;padding-left:18px">' + miss.map(m => '<li>' + escapeHtml(m.th) + ' <span style="opacity:.7">← ' + (GLOSS_SRC_TEXT[m.src] || m.src) + '</span></li>').join('') + '</ul>' });
+            }
         }
         if (!items.length) {
             panel.style.display = 'none';
