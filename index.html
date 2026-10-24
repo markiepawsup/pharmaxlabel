@@ -3906,20 +3906,55 @@
         }
         const from = srcImg.getBoundingClientRect();
         const fromFilter = getComputedStyle(srcImg).filter;
+        // v1.38: ถ้ารายการสาขาเปิดอยู่ → ปุ่มสาขาที่เลือกลอยขึ้นไปเป็นป้ายสาขาบนหัว (พร้อมโลโก้)
+        const pill = _branchBtnSnapshot(code);
         const bg = _brandBgLayer(brand);                 // พื้นสีแบรนด์ค้างไว้ระหว่างสลับหน้า แล้วค่อยเฟดหาย
         selectBranch(code);                              // แสดงหน้าสร้างฉลากด้านหลัง (ใช้วัดตำแหน่งโลโก้ปลายทาง)
         const target = document.getElementById('app_header_logo');
+        const badge = document.getElementById('current_branch_badge');
         target.style.visibility = 'hidden';
+        if (pill && badge) badge.style.visibility = 'hidden';
         await new Promise(r => requestAnimationFrame(r));
         const to = target.getBoundingClientRect();
         const fly = _flyClone(srcImg, from, to, fromFilter, 'none', 950);
+        const bub = (pill && badge) ? _flyBubble(pill.rect, pill.style, badge.getBoundingClientRect(), getComputedStyle(badge), badge.textContent || pill.text, 1000, 60) : null;
         bg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 750, delay: 200, easing: 'ease', fill: 'forwards' });
-        await fly.done;
+        await Promise.all([fly.done, bub ? bub.done : null]);
         target.style.visibility = '';
-        fly.el.remove(); bg.remove();
+        if (badge) badge.style.visibility = '';
+        fly.el.remove(); bg.remove(); if (bub) bub.el.remove();
         pulseHeaderLogo();
         _entering = false;
         const bc = document.getElementById('in_barcode_scan'); if (bc) bc.focus();
+    }
+
+    // v1.38: ตำแหน่ง/สีของปุ่มสาขาในรายการ (เฉพาะตอนรายการเปิดอยู่และมองเห็นปุ่ม)
+    function _branchBtnSnapshot(code) {
+        const list = document.getElementById('home_branch_switch');
+        if (!list || !list.classList.contains('show') || list.offsetParent === null) return null;
+        const btn = Array.from(list.querySelectorAll('.branch-btn')).find(b => b.dataset.branch === code); if (!btn) return null;
+        const r = btn.getBoundingClientRect(), lr = list.getBoundingClientRect();
+        if (r.width < 1 || r.bottom < lr.top || r.top > lr.bottom) return null;
+        return { rect: r, style: getComputedStyle(btn), text: btn.textContent, el: btn };
+    }
+    // ป้ายลอยจากตำแหน่งหนึ่งไปอีกตำแหน่ง พร้อมเปลี่ยนสี/ขนาด/มุมโค้ง (ใช้ทั้งขาเข้าและขากลับ)
+    function _flyBubble(fromR, fs, toR, ts, text, ms, delay) {
+        const bc = st => parseFloat(st.borderTopWidth) ? st.borderTopColor : st.backgroundColor;   // ไม่มีขอบ = ขอบสีเดียวกับพื้น
+        const fB = bc(fs), tB = bc(ts);
+        const c = document.createElement('div');
+        c.className = 'badge-fly'; c.textContent = text;
+        Object.assign(c.style, { left: fromR.left + 'px', top: fromR.top + 'px', width: fromR.width + 'px', height: fromR.height + 'px',
+            background: fs.backgroundColor, color: fs.color, borderRadius: fs.borderRadius, fontFamily: fs.fontFamily, fontWeight: fs.fontWeight, fontSize: fs.fontSize,
+            border: '1.5px solid ' + fB });
+        document.body.appendChild(c);
+        const a = c.animate([
+            { left: fromR.left + 'px', top: fromR.top + 'px', width: fromR.width + 'px', height: fromR.height + 'px', backgroundColor: fs.backgroundColor, color: fs.color,
+              borderRadius: fs.borderRadius, fontSize: fs.fontSize, borderColor: fB, boxShadow: '0 0 0 rgba(0,0,0,0)' },
+            { offset: 0.5, boxShadow: '0 14px 34px rgba(0,0,0,.28)' },
+            { left: toR.left + 'px', top: toR.top + 'px', width: toR.width + 'px', height: toR.height + 'px', backgroundColor: ts.backgroundColor, color: ts.color,
+              borderRadius: ts.borderRadius, fontSize: ts.fontSize, borderColor: tB, boxShadow: '0 0 0 rgba(0,0,0,0)' }
+        ], { duration: ms, delay: delay || 0, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'both' });
+        return { el: c, done: a.finished.catch(() => {}) };
     }
 
     // v1.38: กดป้ายสาขาบนหัว → กลับหน้าเลือกสาขาของแบรนด์เดิม (เปิดรายการสาขาไว้) แล้วป้ายลอยกลับเข้าไปอยู่ในตำแหน่งของมันในรายการ
@@ -3949,23 +3984,11 @@
         if (!canAnim || !target) return;
         const to = target.getBoundingClientRect(), ts = getComputedStyle(target);
         target.style.visibility = 'hidden';
-        const c = document.createElement('div');
-        c.className = 'badge-fly';
-        c.textContent = badge.textContent;
-        Object.assign(c.style, { left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px',
-            background: bs.backgroundColor, color: bs.color, borderRadius: bs.borderRadius, font: bs.font, padding: bs.padding, border: '1.5px solid transparent' });
-        document.body.appendChild(c);
         home.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 380, easing: 'ease-out' });
-        const anim = c.animate([
-            { left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px', backgroundColor: bs.backgroundColor, color: bs.color,
-              borderRadius: bs.borderRadius, fontSize: bs.fontSize, borderColor: 'transparent', boxShadow: '0 10px 30px rgba(0,0,0,.25)' },
-            { offset: 0.55, boxShadow: '0 14px 34px rgba(0,0,0,.28)' },
-            { left: to.left + 'px', top: to.top + 'px', width: to.width + 'px', height: to.height + 'px', backgroundColor: ts.backgroundColor, color: ts.color,
-              borderRadius: ts.borderRadius, fontSize: ts.fontSize, borderColor: ts.borderTopColor, boxShadow: '0 0 0 rgba(0,0,0,0)' }
-        ], { duration: 900, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'forwards' });
-        await anim.finished.catch(() => {});
+        const bub = _flyBubble(from, bs, to, ts, badge.textContent, 900, 0);
+        await bub.done;
         target.style.visibility = '';
-        c.remove();
+        bub.el.remove();
     }
 
     async function goHome() {
@@ -7439,7 +7462,7 @@ window.PrintLog = (function () {
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
@@ -7455,5 +7478,34 @@ function openAdminPage() {
 }
 </script>
 <script src="drug-submit.js"></script>
+<script>
+/* v1.38: ปิด auto-fill / คำแนะนำจากเบราว์เซอร์และคีย์บอร์ด ทุกช่องกรอก (เช่น ช่องบาร์โค้ดโผล่รหัสไปรษณีย์/ที่อยู่ที่บันทึกไว้)
+   - ใช้ค่า autocomplete ที่เบราว์เซอร์ไม่รู้จัก ("pmx-off") เพราะ Chrome มักไม่สน autocomplete="off" กับการเติมที่อยู่
+   - ช่องรหัสผ่าน → "new-password" (ไม่เสนอรหัสที่บันทึกไว้) · ครอบคลุมช่องที่สร้างทีหลังด้วย (หน้าต่างเพิ่มยา ฯลฯ) */
+(function () {
+  const SKIP = /^(checkbox|radio|file|hidden|range|color|button|submit|reset|image)$/i;
+  function off(el) {
+    if (!el || el.dataset.pmxNoAf) return;
+    const tag = el.tagName;
+    if (tag === 'INPUT') {
+      if (SKIP.test(el.type)) return;
+      el.setAttribute('autocomplete', el.type === 'password' ? 'new-password' : 'pmx-off');
+      el.setAttribute('autocorrect', 'off'); el.setAttribute('autocapitalize', 'off'); el.setAttribute('spellcheck', 'false');
+      el.setAttribute('data-lpignore', 'true'); el.setAttribute('data-1p-ignore', ''); el.setAttribute('data-form-type', 'other');   // ตัวจัดการรหัสผ่าน (LastPass / 1Password / Dashlane)
+    } else if (tag === 'TEXTAREA') {
+      el.setAttribute('autocomplete', 'pmx-off'); el.setAttribute('autocorrect', 'off');
+    } else if (tag === 'FORM') {
+      el.setAttribute('autocomplete', 'off');
+    } else return;
+    el.dataset.pmxNoAf = '1';
+  }
+  function scan(root) { (root.querySelectorAll ? root : document).querySelectorAll('input, textarea, form').forEach(off); if (root.tagName) off(root); }
+  function start() {
+    scan(document);
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) scan(n); }))).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
 </body>
 </html>
