@@ -1166,7 +1166,7 @@
 
         #app_screen { background: #F4F7FB; min-height: 100vh; color: var(--c-text); }
         @media screen and (min-width: 1400px) { .app-container { zoom: 1; } #app_screen { zoom: 1.08; } }
-        @media print { #app_screen { zoom: 1 !important; background: none; } .scan-band, .queue-tray, .no-print { display: none !important; } }
+        @media print { #app_screen { display: none !important; } .no-print { display: none !important; } }   /* v1.38: ตอนพิมพ์ใช้เฉพาะ #batch_print_container (อยู่นอก #app_screen) — กันปุ่ม/การ์ดหน้าจอติดไปเป็นหน้าเกิน */
 
         /* header */
         .app-header { justify-content: flex-start; gap: 14px; padding: 8px 20px; flex-wrap: wrap; box-shadow: none; border-bottom: 1px solid #E3EAF3; }
@@ -1271,7 +1271,31 @@
         #fab_print { display: none !important; }   /* มีปุ่ม "พิมพ์ทันที" ใต้ฉลากแล้ว (Ctrl+P ยังใช้ได้) */
         @media screen and (max-height: 960px) and (min-width: 901px) { :root { --preview-scale: 1.22; } }
         @media screen and (max-height: 800px) and (min-width: 901px) { :root { --preview-scale: 1.08; } }
+        /* v1.38: ธงประกอบปุ่มภาษา (วาดเป็น SVG ฝังในไฟล์ — ไม่ต้องโหลดจากเน็ต, Windows ไม่แสดงอีโมจิธงชาติ) */
+        .lang-flag { display: inline-block; width: 1.5em; height: 1em; margin-right: 6px; vertical-align: -0.15em; border-radius: 2px; background: #ddd center/cover no-repeat; box-shadow: 0 0 0 1px rgba(0,0,0,0.18); flex: 0 0 auto; }
+        .flag-gb { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect width=%2230%22 height=%2220%22 fill=%22%23012169%22/%3E%3Cpath d=%22M0,0 30,20M30,0 0,20%22 stroke=%22%23fff%22 stroke-width=%224%22/%3E%3Cpath d=%22M0,0 30,20M30,0 0,20%22 stroke=%22%23C8102E%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M15,0V20M0,10H30%22 stroke=%22%23fff%22 stroke-width=%226%22/%3E%3Cpath d=%22M15,0V20M0,10H30%22 stroke=%22%23C8102E%22 stroke-width=%223.4%22/%3E%3C/svg%3E"); }
+        .flag-jp { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect width=%2230%22 height=%2220%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2215%22 cy=%2210%22 r=%226%22 fill=%22%23BC002D%22/%3E%3C/svg%3E"); }
+        .flag-kr { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect width=%2230%22 height=%2220%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2215%22 cy=%2210%22 r=%225%22 fill=%22%230047A0%22/%3E%3Cpath d=%22M10,10a5,5 0 0 1 10,0a2.5,2.5 0 0 1-5,0a2.5,2.5 0 0 0-5,0z%22 fill=%22%23CD2E3A%22 transform=%22rotate%2833.7 15 10%29%22/%3E%3Cg transform=%22translate%286.5,4.6%29 rotate%28-56.3%29%22 fill=%22%23000%22%3E%3Crect x=%22-2.2%22 y=%22-1.6%22 width=%224.4%22 height=%220.7%22/%3E%3Crect x=%22-2.2%22 y=%22-0.35%22 width=%224.4%22 height=%220.7%22/%3E%3Crect x=%22-2.2%22 y=%220.9%22 width=%224.4%22 height=%220.7%22/%3E%3C/g%3E%3Cg transform=%22translate%2823.5,15.4%29 rotate%28-56.3%29%22 fill=%22%23000%22%3E%3Crect x=%22-2.2%22 y=%22-1.6%22 width=%224.4%22 height=%220.7%22/%3E%3Crect x=%22-2.2%22 y=%22-0.35%22 width=%224.4%22 height=%220.7%22/%3E%3Crect x=%22-2.2%22 y=%220.9%22 width=%224.4%22 height=%220.7%22/%3E%3C/g%3E%3Cg transform=%22translate%2823.5,4.6%29 rotate%2856.3%29%22 fill=%22%23000%22%3E%3Crect x=%22-2.2%22 y=%22-1.6%22 width=%224.4%22 height=%220.7%22/%3E%3Crect x=%22-2.2%22 y=%22-0.35%22 width=%224.4%22 height=%220.7%22/%3E%3Crect x=%22-2.2%22 y=%220.9%22 width=%224.4%22 height=%220.7%22/%3E%3C/g%3E%3Cg transform=%22translate%286.5,15.4%29 rotate%2856.3%29%22 fill=%22%23000%22%3E%3Crect x=%22-2.2%22 y=%22-1.6%22 width=%224.4%22 height=%220.7%22/%3E%3Crect x=%22-2.2%22 y=%22-0.35%22 width=%224.4%22 height=%220.7%22/%3E%3Crect x=%22-2.2%22 y=%220.9%22 width=%224.4%22 height=%220.7%22/%3E%3C/g%3E%3C/svg%3E"); }
+        .flag-cn { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect width=%2230%22 height=%2220%22 fill=%22%23EE1C25%22/%3E%3Cg fill=%22%23FFFF00%22%3E%3Cpolygon points=%225.00,2.00 5.67,4.07 7.85,4.07 6.09,5.35 6.76,7.43 5.00,6.15 3.24,7.43 3.91,5.35 2.15,4.07 4.33,4.07%22/%3E%3Cpolygon points=%2210.50,1.13 10.35,1.84 10.98,2.21 10.26,2.28 10.10,2.99 9.81,2.33 9.09,2.41 9.63,1.92 9.33,1.26 9.96,1.62%22/%3E%3Cpolygon points=%2212.17,3.02 12.27,3.73 12.99,3.86 12.34,4.18 12.44,4.90 11.93,4.38 11.28,4.69 11.62,4.05 11.12,3.53 11.83,3.66%22/%3E%3Cpolygon points=%2211.83,6.02 12.17,6.66 12.88,6.53 12.38,7.05 12.72,7.69 12.07,7.38 11.56,7.90 11.66,7.18 11.01,6.86 11.73,6.73%22/%3E%3Cpolygon points=%229.50,8.13 10.04,8.62 10.67,8.26 10.37,8.92 10.91,9.41 10.19,9.33 9.90,9.99 9.74,9.28 9.02,9.21 9.65,8.84%22/%3E%3C/g%3E%3C/svg%3E"); }
+        .flag-tw { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect width=%2230%22 height=%2220%22 fill=%22%23FE0000%22/%3E%3Crect width=%2215%22 height=%2210%22 fill=%22%23000095%22/%3E%3Cpath d=%22M7.5,5 L10.80,5.00%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L10.36,6.65%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L9.15,7.86%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L7.50,8.30%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L5.85,7.86%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L4.64,6.65%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L4.20,5.00%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L4.64,3.35%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L5.85,2.14%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L7.50,1.70%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L9.15,2.14%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Cpath d=%22M7.5,5 L10.36,3.35%22 stroke=%22%23fff%22 stroke-width=%220.9%22/%3E%3Ccircle cx=%227.5%22 cy=%225%22 r=%221.9%22 fill=%22%23000095%22/%3E%3Ccircle cx=%227.5%22 cy=%225%22 r=%221.5%22 fill=%22%23fff%22/%3E%3C/svg%3E"); }
+        .flag-es { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect y=%220.00%22 width=%2230%22 height=%225.05%22 fill=%22%23AA151B%22/%3E%3Crect y=%225.00%22 width=%2230%22 height=%2210.05%22 fill=%22%23F1BF00%22/%3E%3Crect y=%2215.00%22 width=%2230%22 height=%225.05%22 fill=%22%23AA151B%22/%3E%3C/svg%3E"); }
+        .flag-fr { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect x=%220.00%22 width=%2210.05%22 height=%2220%22 fill=%22%23002654%22/%3E%3Crect x=%2210.00%22 width=%2210.05%22 height=%2220%22 fill=%22%23fff%22/%3E%3Crect x=%2220.00%22 width=%2210.05%22 height=%2220%22 fill=%22%23CE1126%22/%3E%3C/svg%3E"); }
+        .flag-ru { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect y=%220.00%22 width=%2230%22 height=%226.72%22 fill=%22%23fff%22/%3E%3Crect y=%226.67%22 width=%2230%22 height=%226.72%22 fill=%22%230039A6%22/%3E%3Crect y=%2213.33%22 width=%2230%22 height=%226.72%22 fill=%22%23D52B1E%22/%3E%3C/svg%3E"); }
+        .flag-sa { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect width=%2230%22 height=%2220%22 fill=%22%23006C35%22/%3E%3Cpath d=%22M8,7.5 q1,-1.2 2,0 t2,0 t2,0 t2,0 t2,0 t2,0%22 stroke=%22%23fff%22 stroke-width=%220.9%22 fill=%22none%22/%3E%3Cpath d=%22M8,9.6 h12%22 stroke=%22%23fff%22 stroke-width=%220.6%22/%3E%3Cpath d=%22M9,13.2 H21 l1.2,-0.6%22 stroke=%22%23fff%22 stroke-width=%220.9%22 fill=%22none%22/%3E%3C/svg%3E"); }
+        .flag-mm { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect y=%220.00%22 width=%2230%22 height=%226.72%22 fill=%22%23FECB00%22/%3E%3Crect y=%226.67%22 width=%2230%22 height=%226.72%22 fill=%22%2334B233%22/%3E%3Crect y=%2213.33%22 width=%2230%22 height=%226.72%22 fill=%22%23EA2839%22/%3E%3Cg fill=%22%23fff%22%3E%3Cpolygon points=%2215.00,4.60 16.39,8.88 20.90,8.88 17.25,11.53 18.64,15.82 15.00,13.17 11.36,15.82 12.75,11.53 9.10,8.88 13.61,8.88%22/%3E%3C/g%3E%3C/svg%3E"); }
+        .flag-vn { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect width=%2230%22 height=%2220%22 fill=%22%23DA251D%22/%3E%3Cg fill=%22%23FFFF00%22%3E%3Cpolygon points=%2215.00,4.60 16.35,8.75 20.71,8.75 17.18,11.31 18.53,15.45 15.00,12.89 11.47,15.45 12.82,11.31 9.29,8.75 13.65,8.75%22/%3E%3C/g%3E%3C/svg%3E"); }
+        .flag-kh { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect y=%220.00%22 width=%2230%22 height=%225.05%22 fill=%22%23032EA1%22/%3E%3Crect y=%225.00%22 width=%2230%22 height=%2210.05%22 fill=%22%23E00025%22/%3E%3Crect y=%2215.00%22 width=%2230%22 height=%225.05%22 fill=%22%23032EA1%22/%3E%3Cpath d=%22M9.5,13.5h11v-1h-1v-2h-1v-2l-1-1v-1.5l-1.5-1.5-1.5,1.5v1.5l-1,1v2h-1v2h-1v1h-1z%22 fill=%22%23fff%22/%3E%3C/svg%3E"); }
+        .flag-it { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect x=%220.00%22 width=%2210.05%22 height=%2220%22 fill=%22%23009246%22/%3E%3Crect x=%2210.00%22 width=%2210.05%22 height=%2220%22 fill=%22%23fff%22/%3E%3Crect x=%2220.00%22 width=%2210.05%22 height=%2220%22 fill=%22%23CE2B37%22/%3E%3C/svg%3E"); }
+        .flag-de { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect y=%220.00%22 width=%2230%22 height=%226.72%22 fill=%22%23000%22/%3E%3Crect y=%226.67%22 width=%2230%22 height=%226.72%22 fill=%22%23DD0000%22/%3E%3Crect y=%2213.33%22 width=%2230%22 height=%226.72%22 fill=%22%23FFCE00%22/%3E%3C/svg%3E"); }
+        .flag-in { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect y=%220.00%22 width=%2230%22 height=%226.72%22 fill=%22%23FF9933%22/%3E%3Crect y=%226.67%22 width=%2230%22 height=%226.72%22 fill=%22%23fff%22/%3E%3Crect y=%2213.33%22 width=%2230%22 height=%226.72%22 fill=%22%23138808%22/%3E%3Ccircle cx=%2215%22 cy=%2210%22 r=%222.6%22 fill=%22none%22 stroke=%22%23000080%22 stroke-width=%220.5%22/%3E%3Cpath d=%22M15,10 L17.40,10.00%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.32,10.62%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.08,11.20%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.70,11.70%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.20,12.08%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.62,12.32%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.00,12.40%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L14.38,12.32%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.80,12.08%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.30,11.70%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.92,11.20%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.68,10.62%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.60,10.00%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.68,9.38%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.92,8.80%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.30,8.30%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.80,7.92%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L14.38,7.68%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.00,7.60%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.62,7.68%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.20,7.92%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.70,8.30%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.08,8.80%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.32,9.38%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Ccircle cx=%2215%22 cy=%2210%22 r=%220.5%22 fill=%22%23000080%22/%3E%3C/svg%3E"); }
+        .lang-btn { display: inline-flex; align-items: center; }
         /* v1.38: บีบให้อยู่ในหน้าเดียว */
+        .scan-band .lang-btn { padding: 3px 8px 3px 6px; font-size: 0.74rem; }
+        .scan-band .lang-switch { gap: 4px; }
+        .scan-band .lang-flag { margin-right: 5px; }
+        .scan-band .barcode-scan-group { flex-basis: 400px; }
+        .scan-band-inner { gap: 12px 18px; }
+
         @media screen and (min-width: 1400px) { #app_screen { zoom: 1.04; } }
         .scan-band-inner { padding: 9px 20px 11px; }
         .scan-band .barcode-scan-group { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; align-items: end; }
@@ -1279,6 +1303,8 @@
         .scan-band .barcode-scan-group > .barcode-scan-row { grid-column: 1 / span 2; grid-row: 2; }
         .scan-band .barcode-scan-group > .barcode-scan-status { grid-column: 1 / span 2; grid-row: 3; }
         .scan-band #dsm_open_btn { grid-column: 2; grid-row: 1; margin: 0 0 5px !important; padding: 2px 9px !important; }
+        .scan-band #dsm_open_btn.dsm-alert { background: #E53935 !important; color: #fff !important; border-color: #fff !important; font-weight: 800 !important; animation: dsmAlertBand 1s ease-in-out infinite; }
+        @keyframes dsmAlertBand { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,.85); transform: scale(1); } 50% { box-shadow: 0 0 0 7px rgba(255,255,255,0); transform: scale(1.06); } }
         .scan-band .barcode-scan-input { height: 40px; }
         .c-row-text > .form-group { flex: 1 1 300px; }
         .c-row-2 > .form-group { flex: 1 1 200px; }
@@ -1407,21 +1433,21 @@
         <div class="lang-group">
             <div class="band-label">ภาษาฉลาก (Label Language)</div>
             <div class="lang-switch" id="lang_switch">
-                <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">English อังกฤษ</button>
-                <button type="button" class="lang-btn" data-lang="ja" onclick="setLanguage('ja')">日本語 ญี่ปุ่น</button>
-                <button type="button" class="lang-btn" data-lang="ko" onclick="setLanguage('ko')">한국어 เกาหลี</button>
-                <button type="button" class="lang-btn" data-lang="zh-CN" onclick="setLanguage('zh-CN')">简体中文 จีนย่อ</button>
-                <button type="button" class="lang-btn" data-lang="zh-TW" onclick="setLanguage('zh-TW')">繁體中文 จีนเต็ม</button>
-                <button type="button" class="lang-btn" data-lang="es" onclick="setLanguage('es')">Español สเปน</button>
-                <button type="button" class="lang-btn" data-lang="fr" onclick="setLanguage('fr')">Français ฝรั่งเศส</button>
-                <button type="button" class="lang-btn" data-lang="ru" onclick="setLanguage('ru')">Русский รัสเซีย</button>
-                <button type="button" class="lang-btn" data-lang="ar" onclick="setLanguage('ar')">العربية อาหรับ</button>
-                <button type="button" class="lang-btn" data-lang="my" onclick="setLanguage('my')">မြန်မာ พม่า</button>
-                <button type="button" class="lang-btn" data-lang="vi" onclick="setLanguage('vi')">Tiếng Việt เวียดนาม</button>
-                <button type="button" class="lang-btn" data-lang="km" onclick="setLanguage('km')">ខ្មែរ เขมร</button>
-                <button type="button" class="lang-btn" data-lang="it" onclick="setLanguage('it')">Italiano อิตาลี</button>
-                <button type="button" class="lang-btn" data-lang="de" onclick="setLanguage('de')">Deutsch เยอรมัน</button>
-                <button type="button" class="lang-btn" data-lang="hi" onclick="setLanguage('hi')">हिन्दी ฮินดี</button>
+                <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')"><span class="lang-flag flag-gb" aria-hidden="true"></span>English อังกฤษ</button>
+                <button type="button" class="lang-btn" data-lang="ja" onclick="setLanguage('ja')"><span class="lang-flag flag-jp" aria-hidden="true"></span>日本語 ญี่ปุ่น</button>
+                <button type="button" class="lang-btn" data-lang="ko" onclick="setLanguage('ko')"><span class="lang-flag flag-kr" aria-hidden="true"></span>한국어 เกาหลี</button>
+                <button type="button" class="lang-btn" data-lang="zh-CN" onclick="setLanguage('zh-CN')"><span class="lang-flag flag-cn" aria-hidden="true"></span>简体中文 จีนย่อ</button>
+                <button type="button" class="lang-btn" data-lang="zh-TW" onclick="setLanguage('zh-TW')"><span class="lang-flag flag-tw" aria-hidden="true"></span>繁體中文 จีนเต็ม</button>
+                <button type="button" class="lang-btn" data-lang="es" onclick="setLanguage('es')"><span class="lang-flag flag-es" aria-hidden="true"></span>Español สเปน</button>
+                <button type="button" class="lang-btn" data-lang="fr" onclick="setLanguage('fr')"><span class="lang-flag flag-fr" aria-hidden="true"></span>Français ฝรั่งเศส</button>
+                <button type="button" class="lang-btn" data-lang="ru" onclick="setLanguage('ru')"><span class="lang-flag flag-ru" aria-hidden="true"></span>Русский รัสเซีย</button>
+                <button type="button" class="lang-btn" data-lang="ar" onclick="setLanguage('ar')"><span class="lang-flag flag-sa" aria-hidden="true"></span>العربية อาหรับ</button>
+                <button type="button" class="lang-btn" data-lang="my" onclick="setLanguage('my')"><span class="lang-flag flag-mm" aria-hidden="true"></span>မြန်မာ พม่า</button>
+                <button type="button" class="lang-btn" data-lang="vi" onclick="setLanguage('vi')"><span class="lang-flag flag-vn" aria-hidden="true"></span>Tiếng Việt เวียดนาม</button>
+                <button type="button" class="lang-btn" data-lang="km" onclick="setLanguage('km')"><span class="lang-flag flag-kh" aria-hidden="true"></span>ខ្មែរ เขมร</button>
+                <button type="button" class="lang-btn" data-lang="it" onclick="setLanguage('it')"><span class="lang-flag flag-it" aria-hidden="true"></span>Italiano อิตาลี</button>
+                <button type="button" class="lang-btn" data-lang="de" onclick="setLanguage('de')"><span class="lang-flag flag-de" aria-hidden="true"></span>Deutsch เยอรมัน</button>
+                <button type="button" class="lang-btn" data-lang="hi" onclick="setLanguage('hi')"><span class="lang-flag flag-in" aria-hidden="true"></span>हिन्दी ฮินดี</button>
             </div>
         </div>
     </div>
@@ -3000,7 +3026,7 @@
             el.value = '';
             el.focus();
         } else {
-            setBarcodeStatus('notfound', '❌ ไม่พบรหัส "' + digits + '" ในฐานข้อมูล — 👉 กดปุ่มสีแดง "เพิ่มข้อมูลยาใหม่" ด้านล่าง เพื่อส่งข้อมูลยานี้ให้แอดมินตรวจสอบ (หรือพิมพ์ชื่อยาด้านล่างแทน)');
+            setBarcodeStatus('notfound', '❌ ไม่พบรหัส "' + digits + '" ในฐานข้อมูล — 👉 กดปุ่มสีแดง "เพิ่มข้อมูลยาใหม่" ด้านบน เพื่อส่งข้อมูลยานี้ให้แอดมินตรวจสอบ (หรือพิมพ์ชื่อยาด้านล่างแทน)');
             highlightAddDrugBtn(digits);
             try { el.select(); } catch (e) { /* ignore */ }
         }
@@ -6215,7 +6241,7 @@
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
