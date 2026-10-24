@@ -1500,6 +1500,22 @@
             70%  { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(253,183,19,0)); }
             100% { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(253,183,19,0)); }
         }
+        /* v1.38: ช่องรหัสสาขาจริง (โปร่งใส) + โลโก้หัวเว็บกดกลับหน้าแรก + ป้ายสาขาเต้นพร้อมโลโก้ */
+        #home_screen .otp-digit-group { position: relative; }
+        #home_screen .otp-digit { pointer-events: none; }
+        .otp-real { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: none; background: transparent; color: transparent; caret-color: transparent;
+            font-size: 16px; padding: 0; margin: 0; z-index: 2; cursor: text; -webkit-appearance: none; appearance: none; }
+        #home_screen .otp-digit.otp-cur { box-shadow: 0 0 0 6px rgba(253,183,19,0.9), 0 10px 24px rgba(0,0,0,0.2); transform: translateY(-2px); }
+        #app_header_logo { cursor: pointer; border-radius: 6px; }
+        #app_header_logo:focus-visible { outline: 3px solid #FDB713; outline-offset: 3px; }
+        #current_branch_badge.logo-aura { animation: badgeHeartbeat 1.1s ease-in-out 3; }
+        @keyframes badgeHeartbeat {
+            0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(253,183,19,0); }
+            14%  { transform: scale(1.07); box-shadow: 0 0 0 4px rgba(253,183,19,0.95), 0 0 20px 6px rgba(253,183,19,0.55); }
+            28%  { transform: scale(1);    box-shadow: 0 0 0 2px rgba(253,183,19,0.5); }
+            42%  { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(253,183,19,0.9), 0 0 16px 4px rgba(253,183,19,0.45); }
+            70%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253,183,19,0); }
+        }
         @media (max-width: 900px) { .queue-tray { position: static; } }
     </style>
 </head>
@@ -1549,9 +1565,11 @@
             <div class="otp-input-row">
                 <span class="otp-prefix" id="otp_prefix_label"></span>
                 <div class="otp-digit-group" id="otp_digit_group">
-                    <input type="text" id="otp_digit_0" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
-                    <input type="text" id="otp_digit_1" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
-                    <input type="text" id="otp_digit_2" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+                    <input type="text" id="otp_digit_0" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" readonly tabindex="-1" aria-hidden="true">
+                    <input type="text" id="otp_digit_1" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" readonly tabindex="-1" aria-hidden="true">
+                    <input type="text" id="otp_digit_2" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" readonly tabindex="-1" aria-hidden="true">
+                    <!-- v1.38: ช่องรับพิมพ์จริงช่องเดียว (โปร่งใส ทับ 3 กล่อง) — แป้นตัวเลขไม่เด้งกลับเป็นตัวอักษรบน iPad/แท็บเล็ต -->
+                    <input type="tel" id="otp_input" class="otp-real" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="one-time-code" aria-label="รหัสสาขา 3 หลัก">
                 </div>
             </div>
             <div class="otp-error" id="branch_otp_error" style="display:none;"></div>
@@ -1569,7 +1587,7 @@
 <div id="app_screen">
 <header class="app-header no-print">
     <div class="hdr-brand">
-    <img id="app_header_logo" src="data:image/png;base64,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" alt="Pharmax">
+    <img id="app_header_logo" role="button" tabindex="0" title="กลับหน้าแรก (เปลี่ยนสาขา)" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}" src="data:image/png;base64,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" alt="Pharmax">
     <div>
         <div class="app-title">ระบบพิมพ์ฉลากยาหลายภาษา</div>
         <div class="app-subtitle">Multi-language Medicine Label Printer</div>
@@ -3600,56 +3618,33 @@
 
     function clearBranchOtpDigits() {
         OTP_DIGIT_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        const real = document.getElementById('otp_input'); if (real) real.value = '';
     }
 
     function initBranchOtpDigitInputs() {
-    OTP_DIGIT_IDS.forEach((id, idx) => {
-        const el = document.getElementById(id);
-        if (!el || el.dataset.otpBound) return;
-        el.dataset.otpBound = '1';
-        el.addEventListener('input', () => {
-            el.value = el.value.replace(/[^0-9]/g, '').slice(0, 1);
-            if (el.value && idx < OTP_DIGIT_IDS.length - 1) {
-                const next = document.getElementById(OTP_DIGIT_IDS[idx + 1]);
-                if (next) next.focus();
-            }
-            
-            // 👉 เพิ่มเช็คตรงนี้: ถ้ากรอกครบ 3 หลักแล้ว ให้กดส่ง/เลือกสาขาอัตโนมัติทันที
-            const currentDigits = getBranchOtpDigits();
-            if (currentDigits.length === 3) {
-                submitBranchOtp();
-            }
-        });
-        el.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); submitBranchOtp(); return; }
-            if (e.key === 'Backspace' && !el.value && idx > 0) {
-                const prev = document.getElementById(OTP_DIGIT_IDS[idx - 1]);
-                if (prev) { prev.focus(); prev.select(); }
-            } else if (e.key === 'ArrowLeft' && idx > 0) {
-                const prev = document.getElementById(OTP_DIGIT_IDS[idx - 1]);
-                if (prev) prev.focus();
-            } else if (e.key === 'ArrowRight' && idx < OTP_DIGIT_IDS.length - 1) {
-                const next = document.getElementById(OTP_DIGIT_IDS[idx + 1]);
-                if (next) next.focus();
-            }
-        });
-        el.addEventListener('paste', (e) => {
-            const clip = (e.clipboardData || window.clipboardData);
-            const text = clip ? clip.getData('text').replace(/[^0-9]/g, '') : '';
-            if (!text) return;
-            e.preventDefault();
-            OTP_DIGIT_IDS.forEach((did, i) => {
-                const d = document.getElementById(did);
-                if (d) d.value = text[i] || '';
+        // v1.38: พิมพ์ผ่านช่องจริงช่องเดียว (#otp_input) แล้วกระจายตัวเลขไปโชว์ใน 3 กล่อง — โฟกัสไม่ย้ายช่อง แป้นตัวเลขจึงค้างอยู่
+        const real = document.getElementById('otp_input');
+        if (!real || real.dataset.otpBound) return;
+        real.dataset.otpBound = '1';
+        const sync = () => {
+            const v = real.value.replace(/[^0-9]/g, '').slice(0, 3);
+            if (real.value !== v) real.value = v;
+            OTP_DIGIT_IDS.forEach((id, i) => {
+                const el = document.getElementById(id); if (!el) return;
+                el.value = v[i] || '';
+                el.classList.toggle('otp-cur', document.activeElement === real && i === Math.min(v.length, 2));
             });
-            const nextEmptyIdx = OTP_DIGIT_IDS.findIndex(did => !document.getElementById(did).value);
-            const focusIdx = nextEmptyIdx === -1 ? OTP_DIGIT_IDS.length - 1 : nextEmptyIdx;
-            const focusEl = document.getElementById(OTP_DIGIT_IDS[focusIdx]);
-            if (focusEl) focusEl.focus();
-            if (text.length >= 3) submitBranchOtp();
-        });
-    });
-}
+            const errEl = document.getElementById('branch_otp_error');
+            if (errEl && v.length < 3) errEl.style.display = 'none';
+            if (v.length === 3) submitBranchOtp();
+        };
+        real.addEventListener('input', sync);
+        real.addEventListener('focus', sync);
+        real.addEventListener('blur', () => OTP_DIGIT_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('otp-cur'); }));
+        real.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submitBranchOtp(); } });
+        // โค้ดเดิมที่สั่งโฟกัสกล่องใดกล่องหนึ่ง → ส่งต่อไปช่องจริง
+        OTP_DIGIT_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('focus', () => real.focus()); });
+    }
 
     function resetBranchOtpUI(brand) {
         const errEl = document.getElementById('branch_otp_error');
@@ -3761,8 +3756,9 @@
     }
     function pulseHeaderLogo() {
         const h = document.getElementById('app_header_logo'); if (!h) return;
-        h.classList.remove('logo-aura'); void h.offsetWidth; h.classList.add('logo-aura');
-        setTimeout(() => h.classList.remove('logo-aura'), 3400);
+        const bd = document.getElementById('current_branch_badge');   // v1.38: ป้ายสาขาที่เลือกเต้นพร้อมกัน = ยืนยันสาขา
+        [h, bd].forEach(el => { if (!el) return; el.classList.remove('logo-aura'); void el.offsetWidth; el.classList.add('logo-aura'); });
+        setTimeout(() => [h, bd].forEach(el => el && el.classList.remove('logo-aura')), 3400);
     }
     async function enterBranch(code) {
         if (_entering) return; _entering = true;
@@ -6950,7 +6946,7 @@ window.PrintLog = (function () {
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
