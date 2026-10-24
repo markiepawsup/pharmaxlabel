@@ -445,7 +445,7 @@
   function viewForm() {
     const pre = pendingCode; pendingCode = '';
     body().innerHTML = head('💊 เพิ่มข้อมูลยาใหม่') + whoLine() +
-      '<label>บาร์โค้ดแผง <span class="dsm-hint">ยิงเครื่องสแกนได้เลย</span></label><input id="dsm_bc" inputmode="numeric" autocomplete="off">' +
+      '<label>บาร์โค้ดแผง (ขายแยกชิ้น) <span class="dsm-hint">ยิงเครื่องสแกนได้เลย</span></label><input id="dsm_bc" inputmode="numeric" autocomplete="off">' +
       '<label>บาร์โค้ดกล่อง (ยกแพ็ค) <span class="dsm-hint">หากมี</span></label><input id="dsm_bc_pack" inputmode="numeric" autocomplete="off">' +
       '<label>Item No. (7 หลัก)</label><input id="dsm_item" inputmode="numeric" autocomplete="off" maxlength="7">' +
       '<div id="dsm_dup"></div>' +
@@ -458,7 +458,7 @@
       '<div class="dsm-card2"><div class="dsm-card2-title"><span class="dsm-num">2</span> ขนาดยาและเวลา (Dosage &amp; Timing)</div>' +
       '<div class="dsm-row2"><div><label>ประเภทของยา (Dosage Form)</label><select id="dsm_type">' + typeOptions() + '</select></div>' +
       '<div><label>เวลาใช้ยา (Meal Time)</label><select id="dsm_meal">' + mealOptions() + '</select></div></div>' + doseDatalist() +
-      '<label>ปริมาณการใช้ยา <span class="dsm-hint">เช่น 1 เม็ด (เว้นว่างถ้าไม่ใช้)</span></label>' +
+      '<label>ปริมาณการใช้ยา <span class="dsm-hint">ไม่บังคับกรอก · เช่น 1 เม็ด (เว้นว่างถ้าไม่ใช้ หรืออธิบายในคำแนะนำเพิ่มเติมแทน)</span></label>' +
       '<div class="dsm-grid4"><div><label>เช้า</label><input id="dsm_m1" list="dsm_dose_list" autocomplete="off"></div><div><label>กลางวัน</label><input id="dsm_m2" list="dsm_dose_list" autocomplete="off"></div><div><label>เย็น</label><input id="dsm_m3" list="dsm_dose_list" autocomplete="off"></div><div><label>ก่อนนอน</label><input id="dsm_m4" list="dsm_dose_list" autocomplete="off"></div></div>' +
       '<div class="dsm-chips" id="dsm_chips"></div><div class="dsm-chips" id="dsm_freq"></div></div>' +
       '<label>คำแนะนำเพิ่มเติม <span class="dsm-hint">พิมพ์แล้วมีตัวเลือก · กด Tab รับข้อความเงา</span></label>' + smartField('dsm_adv') +
@@ -591,7 +591,7 @@
     if (!/^\d{7}$/.test(drug.itemNo)) return setMsg('err', 'Item No. ต้องเป็นตัวเลข 7 หลัก');
     if (!drug.tradeName || !drug.genericName) return setMsg('err', 'กรุณากรอกชื่อการค้าและชื่อยาสามัญ');
     if (!drug.indication) return setMsg('err', 'กรุณากรอกสรรพคุณ');
-    if (!drug.morning && !drug.noon && !drug.evening && !drug.bed) return setMsg('err', 'กรุณากรอกวิธีกินอย่างน้อย 1 มื้อ');
+    // v1.38: ปริมาณการใช้ยา 4 ช่องไม่บังคับ — เภสัชกรอาจอธิบายวิธีใช้ละเอียดในคำแนะนำเพิ่มเติมแทน
 
     const b = $('#dsm_submit'); b.disabled = true; b.textContent = 'กำลังส่ง…';
     const r = await api(Object.assign({ action: 'submitDrug', drug }, auth()));

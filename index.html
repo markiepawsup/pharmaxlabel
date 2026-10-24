@@ -1289,6 +1289,26 @@
         .flag-de { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect y=%220.00%22 width=%2230%22 height=%226.72%22 fill=%22%23000%22/%3E%3Crect y=%226.67%22 width=%2230%22 height=%226.72%22 fill=%22%23DD0000%22/%3E%3Crect y=%2213.33%22 width=%2230%22 height=%226.72%22 fill=%22%23FFCE00%22/%3E%3C/svg%3E"); }
         .flag-in { background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 20%22%3E%3Crect y=%220.00%22 width=%2230%22 height=%226.72%22 fill=%22%23FF9933%22/%3E%3Crect y=%226.67%22 width=%2230%22 height=%226.72%22 fill=%22%23fff%22/%3E%3Crect y=%2213.33%22 width=%2230%22 height=%226.72%22 fill=%22%23138808%22/%3E%3Ccircle cx=%2215%22 cy=%2210%22 r=%222.6%22 fill=%22none%22 stroke=%22%23000080%22 stroke-width=%220.5%22/%3E%3Cpath d=%22M15,10 L17.40,10.00%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.32,10.62%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.08,11.20%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.70,11.70%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.20,12.08%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.62,12.32%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.00,12.40%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L14.38,12.32%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.80,12.08%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.30,11.70%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.92,11.20%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.68,10.62%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.60,10.00%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.68,9.38%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L12.92,8.80%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.30,8.30%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L13.80,7.92%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L14.38,7.68%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.00,7.60%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L15.62,7.68%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.20,7.92%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L16.70,8.30%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.08,8.80%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Cpath d=%22M15,10 L17.32,9.38%22 stroke=%22%23000080%22 stroke-width=%220.25%22/%3E%3Ccircle cx=%2215%22 cy=%2210%22 r=%220.5%22 fill=%22%23000080%22/%3E%3C/svg%3E"); }
         .lang-btn { display: inline-flex; align-items: center; }
+        /* v1.38: ปุ่มหัวเว็บ · ตารางขนาดยากึ่งกลาง · ป้ายไม่บังคับกรอก */
+        .hdr-sync { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #CFE3D8; background: #F1FAF5; color: #1F6B47; border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 0.74rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .hdr-sync:hover { background: #E2F4EA; }
+        .hdr-sync.syncing svg { animation: hdrSpin 0.9s linear infinite; }
+        .hdr-sync.offline { border-color: #F2C3BE; background: #FDF2F1; color: #A3271D; }
+        @keyframes hdrSpin { to { transform: rotate(360deg); } }
+        .hdr-actions .btn-home { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+        .hdr-actions .btn-feedback { background: #E8F7F1; border-color: #9FD9C6; color: #12795A; }
+        .hdr-actions .btn-feedback:hover { background: #D6F0E6; color: #0B5E45; }
+        .hdr-actions .btn-branch { background: #FFF4DC; border-color: #F2C76B; color: #7A5200; }
+        .hdr-actions .btn-branch:hover { background: #FFEBC2; color: #5E3F00; }
+        .c-form .dosage-item { text-align: center; }
+        .c-form .dosage-item label { text-align: center; padding: 0; }
+        .c-form .dosage-item input[type="text"] { text-align: center; padding-left: 0; padding-right: 0; width: 100%; }
+        .c-form .dosage-item input::-webkit-calendar-picker-indicator { display: none !important; opacity: 0; width: 0; margin: 0; }
+        .c-form .dosage-item input::-webkit-list-button { display: none !important; }
+        .opt-tag { display: inline-block; font-size: 0.68rem; font-weight: 600; color: #5A6779; background: #EEF1F5; border-radius: 6px; padding: 0 6px; margin-left: 4px; vertical-align: 1px; }
+        .clin-under { margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .clin-under .clin-open-btn { width: auto; padding: 4px 12px; font-size: 0.74rem; border-radius: 8px; }
+        .clin-under .patient-profile-summary { margin-top: 0; flex: 1 1 200px; }
         /* v1.38: บีบให้อยู่ในหน้าเดียว */
         .scan-band .lang-btn { padding: 3px 8px 3px 6px; font-size: 0.74rem; }
         .scan-band .lang-switch { gap: 4px; }
@@ -1396,8 +1416,9 @@
                 <span class="conn-dot" id="conn_status_dot"></span>
                 <span id="conn_status_text">กำลังเชื่อมต่อ…</span>
             </span>
-        <button type="button" class="btn-home btn-feedback" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openFeedback()" title="ส่งความคิดเห็นเกี่ยวกับข้อมูลยา/การใช้งาน (ต้องเข้าสู่ระบบ)">Feedback</button>
-        <button type="button" class="btn-home" onclick="goHome()" title="กลับหน้าแรกเพื่อเปลี่ยนแบรนด์/สาขา">เปลี่ยนสาขา</button>
+        <button type="button" id="hdr_sync_btn" class="hdr-sync" onclick="PharmaxSheet.sync()" title="กดเพื่อซิงค์ฐานข้อมูลยาจาก Google Sheet อีกครั้ง"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"></path><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"></path><path d="M21 3v5h-5M3 21v-5h5"></path></svg><span id="sheet_sync_status">ฐานข้อมูลยา</span></button>
+        <button type="button" class="btn-home btn-feedback" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openFeedback()" title="ส่งความคิดเห็นเกี่ยวกับข้อมูลยา/การใช้งาน (ต้องเข้าสู่ระบบ)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 9.5h8M8 12.5h5"></path></svg>Feedback</button>
+        <button type="button" class="btn-home btn-branch" onclick="goHome()" title="กลับหน้าแรกเพื่อเปลี่ยนแบรนด์/สาขา"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v10h16V10"></path><path d="M3 10l2-6h14l2 6z"></path><path d="M10 20v-5h4v5"></path></svg>เปลี่ยนสาขา</button>
     </div>
 </header>
 <div class="brand-bar no-print"></div>
@@ -1482,23 +1503,22 @@
 
             <div class="c-row c-row-2">
         <div class="form-group">
-            <label>👤 ชื่อผู้ใช้ยา (ภาษาอังกฤษ): <span class="hint">พิมพ์ชื่อ-สกุลเป็นภาษาอังกฤษ ระบบแปลงเป็นตัวพิมพ์ใหญ่ให้เอง · เว้นว่าง = ไม่แสดงบนฉลาก</span></label>
+            <label>👤 ชื่อผู้ใช้ยา (ภาษาอังกฤษ): <span class="opt-tag">ไม่บังคับกรอก</span> <span class="hint">พิมพ์ชื่อ-สกุลเป็นภาษาอังกฤษ ระบบแปลงเป็นตัวพิมพ์ใหญ่ให้เอง · เว้นว่าง = ไม่แสดงบนฉลาก</span></label>
             <input type="text" id="in_patient_name" placeholder="เช่น SOMCHAI JAIDEE" maxlength="40" autocomplete="off" autocapitalize="characters" spellcheck="false"
                    oninput="onPatientNameInput(this, event)" oncompositionend="onPatientNameInput(this)">
             <div id="patient_name_hint" class="hint" style="display:none; color:#c0392b;">⚠️ รับเฉพาะตัวอักษรภาษาอังกฤษ (A-Z) — ตัวอักษรอื่นถูกลบออกให้แล้ว</div>
+            <div class="clin-btn-row clin-under no-print">
+                <button type="button" class="quick-chip clin-open-btn" onclick="openSpecialPopModal()">⚠️ คัดกรองกลุ่มพิเศษ / แพ้ยา / โรคไต / เด็ก</button>
+                <div id="patient_profile_summary" class="patient-profile-summary"></div>
+            </div>
         </div>
         <div class="form-group">
-            <label>⚕️ เลขที่ใบอนุญาตเภสัชกรผู้จ่ายยา: <span class="hint">ไม่บังคับ · ใส่เลข 5 หลัก ระบบค้นชื่อจากสภาเภสัชกรรมให้ และจำไว้ในเครื่องนี้</span></label>
+            <label>⚕️ เลขที่ใบอนุญาตเภสัชกรผู้จ่ายยา: <span class="opt-tag">ไม่บังคับกรอก</span> <span class="hint">ไม่บังคับ · ใส่เลข 5 หลัก ระบบค้นชื่อจากสภาเภสัชกรรมให้ และจำไว้ในเครื่องนี้</span></label>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <input type="text" id="in_rph_license" inputmode="numeric" maxlength="5" placeholder="เช่น 41618" autocomplete="off" style="max-width:140px;"
                        oninput="onRphLicenseInput(this)">
                 <button type="button" id="rph_clear_btn" class="no-print" onclick="clearRphLicense()" title="ล้าง" style="display:none; border:1px solid #ccc; background:#fff; border-radius:6px; padding:4px 10px; cursor:pointer;">✕ ล้าง</button>
                 <span id="rph_status" class="hint" style="font-size:.85em;"></span>
-            <div class="clin-btn-row clin-inline no-print">
-                <button type="button" class="quick-chip clin-open-btn" onclick="openSpecialPopModal()">⚠️ คัดกรองกลุ่มพิเศษ / แพ้ยา / โรคไต / เด็ก</button>
-                <div id="patient_profile_summary" class="patient-profile-summary"></div>
-            </div>
-
             </div>
         </div>
             </div>
@@ -1557,20 +1577,13 @@
 
 
             <details class="c4-more c-tools no-print">
-                <summary>เครื่องมือเสริม: ประวัติการพิมพ์ · ซิงค์ฐานข้อมูลยา · ชุดยาโปรด · ล้างฟอร์ม</summary>
+                <summary>เครื่องมือเสริม: ประวัติการพิมพ์ · ชุดยาโปรด · ล้างฟอร์ม</summary>
         <div class="form-group" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
             <div style="flex: 1; min-width: 160px;">
                 <label>ประวัติการพิมพ์ล่าสุด: <span class="hint">เลือกเพื่อพิมพ์ซ้ำ</span></label>
                 <select id="history_select" onchange="if(this.value !== '') restoreHistoryItem(parseInt(this.value,10)); this.selectedIndex = 0;">
                     <option value="">🔽 ยังไม่มีประวัติการพิมพ์</option>
                 </select>
-            </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label>ฐานข้อมูลยา:</label>
-                <div style="display: flex; gap: 6px; align-items: center;">
-                    <button type="button" class="quick-chip" onclick="PharmaxSheet.sync()" title="คลิกเพื่อซิงค์ฐานข้อมูลยาอีกครั้ง" style="flex: 0 0 auto; padding: 5px 10px;">🔄 ซิงค์ตอนนี้</button>
-                    <span id="sheet_sync_status" style="font-size: 0.72rem; color: #555; line-height: 1.3;"></span>
-                </div>
             </div>
         </div>
                 <div class="form-group" style="margin-top: 8px;">
@@ -2279,9 +2292,11 @@
             const el = document.getElementById('sheet_sync_status');
             const n = state.drugs.length;
             if (el) {
-                if (kind === 'syncing') el.textContent = '☁ Sheet: กำลังซิงค์…' + (n ? ' (แคช ' + n + ' รายการ)' : '');
-                else if (kind === 'ok') el.textContent = '☁ Sheet: ซิงค์แล้ว ' + n + ' รายการ';
-                else if (kind === 'offline') el.textContent = '☁ Sheet: ออฟไลน์ – ใช้ ' + (n ? 'แคช ' + n + ' รายการ + ' : '') + 'data.js';
+                if (kind === 'syncing') el.textContent = 'กำลังซิงค์…' + (n ? ' (' + n + ' รายการ)' : '');
+                else if (kind === 'ok') el.textContent = 'ยา ' + n + ' รายการ · ซิงค์แล้ว';
+                else if (kind === 'offline') el.textContent = 'ออฟไลน์ · ใช้' + (n ? 'แคช ' + n + ' รายการ' : ' data.js');
+                const sb = document.getElementById('hdr_sync_btn');
+                if (sb) { sb.classList.toggle('syncing', kind === 'syncing'); sb.classList.toggle('offline', kind === 'offline'); }
             }
             // v1.19: แจ้งสถานะไปยังตัวแสดงผลรวม (ยา+สาขา) แบบเรียลไทม์ที่ header
             ConnStatus.drugs = kind;
@@ -2476,7 +2491,7 @@
     // ==========================================================================
     const Glossary = (() => {
         const TAB = 'medical_glossary', KEY = 'pharmax_glossary_v1';
-        let map = {}, ready = false, inflight = null;
+        let map = {}, ready = false, inflight = null, lastSync = 0, tight = {};
         const norm = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
         const loose = s => norm(s).toLowerCase().replace(/[\s.。,，:;!]+$/g, '');
         // หัวคอลัมน์ Term_XX → รหัสภาษาของโปรแกรม
@@ -2491,28 +2506,68 @@
             const th = headers.findIndex(h => langOf(h) === 'th');
             if (th < 0) return null;
             const cols = headers.map((h, i) => [i, langOf(h)]).filter(x => x[1] && x[1] !== 'th');
+            const st = headers.findIndex(h => /^(status|สถานะ)$/i.test(String(h || '').trim()));   // v1.38: "รอตรวจ" = คำแปลเครื่องที่ระบบเพิ่มเอง
             const out = {};
             rows.forEach(r => {
                 const k = loose(r[th]); if (!k) return;
+                const isNew = !out[k];
                 const e = out[k] || (out[k] = {});
+                if (isNew && st >= 0 && String(r[st] || '').trim() === 'รอตรวจ') e._p = 1;
                 cols.forEach(([i, lang]) => { const v = norm(r[i]); if (v && !e[lang]) e[lang] = v; });   // ซ้ำกัน → ใช้แถวแรก
             });
             return out;
         }
-        function loadCache() { try { const c = JSON.parse(localStorage.getItem(KEY) || 'null'); if (c && c.map) { map = c.map; ready = true; } } catch (e) {} }
+        // v1.38: คีย์สำรองแบบตัดช่องว่างทั้งหมด — กันเคสเว้นวรรคต่างกัน (เช่น "ผื่นขึ้น ดื่มน้ำ" กับ "ผื่นขึ้นดื่มน้ำ")
+        const tightKey = s => loose(s).replace(/\s+/g, '');
+        function rebuildTight() { tight = {}; Object.keys(map).forEach(k => { const t = tightKey(k); if (!tight[t]) tight[t] = k; }); }
+        function loadCache() { try { const c = JSON.parse(localStorage.getItem(KEY) || 'null'); if (c && c.map) { map = c.map; ready = true; rebuildTight(); } } catch (e) {} }
         function sync() {
             if (inflight) return inflight;
+            const before = Object.keys(map).length;
             inflight = PharmaxSheet.fetchTab(TAB).then(({ headers, rows }) => {
                 const m = build(headers, rows);
-                if (m) { map = m; try { localStorage.setItem(KEY, JSON.stringify({ ts: Date.now(), map: m })); } catch (e) {} }
-            }).catch(e => console.warn('[Glossary] load failed:', e && e.message)).then(() => { ready = true; });
+                if (m) {
+                    const changed = JSON.stringify(m) !== JSON.stringify(map);
+                    map = m; rebuildTight(); lastSync = Date.now();
+                    try { localStorage.setItem(KEY, JSON.stringify({ ts: Date.now(), map: m })); } catch (e) {}
+                    // ชีทมีคำใหม่ และฉลากที่เปิดอยู่มีบรรทัดที่ยังไม่เจอใน glossary → แปลใหม่ทันที
+                    if (changed && typeof _glossMiss !== 'undefined' && (_glossMiss.ind.length || _glossMiss.adv.length)) {
+                        try { performTranslateInd(); performTranslateAdv(); } catch (e) {}
+                    }
+                }
+            }).catch(e => console.warn('[Glossary] load failed:', e && e.message)).then(() => { ready = true; inflight = null; });
             return inflight;
         }
         async function whenReady(ms) {
             if (ready) return;
             await Promise.race([sync(), new Promise(r => setTimeout(r, ms || 3000))]);
         }
-        const lookup = (thai, lang) => { if (!thai || !lang || lang === 'th') return null; const e = map[loose(thai)]; return (e && e[lang]) || null; };
+        // v1.38: ไม่เจอในแคช → ดึง medical_glossary จาก Google Sheet ใหม่ก่อน (ไม่เกินทุก 20 วิ) แล้วค่อยยอมไปแปลสด
+        async function refresh(ms) {
+            if (lastSync && Date.now() - lastSync < 20000 && !inflight) return;
+            await Promise.race([sync(), new Promise(r => setTimeout(r, ms || 5000))]);
+        }
+        const entryOf = thai => map[loose(thai)] || map[tight[tightKey(thai)]] || null;
+        const lookup = (thai, lang) => { if (!thai || !lang || lang === 'th') return null; const e = entryOf(thai); return (e && e[lang]) || null; };
+        const has = thai => !!entryOf(thai);
+        const isPending = thai => { const e = entryOf(thai); return !!(e && e._p); };
+        // ข้อความใน glossary ที่ใกล้เคียงที่สุด (ไว้บอกว่าต่างกันตรงไหน เช่น มี/ไม่มีคำว่า "และ")
+        function nearest(thai) {
+            const a = tightKey(thai); if (!a) return null;
+            let best = null, bestD = Infinity;
+            const lev = (x, y) => {
+                if (Math.abs(x.length - y.length) > bestD) return Infinity;
+                let prev = Array.from({ length: y.length + 1 }, (_, j) => j);
+                for (let i = 1; i <= x.length; i++) {
+                    const cur = [i];
+                    for (let j = 1; j <= y.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (x[i - 1] === y[j - 1] ? 0 : 1));
+                    prev = cur;
+                }
+                return prev[y.length];
+            };
+            Object.keys(tight).forEach(t => { if (Math.abs(t.length - a.length) > a.length * 0.25) return; const d = lev(a, t); if (d < bestD) { bestD = d; best = tight[t]; } });
+            return best && bestD <= Math.max(3, a.length * 0.2) ? { th: best, diff: bestD } : null;
+        }
         // ชนิดยา/เวลาใช้ยา: หา label ไทยจาก data.js (DRUG_TYPE_GROUPS / MEAL_OPTIONS) แล้วค้นใน glossary
         function lookupOption(kind, key, lang) {
             if (!key) return null;
@@ -2526,7 +2581,7 @@
             return lookup(plain, lang);
         }
         loadCache();
-        return { sync, whenReady, lookup, lookupOption, size: () => Object.keys(map).length };
+        return { sync, whenReady, refresh, lookup, lookupOption, has, isPending, nearest, size: () => Object.keys(map).length };
     })();
     setTimeout(() => Glossary.sync(), 0);
 
@@ -3765,8 +3820,13 @@
         const sheetInfo = PharmaxSheet.overrideLineInfo(db === indicationsDB ? 'indication' : 'advice', text, drugName, lang);
         // medical_glossary มาก่อน: แท็บภาษาในชีทเป็นสูตร GOOGLETRANSLATE (เครื่องแปล) ส่วน glossary คือคำที่คนคัดไว้
         if (lang !== 'th') await Glossary.whenReady(3000);
-        const glossaryText = Glossary.lookup(text, lang);
-        if (glossaryText) return { text: glossaryText, failed: false, source: 'glossary' };
+        let glossaryText = Glossary.lookup(text, lang);
+        if (!glossaryText) {   // v1.38: ไม่เจอในแคช → ค้น medical_glossary ใน Google Sheet ล่าสุดอีกรอบก่อน
+            await Glossary.refresh(5000);
+            if (signal && signal.aborted) throw new DOMException('Aborted', 'AbortError');
+            glossaryText = Glossary.lookup(text, lang);
+        }
+        if (glossaryText) return { text: glossaryText, failed: false, source: Glossary.isPending(text) ? 'glossaryPending' : 'glossary' };
 
         if (sheetInfo && sheetInfo.trusted) return { text: sheetInfo.text, failed: false, source: 'sheet' };
 
@@ -4103,10 +4163,21 @@
             });
         }
         if (currentLang && currentLang !== 'th') {
-            const miss = _glossMiss.ind.concat(_glossMiss.adv);
+            const all = _glossMiss.ind.concat(_glossMiss.adv);
+            const pend = all.filter(m => m.src === 'glossaryPending');
+            const miss = all.filter(m => m.src !== 'glossaryPending');
+            if (pend.length) {
+                items.push({ cls: 'warn', text: '⚠️ ' + pend.length + ' บรรทัดเป็นคำแปลเครื่องที่ยัง <b>รอตรวจ</b> ใน glossary — อ่านทวนบนฉลากก่อนพิมพ์ (แอดมินตรวจได้ที่เมนู "Glossary รอตรวจ"):' +
+                    '<ul style="margin:3px 0 0;padding-left:18px">' + pend.map(m => '<li>' + escapeHtml(m.th) + '</li>').join('') + '</ul>' });
+            }
             if (miss.length) {
                 items.push({ cls: 'info', text: '📘 ' + miss.length + ' บรรทัดไม่พบใน medical_glossary (ใช้คำแปลจากแหล่งอื่น) — เพิ่มข้อความไทยนี้เข้า glossary เพื่อให้ใช้คำแปลที่คัดไว้:' +
-                    '<ul style="margin:3px 0 0;padding-left:18px">' + miss.map(m => '<li>' + escapeHtml(m.th) + ' <span style="opacity:.7">← ' + (GLOSS_SRC_TEXT[m.src] || m.src) + '</span></li>').join('') + '</ul>' });
+                    '<ul style="margin:3px 0 0;padding-left:18px">' + miss.map(m => {
+                        const inG = Glossary.has(m.th), nb = inG ? null : Glossary.nearest(m.th);
+                        return '<li>' + escapeHtml(m.th) + ' <span style="opacity:.7">← ' + (GLOSS_SRC_TEXT[m.src] || m.src) + '</span>' +
+                            (inG ? '<br><span style="color:#8a5a00">มีใน glossary แต่ยังไม่มีคำแปลภาษานี้ — เติมคอลัมน์ภาษานี้ในแถวนั้น</span>'
+                                 : nb ? '<br><span style="color:#8a5a00">ใน glossary มีข้อความคล้ายกัน (ต่างกัน ' + nb.diff + ' ตัวอักษร): <b>' + escapeHtml(nb.th) + '</b> — แก้ข้อความไทยให้ตรงกัน หรือเพิ่มแถวใหม่</span>' : '') + '</li>';
+                    }).join('') + '</ul>' });
             }
         }
         if (!items.length) {
