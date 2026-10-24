@@ -1,5 +1,6 @@
 /* Pharmax – เพิ่มข้อมูลยาใหม่ผ่านหน้าเว็บ (login / สมัคร / ส่งข้อมูลให้แอดมินตรวจ)  ·  v1.38
  * ใช้คู่กับ Code.gs (Apps Script Web App)  —  วางไฟล์นี้ไว้โฟลเดอร์เดียวกับ index.html */
+window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <meta name="pmx-build"> ใน index.html
 (function () {
   'use strict';
 
@@ -148,6 +149,28 @@
     } else { b.classList.remove('in'); b.textContent = '👤 เข้าสู่ระบบ'; b.title = 'เข้าสู่ระบบเพื่อเพิ่มยา / ใช้ยาที่ส่งแล้วระหว่างรออนุมัติ'; }
   }
   let _privBusy = false;
+  // v1.38: แจ้งผู้ส่งเมื่อแอดมินพิจารณายา/คำขอแก้ไขแล้ว (จำว่าแจ้งอะไรไปแล้วต่อบัญชี · ครั้งแรกไม่แจ้งย้อนหลัง)
+  function notifyDecided(list) {
+    if (!session || !Array.isArray(list)) return;
+    const KEY = 'pharmax_decided_seen_' + session.empId;
+    let seen = null; try { seen = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    const first = !Array.isArray(seen); seen = first ? [] : seen;
+    const fresh = list.filter(x => x && x.k && seen.indexOf(x.k) < 0);
+    if (!fresh.length && !first) return;
+    try { localStorage.setItem(KEY, JSON.stringify(seen.concat(fresh.map(x => x.k)).slice(-200))); } catch (e) {}
+    if (first || typeof window.pxNotice !== 'function') return;
+    fresh.slice(-4).forEach(x => {
+      const ok = /อนุมัติแล้ว|ดำเนินการแล้ว/.test(x.status) && !/ไม่/.test(x.status);
+      window.pxNotice({
+        kind: ok ? 'ok' : 'err', ms: ok ? 12000 : 0,
+        title: (x.type === 'drug' ? (ok ? '✅ ยาที่คุณส่งได้รับอนุมัติแล้ว' : '❌ ยาที่คุณส่งไม่ได้รับอนุมัติ') : (ok ? '✅ คำขอแก้ไขดำเนินการแล้ว' : '❌ คำขอแก้ไขไม่ได้รับอนุมัติ')),
+        html: esc(x.title) + (x.note ? '<br><span style="color:#5b6777">หมายเหตุแอดมิน: ' + esc(x.note) + '</span>' : '') +
+          (ok && x.type === 'drug' ? '<br><span style="color:#5b6777">ทุกสาขาใช้บาร์โค้ดนี้ได้แล้ว (หน้าเว็บอัปเดตรายการยาอัตโนมัติภายในไม่กี่นาที)</span>' : ''),
+        actions: [{ label: 'ดูรายการของฉัน', sec: true, onClick: () => { try { openMine(); } catch (e) {} } }]
+      });
+    });
+    if (fresh.some(x => x.type === 'drug' && /อนุมัติแล้ว/.test(x.status))) { setTimeout(() => { try { PharmaxSheet.sync(); } catch (e) {} }, 20000); }
+  }
   async function refreshPrivate() {
     const setP = list => { try { PharmaxSheet.setPrivate(list); } catch (e) {} updateUserChip(); };
     if (!session) return setP([]);
@@ -160,6 +183,7 @@
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
       }
       setP(r.drugs || []);
+      notifyDecided(r.decided || []);
     }
     else if (r && ['invalid', 'pending', 'rejected', 'locked', 'expired'].indexOf(r.error) >= 0) { session = null; sessionStorage.removeItem(SESSION_KEY); setP([]); }
     else updateUserChip();

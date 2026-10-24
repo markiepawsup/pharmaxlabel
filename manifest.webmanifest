@@ -1,0 +1,17 @@
+{
+  "name": "Pharmax Label — ฉลากยาหลายภาษา",
+  "short_name": "Pharmax Label",
+  "description": "โปรแกรมพิมพ์ฉลากยาหลายภาษา Pharmax / iCare / Super Drug",
+  "lang": "th",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#16478E",
+  "icons": [
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

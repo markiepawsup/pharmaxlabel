@@ -3,6 +3,15 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="pmx-build" content="20261025-1"><!-- v1.38: เลขชุดไฟล์ — ต้องตรงกับ DATA_BUILD (data.js), PMX_DS_BUILD (drug-submit.js), BUILD (sw.js) · อัปโหลดชุดใหม่ = เปลี่ยนเลขทั้ง 4 ที่ -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#16478E">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Pharmax Label">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="Mark Sirikorn">
     <title>Pharmax - โปรแกรมพิมพ์ฉลากยาหลายภาษา - ทุกสาขา</title>
@@ -838,6 +847,28 @@
 
         .undo-toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: rgba(30,40,50,0.92); color: #fff; padding: 6px 14px; border-radius: 16px; font-size: 0.78rem; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 3000; }
         .undo-toast.show { opacity: 1; }
+        /* v1.38: การแจ้งเตือนมุมขวาบน (ผลอนุมัติยา / เวอร์ชันใหม่ / สาขาใกล้ฉัน) */
+        #px_notices { position: fixed; top: 74px; right: 16px; z-index: 3500; display: flex; flex-direction: column; gap: 10px; width: min(380px, calc(100vw - 32px)); pointer-events: none; }
+        .px-notice { pointer-events: auto; background: #fff; border: 1px solid #DCE3EC; border-left: 5px solid var(--brand, #16478E); border-radius: 12px; box-shadow: 0 10px 30px rgba(20,30,50,.18);
+            padding: 12px 38px 12px 14px; font-size: 0.86rem; line-height: 1.45; color: #1d2733; position: relative; animation: pxnIn .28s ease-out; }
+        .px-notice.ok { border-left-color: #0E9F6E; } .px-notice.err { border-left-color: #D93636; } .px-notice.info { border-left-color: #1E7FD8; } .px-notice.warn { border-left-color: #E3A008; }
+        .px-notice b { display: block; margin-bottom: 2px; font-size: 0.92rem; }
+        .px-notice .pxn-x { position: absolute; top: 6px; right: 8px; border: 0; background: none; font-size: 18px; line-height: 1; color: #7a8696; cursor: pointer; padding: 4px; }
+        .px-notice .pxn-act { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .px-notice .pxn-act button { border: 0; border-radius: 8px; padding: 7px 12px; font: inherit; font-weight: 600; cursor: pointer; background: var(--brand, #16478E); color: #fff; }
+        .px-notice .pxn-act button.sec { background: #EEF2F7; color: #24364d; }
+        .px-notice.out { animation: pxnOut .22s ease-in forwards; }
+        @keyframes pxnIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+        @keyframes pxnOut { to { opacity: 0; transform: translateX(16px); } }
+        @media print { #px_notices { display: none !important; } }
+        /* v1.38: โหมดพรีวิวจากหน้าแอดมิน — แสดงเฉพาะฉลาก + กล่องตรวจคำแปล */
+        body.pmx-preview { background: #F4F6FA !important; }
+        body.pmx-preview #app_screen { display: none !important; }
+        body.pmx-preview > .preview-panel { display: block !important; padding: 14px; margin: 0 !important; max-width: none !important; width: auto !important; }
+        body.pmx-preview .preview-panel .preview-card { max-width: 520px; margin: 0 auto; position: static !important; }
+        body.pmx-preview .preview-head > :not(span:first-child), body.pmx-preview .label-quick-controls { display: none !important; }
+        body.pmx-preview .c4-block, body.pmx-preview .label-toggle-row, body.pmx-preview #fab_print,
+        body.pmx-preview #px_notices, body.pmx-preview #draft_recovery_banner, body.pmx-preview .queue-tray, body.pmx-preview #home_screen { display: none !important; }
 
         /* --- Print Styles --- */
         @media print {
@@ -1262,7 +1293,8 @@
         .queue-tray .batch-queue-section { max-width: 1500px; margin: 0 auto; padding: 10px 20px; border: none; border-radius: 0; background: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
         .queue-tray .batch-queue-title { margin: 0; gap: 8px; flex: 0 0 auto; }
         .queue-tray .queue-cards-container { flex: 1 1 360px; min-width: 0; flex-direction: row; overflow-x: auto; overflow-y: hidden; max-height: none; margin: 0; padding-bottom: 2px; }
-        .queue-tray .queue-card { flex: 0 0 auto; max-width: 300px; padding: 6px 10px; }
+        .queue-tray .queue-card { flex: 0 0 auto; max-width: 400px; padding: 6px 10px; }
+        .queue-tray .queue-card-drug { min-width: 70px; }
         .queue-tray .queue-empty-msg { padding: 7px 12px; flex: 1 1 auto; text-align: left; }
         .queue-tray .btn-row { margin-top: 0 !important; flex: 0 0 240px; }
         .queue-tray #btn_batch_print { padding: 10px !important; border-radius: 10px; }
@@ -1273,6 +1305,22 @@
         #app_screen > .app-footer { max-width: 1500px; margin: 0 auto; border-top: none !important; padding: 6px 20px 10px !important; }
         .queue-tray .queue-card-dose, .queue-tray .queue-card-drug { white-space: nowrap; }
         .queue-tray .queue-card-info { gap: 8px; }
+        /* v1.38: สำเนาต่อรายการ / แก้รายการ / ชื่อทั้งคิว */
+        .queue-card { gap: 6px; }
+        .q-copies { display: inline-flex; align-items: center; border: 1px solid #D5DEEA; border-radius: 999px; overflow: hidden; flex: 0 0 auto; background: #fff; }
+        .q-copies button { border: 0; background: #F1F5FA; width: 22px; height: 22px; font-size: 14px; line-height: 1; cursor: pointer; color: #2a3b52; padding: 0; }
+        .q-copies button:hover { background: #E2EAF4; }
+        .q-copies b { font-size: 0.72rem; min-width: 26px; text-align: center; color: var(--brand, #16478E); font-variant-numeric: tabular-nums; }
+        .queue-card-edit { border: 0; background: none; color: #5b6b80; font-size: 15px; cursor: pointer; padding: 2px 4px; flex: 0 0 auto; }
+        .queue-card-edit:hover { color: var(--brand, #16478E); }
+        .q-name-btn { border: 1px solid #D5DEEA; background: #fff; border-radius: 999px; padding: 2px 10px; font-size: 0.72rem; cursor: pointer; color: #2a3b52; font-family: inherit; }
+        .kb-hint { font: 600 0.62rem/1 ui-monospace, Menlo, Consolas, monospace; padding: 2px 5px; border-radius: 4px; margin-left: 4px; vertical-align: middle;
+            background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.45); color: inherit; opacity: .85; }
+        .btn-action-secondary .kb-hint { background: rgba(0,0,0,.05); border-color: rgba(0,0,0,.18); }
+        @media (hover: none) { .kb-hint { display: none; } }   /* แท็บเล็ต/มือถือไม่มีคีย์บอร์ด */
+        .hdr-help { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #D5DEEA; background: #fff; color: #2a3b52; font-weight: 700; cursor: pointer; font-size: 15px; flex: 0 0 auto; }
+        .hdr-help:hover { border-color: var(--brand, #16478E); color: var(--brand, #16478E); }
+        .q-name-btn:hover { border-color: var(--brand, #16478E); color: var(--brand, #16478E); }
         #fab_print { display: none !important; }   /* มีปุ่ม "พิมพ์ทันที" ใต้ฉลากแล้ว (Ctrl+P ยังใช้ได้) */
         @media screen and (max-height: 960px) and (min-width: 901px) { :root { --preview-scale: 1.22; } }
         @media screen and (max-height: 800px) and (min-width: 901px) { :root { --preview-scale: 1.08; } }
@@ -1418,6 +1466,23 @@
             padding: 2px 0; border-radius: 0; box-shadow: none; max-height: 60px; overflow: hidden; margin-top: 4px;
             transition: opacity 0.35s ease, max-height 0.5s ease, padding 0.5s ease, margin 0.5s ease; animation: promptIn 0.6s ease both; }
         .home-prompt span { font-size: 0.9rem; font-weight: 400; color: #7F8C9C; }
+        /* v1.38: หาสาขาใกล้ฉัน */
+        .geo-box { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 4px 0 6px; width: min(520px, 100%); transition: opacity .35s, max-height .45s; max-height: 600px; }
+        #home_screen.brand-on .geo-box { opacity: 0; max-height: 0; overflow: hidden; pointer-events: none; margin: 0; }
+        .geo-btn { border: 1px solid #CFDAE7; background: #fff; color: #16478E; font: 600 0.9rem/1 inherit; font-family: inherit; padding: 9px 16px; border-radius: 999px; cursor: pointer; box-shadow: 0 2px 8px rgba(20,40,70,.06); }
+        .geo-btn:hover { border-color: #16478E; }
+        .geo-btn[disabled] { opacity: .6; cursor: progress; }
+        .geo-status { font-size: 0.8rem; color: #6B7789; min-height: 1em; text-align: center; }
+        .geo-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .geo-item { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #DCE3EC; border-radius: 12px; padding: 10px 12px; cursor: pointer; text-align: left; font-family: inherit; width: 100%; box-shadow: 0 2px 10px rgba(20,40,70,.05); }
+        .geo-item:hover { border-color: #16478E; }
+        .geo-item .gi-main { flex: 1; min-width: 0; }
+        .geo-item b { display: block; font-size: 0.92rem; color: #1d2733; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .geo-item small { color: #6B7789; font-size: 0.76rem; }
+        .geo-item .gi-d { font-weight: 700; color: #04B085; font-size: 0.9rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .geo-item a { font-size: 0.74rem; color: #1E7FD8; text-decoration: none; white-space: nowrap; }
+        .geo-item .gi-brand { width: 8px; align-self: stretch; border-radius: 4px; background: #16478E; flex: 0 0 auto; }
+        .geo-item[data-brand="icare"] .gi-brand { background: #E07400; } .geo-item[data-brand="superdrug"] .gi-brand { background: #00774A; }
         @keyframes promptIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         #home_screen.brand-on .home-prompt { opacity: 0; max-height: 0; padding: 0; margin: -16px 0 0; animation: none; }
         #home_screen #branch_loading_text { color: inherit; }
@@ -1531,6 +1596,12 @@
     <div class="home-title">ระบบพิมพ์ฉลากยาหลายภาษา</div>
     <div class="home-subtitle">Multi-language Medicine Label Printer</div>
     <div class="home-prompt" id="home_prompt">กรุณาเลือกร้านยาของคุณ <span>· Please select your pharmacy</span></div>
+    <!-- v1.38: หาสาขาใกล้ฉันจาก GPS (มือถือ/แท็บเล็ตหาให้อัตโนมัติ) -->
+    <div class="geo-box" id="geo_box">
+        <button type="button" class="geo-btn" id="geo_btn" onclick="NearBranch.find(true)">📍 หาสาขาใกล้ฉัน</button>
+        <div class="geo-status" id="geo_status" aria-live="polite"></div>
+        <div class="geo-list" id="geo_list"></div>
+    </div>
         <!-- ⏳ แถบแสดงสถานะกำลังโหลดข้อมูลสาขา -->
     <div id="branch_loading_container" style="text-align: center; margin: 8px 0; display: none; width: 100%;">
         <div style="font-size: 0.78rem; color: var(--color-navy); font-weight: 600;" id="branch_loading_text">⏳ กำลังซิงค์รายชื่อสาขาล่าสุดจาก Google Sheet...</div>
@@ -1602,6 +1673,7 @@
                 <span id="conn_status_text">กำลังเชื่อมต่อ…</span>
             </span>
         <button type="button" id="hdr_sync_btn" class="hdr-sync" onclick="PharmaxSheet.sync()" title="กดเพื่อซิงค์ฐานข้อมูลยาจาก Google Sheet อีกครั้ง"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"></path><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"></path><path d="M21 3v5h-5M3 21v-5h5"></path></svg><span id="sheet_sync_status">ฐานข้อมูลยา</span></button>
+        <button type="button" class="hdr-help" onclick="openHelpModal()" title="วิธีใช้งาน (F1)" aria-label="วิธีใช้งาน">?</button>
         <button type="button" class="btn-home btn-feedback" onclick="window.PharmaxDrugSubmit && PharmaxDrugSubmit.openFeedback()" title="ส่งความคิดเห็นเกี่ยวกับข้อมูลยา/การใช้งาน (ต้องเข้าสู่ระบบ)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 9.5h8M8 12.5h5"></path></svg>Feedback</button>
         <button type="button" class="btn-home btn-branch" onclick="goHome()" title="กลับหน้าแรกเพื่อเปลี่ยนแบรนด์/สาขา"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v10h16V10"></path><path d="M3 10l2-6h14l2 6z"></path><path d="M10 20v-5h4v5"></path></svg>เปลี่ยนสาขา</button>
     </div>
@@ -1761,6 +1833,25 @@
             <div class="quick-chip-row quick-chip-row-freq" id="quick_freq_shortcuts"></div>
         </div>
 
+        <!-- v1.38: ความถี่ / วิธีใช้พิเศษ — สำหรับวิธีใช้ที่ตาราง 4 ช่องแสดงไม่ได้ (วันละ 5 ครั้ง, ทุก 6 ชม., สัปดาห์ละครั้ง) · ว่าง = ไม่แสดงบนฉลาก -->
+        <div class="form-group">
+            <label for="in_frequency">ความถี่ / วิธีใช้พิเศษ (Frequency): <span class="opt-tag">ไม่บังคับกรอก</span></label>
+            <input type="text" id="in_frequency" list="freq_options" autocomplete="off" placeholder="เช่น ทุก 6 ชั่วโมง, วันละ 5 ครั้ง ห่างกัน 4 ชั่วโมง, สัปดาห์ละ 1 ครั้ง" oninput="updateLabel(); debounceTranslateFreq();">
+            <datalist id="freq_options">
+                <option value="ทุก 4-6 ชั่วโมง เมื่อมีอาการ"></option>
+                <option value="ทุก 4 ชั่วโมง"></option>
+                <option value="ทุก 6 ชั่วโมง"></option>
+                <option value="ทุก 8 ชั่วโมง"></option>
+                <option value="ทุก 12 ชั่วโมง"></option>
+                <option value="วันละ 1 ครั้ง"></option>
+                <option value="วันละ 5 ครั้ง ห่างกันประมาณ 4 ชั่วโมง"></option>
+                <option value="สัปดาห์ละ 1 ครั้ง"></option>
+                <option value="ครั้งเดียว"></option>
+                <option value="ใช้เมื่อมีอาการ"></option>
+                <option value="วันเว้นวัน"></option>
+            </datalist>
+        </div>
+
 
 
             <details class="c4-more c-tools no-print">
@@ -1845,6 +1936,10 @@
                     <span class="label-title"><span id="lbl_title_time"></span> <span class="thai-text">(เวลา)</span>:</span>
                     <span class="label-value" id="out_meal"></span>
                 </div>
+                <div class="label-row" id="row_frequency" style="display:none; border:none;">
+                    <span class="label-title"><span id="lbl_title_freq"></span> <span class="thai-text">(ความถี่)</span>:</span>
+                    <span class="label-value" id="out_frequency" style="font-weight: 700 !important;"></span>
+                </div>
         
                 <!-- คำแนะนำ: แสดงแบบ Inline พร้อมไอคอนและข้อความไหลเต็มพื้นที่ -->
                 <div class="label-block" style="border-top: 1px dashed #000; margin-top: 6px; padding-top: 4px; border-bottom: none;">
@@ -1863,11 +1958,11 @@
                 <div class="c4-step">ยาตัวนี้ต้องการทำอะไร?</div>
                 <div class="c4-main-actions">
                     <button type="button" class="btn-action-primary c4-btn" onclick="addCurrentItemToQueue()">
-                        <span class="c4-btn-main">➕ เพิ่มเข้าคิว</span>
+                        <span class="c4-btn-main">➕ เพิ่มเข้าคิว <kbd class="kb-hint">F2</kbd></span>
                         <span class="c4-btn-sub">สะสมหลายตัว แล้วพิมพ์ทีเดียว</span>
                     </button>
                     <button type="button" class="btn-action-secondary c4-btn" onclick="printSingleCurrentItem()">
-                        <span class="c4-btn-main">🖨️ พิมพ์ทันที</span>
+                        <span class="c4-btn-main">🖨️ พิมพ์ทันที <kbd class="kb-hint">F4</kbd></span>
                         <span class="c4-btn-sub">เฉพาะฉลากตัวนี้</span>
                     </button>
                 </div>
@@ -1911,6 +2006,7 @@
                 <div class="batch-queue-title">
                     <span>📌 คิวรอพิมพ์ (Batch Queue)</span>
                     <span id="queue_count_badge" style="background:var(--color-navy); color:#fff; padding:2px 8px; border-radius:10px; font-size:0.75rem;">0 รายการ</span>
+                    <button type="button" id="btn_queue_name" class="q-name-btn" onclick="applyPatientNameToQueue()" title="ใส่ชื่อผู้ใช้ยาคนเดียวกันให้ทุกรายการในคิว" style="display:none">👤 ชื่อทั้งคิว</button>
                 </div>
 
                 <div id="queue_cards_container" class="queue-cards-container">
@@ -1919,7 +2015,7 @@
 
                 <!-- ปุ่มพิมพ์หลัก อยู่ใต้รายการคิว -->
                 <div class="btn-row" style="margin-top: 10px;">
-                    <button class="btn-action-primary" id="btn_batch_print" onclick="safeBatchPrint()" style="width: 100%; padding: 12px; font-size: 0.95rem;">🖨️ พิมพ์ทั้งหมดในคิว (Batch Print)</button>
+                    <button class="btn-action-primary" id="btn_batch_print" onclick="safeBatchPrint()" style="width: 100%; padding: 12px; font-size: 0.95rem;">🖨️ พิมพ์ทั้งหมดในคิว (Batch Print) <kbd class="kb-hint">F8</kbd></button>
                 </div>
 
                 <!-- กู้คืนคิว: พับเก็บไว้ (ใช้เฉพาะตอนกระดาษหมด/เครื่องพิมพ์ค้าง/กดล้างผิด) -->
@@ -1958,19 +2054,38 @@
             <div class="help-modal-title">❓ วิธีใช้งานโปรแกรมโดยสรุป</div>
             <button type="button" class="help-modal-close" onclick="closeHelpModal()" aria-label="ปิด">✕</button>
         </div>
-        <h3>1. เริ่มต้นใช้งาน</h3>
-        <ol>
-            <li>เลือกสาขาของคุณจากหน้าแรก (ถ้าต้องการเปลี่ยนสาขา ให้กดปุ่ม 🏠 หน้าแรก มุมซ้ายบน)</li>
-            <li>เลือกภาษาที่จะพิมพ์บนฉลากจากแถบปุ่มภาษา ด้านบนของฟอร์ม</li>
-        </ol>
-        <h3>2. กรอกข้อมูลยา</h3>
+        <h3>1. เลือกร้าน / สาขา</h3>
         <ul>
-            <li>พิมพ์ <b>ชื่อยา</b> แล้วกด <kbd>Tab</kbd> หรือ <kbd>Space</kbd> เพื่อเลือกคำแนะนำที่ระบบเดาให้</li>
-            <li>พิมพ์ <b>สรรพคุณ</b> หรือ <b>คำแนะนำ</b> จะมีรายการแนะนำเด้งขึ้นมาให้คลิกเลือก หรือพิมพ์เพิ่มเองได้อิสระ</li>
-            <li>กรอก <b>ปริมาณการใช้ยา</b> ในแต่ละช่วงเวลา</li>
+            <li>หน้าแรก: แตะโลโก้ร้าน แล้วพิมพ์รหัสสาขา 3 หลัก (เช่น 001) — ระบบเข้าหน้าฉลากให้เองเมื่อครบ 3 หลัก</li>
+            <li>มือถือ/แท็บเล็ต: กด <b>📍 หาสาขาใกล้ฉัน</b> (หรือระบบหาให้อัตโนมัติ) — ถ้าอยู่ในร้านจะเลือกสาขาให้ทันที</li>
+            <li>เปลี่ยนสาขา: กดโลโก้มุมซ้ายบน หรือปุ่ม <b>เปลี่ยนสาขา</b></li>
         </ul>
-        <h3>3. ตรวจสอบและพิมพ์</h3>
-        <p>ตรวจสอบตัวอย่างฉลากทางขวา แล้วกด 🖨️ สั่งปริ้นฉลากยา (หรือกด <kbd>Ctrl</kbd>+<kbd>P</kbd>)</p>
+        <h3>2. หายาด้วยบาร์โค้ด</h3>
+        <ul>
+            <li>ยิงบาร์โค้ดได้ตลอด ไม่ต้องคลิกช่องก่อน — หรือพิมพ์รหัสสินค้า (Item No.) แล้วกด <kbd>Enter</kbd></li>
+            <li>แท็บเล็ต/มือถือ: กดปุ่ม <b>📷</b> เพื่อสแกนด้วยกล้อง</li>
+            <li>ไม่พบยา? → กดปุ่มสีแดงเพื่อส่งข้อมูลยาใหม่ (ต้องเข้าสู่ระบบ) · ยาที่ส่งแล้ว <b>🔒 พิมพ์ได้ทันทีเฉพาะบัญชีคุณ</b> ระหว่างรออนุมัติ และจะมีแจ้งเตือนเมื่ออนุมัติแล้ว</li>
+        </ul>
+        <h3>3. เลือกภาษา &amp; ตรวจฉลาก</h3>
+        <ul>
+            <li>แถบปุ่มภาษา 16 ภาษา (ลากเรียงลำดับได้ ระบบจำไว้ในเครื่อง)</li>
+            <li>ยาที่มีหลายโรค (เช่น aciclovir) เลือกโรคในช่อง <b>ใช้รักษาโรค</b> — ขนาดยา/คำแนะนำเปลี่ยนตาม</li>
+            <li>วิธีใช้ที่ตาราง 4 ช่องแสดงไม่ได้ (ทุก 6 ชม., วันละ 5 ครั้ง, สัปดาห์ละครั้ง) ใส่ในช่อง <b>ความถี่ / วิธีใช้พิเศษ</b></li>
+            <li>กล่องแจ้งเตือนใต้ฉลาก: 📘 ประโยคยังไม่อยู่ใน glossary (แปลอัตโนมัติ) · ⚠️ คำแปลรอตรวจ · ฉลากภาษาต่างประเทศที่ยังมีภาษาไทยปน ระบบจะถามก่อนพิมพ์</li>
+            <li>ปุ่มใต้ Preview: ซ่อน/แสดง โลโก้ · เวลาทำการ · วันที่</li>
+        </ul>
+        <h3>4. พิมพ์</h3>
+        <ul>
+            <li><b>➕ เพิ่มเข้าคิว</b> (<kbd>F2</kbd>) สะสมหลายรายการ แล้ว <b>พิมพ์ทั้งหมดในคิว</b> (<kbd>F8</kbd>) · <b>🖨️ พิมพ์ทันที</b> (<kbd>F4</kbd>) เฉพาะใบนี้</li>
+            <li>ในคิว: <b>− ×N +</b> = จำนวนสำเนา · <b>✎</b> = นำกลับมาแก้ · <b>👤 ชื่อทั้งคิว</b> = ใส่ชื่อผู้ใช้ยาให้ทุกรายการ</li>
+            <li>ติ๊ก <b>พิมพ์ฉลากภาษาไทยเพิ่มด้วย</b> เพื่อพิมพ์ใบไทยต่อท้ายทุกใบ · <kbd>Esc</kbd> = ล้างทั้งหมดเริ่มใหม่</li>
+        </ul>
+        <h3>5. ติดตั้งเป็นแอป / ใช้ตอนเน็ตช้า</h3>
+        <ul>
+            <li>iPad / iPhone (Safari): ปุ่มแชร์ → <b>เพิ่มไปยังหน้าจอโฮม</b> · Android / PC (Chrome): เมนู ⋮ → <b>ติดตั้งแอป</b></li>
+            <li>เปิดแล้วครั้งหนึ่ง เครื่องจะเก็บไฟล์โปรแกรมไว้ เปิดได้แม้เน็ตหลุด (ข้อมูลยาใช้ชุดล่าสุดที่ซิงค์ไว้) · มีเวอร์ชันใหม่จะมีแถบแจ้งให้กดรีเฟรช</li>
+        </ul>
+        <p style="margin-top:14px"><button type="button" class="q-name-btn" onclick="closeHelpModal(); openCheatModal();">⌨️ ดูคีย์ลัดทั้งหมด &amp; สัญลักษณ์บนฉลาก</button></p>
     </div>
 </div>
 
@@ -1983,10 +2098,15 @@
         </div>
         <div style="margin-bottom: 14px;">
             <h3 style="margin-top:0;">⌨️ คีย์ลัด (Keyboard Shortcuts)</h3>
-            <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>P</kbd> <span>สั่งพิมพ์ฉลาก</span></div>
-            <div class="shortcut-row"><kbd>Esc</kbd> <span>ล้างข้อมูลทั้งหมดในฟอร์ม</span></div>
+            <div class="shortcut-row"><kbd>F2</kbd> หรือ <kbd>Ctrl</kbd> + <kbd>Enter</kbd> <span>➕ เพิ่มยาตัวนี้เข้าคิว</span></div>
+            <div class="shortcut-row"><kbd>F4</kbd> หรือ <kbd>Ctrl</kbd> + <kbd>P</kbd> <span>🖨️ พิมพ์ฉลากนี้ทันที (ใบเดียว)</span></div>
+            <div class="shortcut-row"><kbd>F8</kbd> หรือ <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> <span>🖨️ พิมพ์ทั้งหมดในคิว</span></div>
+            <div class="shortcut-row"><kbd>F9</kbd> <span>กลับไปช่องบาร์โค้ด (เลือกข้อความเดิมให้พิมพ์ทับ)</span></div>
+            <div class="shortcut-row"><kbd>F1</kbd> <span>วิธีใช้งาน</span></div>
+            <div class="shortcut-row"><kbd>Esc</kbd> <span>ล้างทั้งหมด เริ่มรายใหม่ (บาร์โค้ด ฟอร์ม คำเตือน)</span></div>
             <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>Z</kbd> <span>ย้อนกลับการแก้ไขฟอร์มยา (ทำซ้ำ: <kbd>Ctrl</kbd> + <kbd>Y</kbd>)</span></div>
             <div class="shortcut-row"><kbd>Tab</kbd> / <kbd>Space</kbd> <span>ยอมรับคำแนะนำข้อความเงา (Ghost Text)</span></div>
+            <div class="shortcut-row"><kbd>Enter</kbd> <span>ในช่องขนาดยา: ไปช่องถัดไป</span></div>
         </div>
         <div>
             <h3>🖼️ สัญลักษณ์ Pictogram บนฉลาก (Legend)</h3>
@@ -2286,6 +2406,7 @@
                 indicationLines: splitLines(raw.indication),
                 adviceLines: splitLines(raw.advice),
                 category: normText(raw.category),
+                frequency: normText(raw.frequency),   // v1.38
                 typeKey: termKey('type', raw.drugType) || ruleLookup(TYPE_RULES, normText(raw.drugType)),   // v1.36: ชื่อมาตรฐานใน data.js ก่อน
                 mealKey: termKey('meal', raw.meal) || ruleLookup(MEAL_RULES, normText(raw.meal)),
                 barcodeNo: normCode(raw.barcodeNo),
@@ -2333,6 +2454,7 @@
                 else if (k.indexOf('bed') === 0) f = 'bed';
                 else if (k.indexOf('indication') === 0) f = 'indication';
                 else if (k.indexOf('advice') === 0) f = 'advice';
+                else if (k.indexOf('frequency') === 0) f = 'frequency';   // v1.38 (ไม่บังคับ)
                 else if (k.indexOf('category') === 0) f = 'category';
                 // v1.24: คอลัมน์ Barcode No. / Item No. สำหรับค้นหายาด้วยการยิงบาร์โค้ด/รหัสสินค้า
                 else if (k === 'barcodeno' || k === 'barcode') f = 'barcodeNo';
@@ -2380,7 +2502,7 @@
             return rows.map(r => makeEntry({
                 name: g(r, 'name'), drugType: g(r, 'drugType'), meal: g(r, 'meal'),
                 morning: g(r, 'morning'), noon: g(r, 'noon'), evening: g(r, 'evening'), bed: g(r, 'bed'),
-                indication: g(r, 'indication'), advice: g(r, 'advice'), category: g(r, 'category'),
+                indication: g(r, 'indication'), advice: g(r, 'advice'), category: g(r, 'category'), frequency: g(r, 'frequency'),
                 barcodeNo: g(r, 'barcodeNo'), barcodePack: g(r, 'barcodePack'), itemNo: g(r, 'itemNo') // v1.24 (+ v1.30 barcodePack): คอลัมน์ใหม่ (ถ้าชีทยังไม่มี จะได้ค่าว่างเฉยๆ ไม่พัง)
             })).filter(Boolean);
         }
@@ -2527,6 +2649,7 @@
             // v1.35: คงการขึ้นบรรทัดตามชีท (เดิมรวมเป็นบรรทัดเดียว → จับคู่คำแปลทีละบรรทัดไม่ได้)
             if (se.indication) $('in_indication').value = (se.indicationLines && se.indicationLines.length ? se.indicationLines.join('\n') : se.indication);
             if (se.advice) $('in_advice').value = (se.adviceLines && se.adviceLines.length ? se.adviceLines.join('\n') : se.advice);
+            if (se.frequency) setFrequencyText(se.frequency);   // v1.38
         }
         // ยาที่มีเฉพาะใน Sheet (ไม่มีใน data.js) -> ล้างฟอร์มแล้วเติมจาก Sheet ล้วนๆ
         function applySheetOnly(se) {
@@ -2535,11 +2658,13 @@
             SLOTS.forEach(s => { $('qty_' + s).value = ''; });
             $('in_indication').value = '';
             $('in_advice').value = '';
+            setFrequencyText('');
             overlay(se);
             if (window.Regimen) window.Regimen.show(se, true);   // v1.37: ยาที่มีวิธีใช้ต่างกันตามโรค → แสดงช่องเลือกโรค
             updateLabel();
             performTranslateInd();
             performTranslateAdv();
+            performTranslateFreq();
             if (typeof clinicalCheckOnSelect === 'function') clinicalCheckOnSelect(); // v1.9
         }
 
@@ -2811,6 +2936,7 @@
                 else if (SLOTS.some(x => k.indexOf(x) === 0)) f = SLOTS.find(x => k.indexOf(x) === 0);
                 else if (k.indexOf('indication') === 0) f = 'indication';
                 else if (k.indexOf('advice') === 0) f = 'advice';
+                else if (k.indexOf('frequency') === 0 || k === 'ความถี่') f = 'frequency';   // v1.38
                 else if (k.indexOf('status') === 0 || k === 'สถานะ') f = 'status';
                 if (f && c[f] === undefined) c[f] = i;
             });
@@ -2823,7 +2949,7 @@
             return data.map(r => ({
                 drug: g(r, 'drug'), match: g(r, 'match'), disease: g(r, 'disease'), meal: g(r, 'meal'),
                 morning: g(r, 'morning'), noon: g(r, 'noon'), evening: g(r, 'evening'), bed: g(r, 'bed'),
-                indication: g(r, 'indication'), advice: g(r, 'advice'), status: g(r, 'status')
+                indication: g(r, 'indication'), advice: g(r, 'advice'), frequency: g(r, 'frequency'), status: g(r, 'status')
             })).filter(r => r.drug && r.disease && (!r.status || /^ใช้/.test(r.status)));
         }
         function loadCache() { try { const x = JSON.parse(localStorage.getItem(KEY) || 'null'); if (x && Array.isArray(x.rows)) rows = x.rows; } catch (e) {} }
@@ -2897,9 +3023,11 @@
             if (SLOTS.some(x => r[x])) SLOTS.forEach(x => { $('qty_' + x).value = /^(x|-|ไม่ใช้)$/i.test(String(r[x]).trim()) ? '' : r[x]; });
             if (r.indication) $('in_indication').value = r.indication;
             if (r.advice) $('in_advice').value = r.advice;
+            if (r.frequency) setFrequencyText(/^(x|-)$/i.test(r.frequency.trim()) ? '' : r.frequency);   // v1.38
             updateLabel();
             performTranslateInd();
             performTranslateAdv();
+            performTranslateFreq();
             if (typeof checkHighAlertDose === 'function') checkHighAlertDose();
             if (typeof clinicalCheckOnSelect === 'function') clinicalCheckOnSelect();
         }
@@ -2944,6 +3072,9 @@
                 else if (k === 'line2') idx.line2 = i;
                 else if (k === 'line3') idx.line3 = i;
                 else if (k === 'phone' || k === 'tel' || k === 'telephone' || k === 'phoneno') idx.phone = i;   // v1.38: เบอร์โทรสาขา (ว่าง = ไม่แสดงบนฉลาก)
+                else if (k === 'lat' || k === 'latitude') idx.lat = i;                                        // v1.38: พิกัดสาขา (Apps Script เติมให้)
+                else if (k === 'lng' || k === 'lon' || k === 'long' || k === 'longitude') idx.lng = i;
+                else if (k === 'map' || k === 'maps' || k === 'googlemap' || k === 'googlemaps' || k === 'maplink') idx.map = i;
             });
             return idx;
         }
@@ -2958,7 +3089,8 @@
                     brandId: g(r, 'brandId').toLowerCase(),
                     brandName: g(r, 'brandName'),
                     branchName: g(r, 'branchName'),
-                    line1: g(r, 'line1'), line2: g(r, 'line2'), line3: g(r, 'line3'), phone: g(r, 'phone')
+                    line1: g(r, 'line1'), line2: g(r, 'line2'), line3: g(r, 'line3'), phone: g(r, 'phone'),
+                    lat: parseFloat(g(r, 'lat')) || null, lng: parseFloat(g(r, 'lng')) || null, map: g(r, 'map')
                 }))
                 .filter(b => b.branchCode);
         }
@@ -3516,6 +3648,7 @@
         updateLabel();
         performTranslateInd();
         performTranslateAdv();
+        performTranslateFreq();   // v1.38
         PharmaxSheet.ensureLang(code); // v1.7: โหลดคำแปลของภาษานี้จาก Google Sheet เบื้องหลัง (เสร็จแล้วรีเฟรชฉลากให้เอง)
         BranchDirectory.ensureLang(code); // v1.18: โหลดที่อยู่/เวลาเปิด-ปิดของสาขาฉบับแปลภาษานี้เบื้องหลัง (เสร็จแล้วรีเฟรชหัวฉลากให้เอง)
     }
@@ -3967,6 +4100,32 @@
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
     })();
 
+    // v1.38: หัวข้อ "ความถี่" บนฉลากแต่ละภาษา
+    const FREQ_TITLE = { th: 'ความถี่', en: 'Frequency', ja: '服用頻度', ko: '복용 빈도', 'zh-CN': '用药频率', 'zh-TW': '用藥頻率', es: 'Frecuencia', fr: 'Fréquence', ru: 'Частота',
+        ar: 'عدد المرات', my: 'အကြိမ်ရေ', vi: 'Tần suất', km: 'ភាពញឹកញាប់', it: 'Frequenza', de: 'Häufigkeit', hi: 'आवृत्ति' };
+    const freqTitle = lang => FREQ_TITLE[lang] || FREQ_TITLE.en;
+    function setFrequencyText(v) { const el = document.getElementById('in_frequency'); if (el) el.value = v || ''; }
+    let freqAbortController = null, freqTimeoutId = null;
+    function debounceTranslateFreq() { clearTimeout(freqTimeoutId); freqTimeoutId = setTimeout(performTranslateFreq, 700); }
+    async function performTranslateFreq() {
+        if (freqAbortController) freqAbortController.abort();
+        const controller = new AbortController(); freqAbortController = controller;
+        const raw = (document.getElementById('in_frequency') || {}).value || '';
+        const out = document.getElementById('out_frequency'), row = document.getElementById('row_frequency');
+        document.getElementById('lbl_title_freq').innerText = freqTitle(currentLang);
+        if (!raw.trim()) { out.innerText = ''; row.style.display = 'none'; _glossMiss.freq = []; fitLabelToBox(); return; }
+        row.style.display = 'flex';
+        const miss = []; let res;
+        try { res = await translateLine(raw.trim(), currentLang, advicesDB, controller.signal, document.getElementById('in_drug_name').value); }
+        catch (e) { if (e.name === 'AbortError') return; throw e; }
+        if (controller.signal.aborted) return;
+        if (res.source && res.source !== 'glossary') miss.push({ th: raw.trim(), src: res.source });
+        _glossMiss.freq = miss;
+        out.innerText = res.text;
+        if (res.failed) updateTranslateWarning('adv', true);
+        fitLabelToBox();
+    }
+
     function updateLabel() {
         if (window.Regimen) window.Regimen.check();   // v1.37: เปลี่ยนชื่อยาแล้ว → ซ่อนช่องเลือกโรค
         stampCurrentDate();
@@ -3992,6 +4151,10 @@
         const _tt = document.querySelector('#label_box .time-table');
         if (_tt) _tt.style.display = _doses.every(d => d === 'X') ? 'none' : '';
 
+        const _fq = (document.getElementById('in_frequency') || {}).value || '';   // v1.38
+        document.getElementById('row_frequency').style.display = _fq.trim() ? 'flex' : 'none';
+        document.getElementById('lbl_title_freq').innerText = freqTitle(currentLang);
+        if (_fq.trim() && !document.getElementById('out_frequency').innerText) document.getElementById('out_frequency').innerText = currentLang === 'th' ? _fq : '…';
         let mealKey = document.getElementById('sel_meal').value;
         document.getElementById('out_meal').innerText = mealKey ? (PharmaxSheet.overrideMeal(mealKey, sheetDrugName, currentLang) || Glossary.lookupOption('meal', mealKey, currentLang) || UI_TEXT[currentLang].mealTimes[mealKey] || "-") : "-";
 
@@ -4140,7 +4303,7 @@
 
     let translateFailed = { ind: false, adv: false };
     // v1.38: เก็บบรรทัดที่ "ไม่พบใน medical_glossary" ไว้แสดงใต้พรีวิว — จะได้รู้ว่าคำแปลไหนมาจากชีทภาษา/แปลสด แล้วเพิ่มเข้า glossary
-    const _glossMiss = { ind: [], adv: [] };
+    const _glossMiss = { ind: [], adv: [], freq: [] };
     const GLOSS_SRC_TEXT = { sheet: 'แท็บภาษา (คนตรวจแล้ว)', dict: 'พจนานุกรมใน data.js', sheetAuto: 'แท็บภาษา (GOOGLETRANSLATE)', live: 'แปลสด' };
     function updateTranslateWarning(field, failed) {
         translateFailed[field] = failed;
@@ -4458,10 +4621,10 @@
         }
         try {
             const dn = document.getElementById('in_drug_name').value;
-            if (dn && PharmaxSheet.isPrivate(dn)) items.unshift({ cls: 'warn', text: '🔒 ยานี้ <b>ยังรอแอดมินอนุมัติ</b> — พิมพ์ได้เฉพาะบัญชีที่ส่งข้อมูล (ต้องเข้าสู่ระบบ) · ตรวจข้อมูลบนฉลากให้ถูกต้องก่อนพิมพ์' });
+            if (dn && PharmaxSheet.isPrivate(dn) && !(typeof PmxPreview !== 'undefined' && PmxPreview.active)) items.unshift({ cls: 'warn', text: '🔒 ยานี้ <b>ยังรอแอดมินอนุมัติ</b> — พิมพ์ได้เฉพาะบัญชีที่ส่งข้อมูล (ต้องเข้าสู่ระบบ) · ตรวจข้อมูลบนฉลากให้ถูกต้องก่อนพิมพ์' });
         } catch (e) {}
         if (currentLang && currentLang !== 'th') {
-            const all = _glossMiss.ind.concat(_glossMiss.adv);
+            const all = _glossMiss.ind.concat(_glossMiss.adv, _glossMiss.freq || []);
             const pend = all.filter(m => m.src === 'glossaryPending');
             const miss = all.filter(m => m.src !== 'glossaryPending');
             if (pend.length) {
@@ -4595,6 +4758,7 @@
         document.getElementById('in_drug_name').classList.remove('field-invalid');
         document.getElementById('in_indication').value = '';
         document.getElementById('in_advice').value = '';
+        setFrequencyText('');
         document.getElementById('qty_morning').value = '';
         document.getElementById('qty_noon').value = '';
         document.getElementById('qty_evening').value = '';
@@ -4625,7 +4789,7 @@
             ['ghost_drug_name', 'ghost_indication', 'ghost_advice'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
             const ha = document.getElementById('high_alert_warning'); if (ha) ha.style.display = 'none';
             if (typeof clinResetProfile === 'function') clinResetProfile();
-            _glossMiss.ind = []; _glossMiss.adv = [];
+            _glossMiss.ind = []; _glossMiss.adv = []; _glossMiss.freq = [];
             const pv = document.querySelector('.preview-panel'); if (pv) pv.scrollTop = 0;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (e) { console.warn('[clearAll]', e); }
@@ -4863,6 +5027,7 @@
             },
             indicationText: document.getElementById('in_indication').value,
             adviceText: document.getElementById('in_advice').value,
+            frequency: (document.getElementById('in_frequency') || {}).value || '',   // v1.38
             regimen: (function () { const sel = document.getElementById('sel_regimen'), box = document.getElementById('regimen_box');   // v1.38: โรคที่เลือก (ไว้บันทึกสถิติ)
                 return (sel && box && box.style.display !== 'none' && sel.value !== '') ? (sel.options[sel.selectedIndex] || {}).text || '' : ''; })()
         };
@@ -4936,6 +5101,7 @@
         document.getElementById('qty_bed').value = draft.dose.bed || '';
         document.getElementById('in_indication').value = draft.indicationText || '';
         document.getElementById('in_advice').value = draft.adviceText || '';
+        setFrequencyText(draft.frequency || '');
         updateLabel();
         performTranslateInd();
         performTranslateAdv();
@@ -4993,10 +5159,12 @@
         document.getElementById('qty_bed').value = entry.dose.bed;
         document.getElementById('in_indication').value = entry.indicationText;
         document.getElementById('in_advice').value = entry.adviceText;
+        setFrequencyText(entry.frequency || '');
 
         updateLabel();
         performTranslateInd();
         performTranslateAdv();
+        performTranslateFreq();
     }
 
     function safePrint() {
@@ -5030,6 +5198,15 @@
         //        Ctrl+Shift+P = พิมพ์ฉลากทั้งหมดในคิว (Batch Print, เหมือนปุ่ม "สั่งพิมพ์ทั้งหมดในคิว")
         const isCtrlOrCmd = (e.ctrlKey || e.metaKey);
         const isPKey = (e.key === 'p' || e.key === 'P');
+        // v1.38: คีย์ลัดสำหรับงานยิงบาร์โค้ด (ใช้ได้แม้เคอร์เซอร์อยู่ในช่องกรอก) — F1 วิธีใช้ · F2 / Ctrl+Enter เข้าคิว · F4 พิมพ์ทันที · F8 พิมพ์คิว · F9 ช่องบาร์โค้ด
+        const onForm = () => { const n = document.getElementById('in_drug_name'); return n && n.offsetParent !== null && !document.querySelector('.pxs-overlay.open, .dsm-overlay.open') && !isModalOpen(); };
+        const fkeys = { F1: () => openHelpModal(), F2: () => addCurrentItemToQueue(), F4: () => printSingleCurrentItem(), F8: () => safeBatchPrint(),
+            F9: () => { const b = document.getElementById('in_barcode_scan'); if (b) { b.focus(); b.select(); } } };
+        if (fkeys[e.key] && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            if (e.key === 'F1' ? !document.querySelector('.pxs-overlay.open, .dsm-overlay.open') : onForm()) { e.preventDefault(); fkeys[e.key](); }
+            return;
+        }
+        if (isCtrlOrCmd && e.key === 'Enter' && !e.shiftKey && onForm()) { e.preventDefault(); addCurrentItemToQueue(); return; }
         if (isCtrlOrCmd && isPKey && e.shiftKey) {
             e.preventDefault();
             safeBatchPrint();
@@ -5232,7 +5409,9 @@
         let badge = document.getElementById('queue_count_badge');
 
         // อัปเดตฝั่งซ้าย
-        badge.innerText = `${labelQueue.length} รายการ`;
+        const _pagesN = labelQueue.reduce((a, it) => a + (it.copies || 1), 0);   // v1.38: นับสำเนาด้วย
+        badge.innerText = `${labelQueue.length} รายการ` + (_pagesN !== labelQueue.length ? ` · ${_pagesN} ใบ` : '');
+        const _qn = document.getElementById('btn_queue_name'); if (_qn) _qn.style.display = labelQueue.length ? '' : 'none';
 
         // อัปเดตฝั่งขวา (Quick Widget)
         let widgetContainer = document.getElementById('widget_items_container');
@@ -5259,6 +5438,10 @@
                             ${warnBadgeHtml(item)}
                             <span class="queue-card-dose">${escapeHtml(shortDose)}</span>
                         </div>
+                        <span class="q-copies" title="จำนวนสำเนาของฉลากนี้">
+                            <button type="button" onclick="setQueueCopies(${index}, -1)" aria-label="ลดจำนวน">−</button><b>×${item.copies || 1}</b><button type="button" onclick="setQueueCopies(${index}, 1)" aria-label="เพิ่มจำนวน">+</button>
+                        </span>
+                        <button type="button" class="queue-card-edit" onclick="editQueueItem(${index})" title="นำกลับมาแก้ในฟอร์ม">✎</button>
                         <button type="button" class="queue-card-delete" onclick="removeQueueItem(${index})" title="ลบรายการนี้">✕</button>
                     </div>
                 `;
@@ -5277,6 +5460,46 @@
                 `;
             }).join('');
         }
+    }
+
+    // v1.38: จำนวนสำเนาต่อรายการ (1-20) · แก้รายการในคิว · ใส่ชื่อผู้ใช้ยาให้ทั้งคิว
+    function setQueueCopies(index, d) {
+        const it = labelQueue[index]; if (!it) return;
+        it.copies = Math.max(1, Math.min(20, (it.copies || 1) + d));
+        saveQueueToStorage(); renderQueueUI();
+    }
+    function editQueueItem(index) {
+        const it = labelQueue[index]; if (!it) return;
+        const cur = document.getElementById('in_drug_name').value.trim();
+        if (cur && !confirm('ฟอร์มมียา "' + cur + '" ค้างอยู่ — แทนที่ด้วยรายการจากคิว?\n(กดยกเลิก แล้ว "เพิ่มเข้าคิว" ยาตัวที่ค้างก่อนได้)')) return;
+        labelQueue.splice(index, 1);
+        saveQueueToStorage(); renderQueueUI();
+        if (it.lang && UI_TEXT[it.lang] && it.lang !== currentLang) setLanguage(it.lang);
+        setPatientName(it.patientName || '');
+        document.getElementById('in_drug_name').value = it.drugName;
+        document.getElementById('sel_drug_type').value = it.drugType;
+        document.getElementById('sel_meal').value = it.meal;
+        ['morning', 'noon', 'evening', 'bed'].forEach(k => { document.getElementById('qty_' + k).value = (it.dose || {})[k] || ''; });
+        document.getElementById('in_indication').value = it.indicationText || '';
+        document.getElementById('in_advice').value = it.adviceText || '';
+        setFrequencyText(it.frequency || '');
+        autoSyncCheckboxesFromText('in_indication', 'ind_list');
+        autoSyncCheckboxesFromText('in_advice', 'adv_list');
+        updateLabel(); performTranslateInd(); performTranslateAdv(); performTranslateFreq();
+        if (typeof clinicalCheckOnSelect === 'function') clinicalCheckOnSelect();
+        showUndoToast('✎ นำ "' + it.drugName + '" กลับมาแก้แล้ว — แก้เสร็จกด "เพิ่มเข้าคิว" อีกครั้ง' + ((it.copies || 1) > 1 ? ' (เดิม ×' + it.copies + ')' : ''));
+        const f = document.getElementById('in_drug_name'); if (f) { f.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }
+    function applyPatientNameToQueue() {
+        if (!labelQueue.length) return;
+        let name = getPatientName();
+        const v = prompt('ชื่อผู้ใช้ยาสำหรับทุกรายการในคิว (' + labelQueue.length + ' รายการ)\nเว้นว่าง = ลบชื่อออกจากทุกรายการ', name || (labelQueue.find(x => x.patientName) || {}).patientName || '');
+        if (v === null) return;
+        name = sanitizePatientName(v);
+        labelQueue.forEach(it => { it.patientName = name; });
+        if (name) setPatientName(name);
+        saveQueueToStorage(); renderQueueUI();
+        showUndoToast(name ? '👤 ใส่ชื่อ "' + name + '" ให้ทั้งคิวแล้ว' : 'ลบชื่อผู้ใช้ยาออกจากทั้งคิวแล้ว');
     }
 
     function removeQueueItem(index) {
@@ -6058,6 +6281,7 @@
         document.getElementById('in_drug_name').classList.remove('field-invalid');
         document.getElementById('in_indication').value = '';     // ล้างช่องสรรพคุณ
         document.getElementById('in_advice').value = '';         // ล้างช่องคำแนะนำเพิ่มเติม
+        setFrequencyText('');
         document.getElementById('qty_morning').value = '';
         document.getElementById('qty_noon').value = '';
         document.getElementById('qty_evening').value = '';
@@ -6145,6 +6369,7 @@
         document.getElementById('qty_bed').value = entry.dose.bed;
         document.getElementById('in_indication').value = entry.indicationText;
         document.getElementById('in_advice').value = entry.adviceText;
+        setFrequencyText(entry.frequency || '');
         updateLabel();
         performTranslateInd();
         performTranslateAdv();
@@ -6189,6 +6414,7 @@
 
         const indicationTranslated = await translateMultilineText(item.indicationText, lang, indicationsDB, item.drugName);
         const adviceTranslated = await translateMultilineText(item.adviceText, lang, advicesDB, item.drugName);
+        const freqTranslated = item.frequency ? await translateMultilineText(item.frequency, lang, advicesDB, item.drugName) : '';   // v1.38
 
         // v1.22: ใส่คลาสซ่อนโลโก้/เวลาทำการ และระบุบรรทัดเวลาทำการให้ตรงกับพรีวิว (line4 ถ้ามี ไม่งั้น line3)
         const hoursKey = getHoursLineKey(branchText);
@@ -6236,6 +6462,7 @@
                         <span class="label-title">${t.time} <span class="thai-text">(เวลา)</span>:</span>
                         <span class="label-value" style="white-space: nowrap;">${mealText}</span>
                     </div>
+                    ${freqTranslated ? `<div class="label-row" style="border:none;"><span class="label-title">${freqTitle(lang)} <span class="thai-text">(ความถี่)</span>:</span><span class="label-value" style="font-weight:700 !important;">${escapeHtml(freqTranslated)}</span></div>` : ''}
                     <div class="label-block" style="border-top: 1px dashed #000; margin-top: 6px; padding-top: 4px; border-bottom: none;">
                         <span class="label-title" style="font-weight: 900;">${t.advice} <span class="thai-text">(คำแนะนำ)</span>:</span>
                         <div class="auxiliary-icons" style="display: inline-flex; vertical-align: middle; margin: 0 4px; float: none;">${getAuxIconsHtml(item.adviceText)}</div>
@@ -6246,6 +6473,34 @@
                 </div>
             </div>
         `;
+    }
+
+    // v1.38: ตรวจฉลากภาษาต่างประเทศก่อนพิมพ์ — ถ้ายังมีตัวอักษรไทย (แปลไม่สำเร็จ/เน็ตหลุด) ต้องยืนยันก่อน
+    function findThaiLeftovers(container) {
+        const out = [];
+        container.querySelectorAll('.batch-box-item').forEach((box, i) => {
+            const lang = box.getAttribute('data-lang');
+            if (!lang || lang === 'th') return;
+            const bad = [];
+            box.querySelectorAll('.label-value').forEach(v => {
+                const txt = (v.innerText || v.textContent || '').trim();
+                if (/[\u0E00-\u0E7F]/.test(txt)) bad.push(txt.length > 60 ? txt.slice(0, 60) + '…' : txt);
+            });
+            if (bad.length) {
+                const nm = (box.querySelector('.label-row .label-value') || {}).textContent || ('ใบที่ ' + (i + 1));
+                out.push({ page: i + 1, drug: nm.trim(), lines: bad });
+            }
+        });
+        return out;
+    }
+    function confirmNoThaiLeftovers(container) {
+        const bad = findThaiLeftovers(container);
+        if (!bad.length) return true;
+        const msg = '⚠️ พบข้อความภาษาไทยบนฉลากภาษาต่างประเทศ (แปลไม่สำเร็จ / ไม่มีใน glossary และเน็ตใช้ไม่ได้)\n\n' +
+            bad.slice(0, 6).map(b => '• ' + b.drug + '\n   ' + b.lines.slice(0, 2).join('\n   ')).join('\n') +
+            (bad.length > 6 ? '\n… และอีก ' + (bad.length - 6) + ' ใบ' : '') +
+            '\n\nคนไข้ต่างชาติอาจอ่านไม่ออก — กด "ยกเลิก" เพื่อกลับไปแก้ (กดลองแปลใหม่ / ตรวจอินเทอร์เน็ต)\nหรือกด "ตกลง" ถ้าตั้งใจพิมพ์ทั้งอย่างนี้';
+        return confirm(msg);
     }
 
     async function safeBatchPrint() {
@@ -6275,11 +6530,12 @@
         let pages = [];
         let pageLabels = []; // v1.14: ชื่อยาที่จับคู่กับ pages ทีละใบ (ใช้ตอนแจ้งเตือนถ้าล้น เพราะตอนเปิดสำเนาไทย จำนวนใบต่อรายการไม่คงที่แล้ว)
         for (let item of validQueue) {
-            pages.push(await buildLabelPageHtml(item, currentLang));
-            pageLabels.push(item.drugName);
-            if (printThaiExtra && currentLang !== 'th') {
-                pages.push(await buildLabelPageHtml(item, 'th')); // v1.14: ใบภาษาต่างประเทศ ตามด้วยใบไทยทันที
-                pageLabels.push(item.drugName + ' (ไทย)');
+            const n = Math.max(1, Math.min(20, item.copies || 1));   // v1.38: สำเนาต่อรายการ
+            const pg = await buildLabelPageHtml(item, currentLang);
+            const pgTh = (printThaiExtra && currentLang !== 'th') ? await buildLabelPageHtml(item, 'th') : null;   // v1.14: ใบภาษาต่างประเทศ ตามด้วยใบไทยทันที
+            for (let c = 0; c < n; c++) {
+                pages.push(pg); pageLabels.push(item.drugName + (n > 1 ? ' #' + (c + 1) : ''));
+                if (pgTh) { pages.push(pgTh); pageLabels.push(item.drugName + ' (ไทย)' + (n > 1 ? ' #' + (c + 1) : '')); }
             }
         }
         printContainer.innerHTML = pages.join('');
@@ -6298,12 +6554,13 @@
             return;
         }
 
+        if (!confirmNoThaiLeftovers(printContainer)) return;   // v1.38: ฉลากภาษาต่างประเทศที่ยังมีข้อความไทย → ต้องยืนยันก่อน
         // v1.8: บันทึกสถิติ/ประวัติ และเก็บคิวชุดนี้ไว้ให้พิมพ์ซ้ำได้ ก่อนสั่งพิมพ์จริง
-        validQueue.forEach(item => {
-            recordPrintStatistics(item.drugName, currentBranch);
-            pushPrintHistory(item);
-        });
-        PrintLog.send(validQueue, 'batch', printThaiExtra);   // v1.38: บันทึกการพิมพ์ลงชีท (แยกสาขา)
+        const expanded = [];   // v1.38: นับสำเนาเป็นฉลากแยกใบ
+        validQueue.forEach(item => { for (let c = 0; c < Math.max(1, Math.min(20, item.copies || 1)); c++) expanded.push(item); });
+        expanded.forEach(item => recordPrintStatistics(item.drugName, currentBranch));
+        validQueue.forEach(item => pushPrintHistory(item));
+        PrintLog.send(expanded, 'batch', printThaiExtra);   // v1.38: บันทึกการพิมพ์ลงชีท (แยกสาขา)
         saveQueueSnapshot(validQueue, 'printed');
 
         window.print();
@@ -6362,6 +6619,7 @@
         }
 
         // บันทึกประวัติและสถิติ (v1.8: ย้ายมาหลังผ่านการตรวจสอบ เพื่อไม่ให้นับเมื่อยกเลิกพิมพ์)
+        if (!confirmNoThaiLeftovers(printContainer)) return;   // v1.38
         recordPrintStatistics(currentItem.drugName, currentBranch);
         pushPrintHistory(currentItem);
         PrintLog.send([currentItem], 'single', printThaiExtra);   // v1.38
@@ -6379,7 +6637,7 @@
     //  - ไม่ดักคีย์เมื่อเปิดป๊อปอัพ หรือโฟกัสอยู่ช่องอื่นนอกฟอร์มยา (เช่น ช่องข้อมูลผู้ป่วย) -> ให้เบราว์เซอร์ Undo ตามปกติ
     //  - ย้อนได้เฉพาะ "ช่องในฟอร์มยา" ไม่รวมคิวพิมพ์ (คิวกู้คืนได้จากรายการ "คิวที่เพิ่งพิมพ์/ล้าง")
     // ==========================================================================
-    const UNDO_FIELD_IDS = ['in_patient_name', 'in_drug_name', 'in_indication', 'in_advice', 'sel_drug_type', 'sel_meal', 'qty_morning', 'qty_noon', 'qty_evening', 'qty_bed'];
+    const UNDO_FIELD_IDS = ['in_patient_name', 'in_drug_name', 'in_indication', 'in_advice', 'in_frequency', 'sel_drug_type', 'sel_meal', 'qty_morning', 'qty_noon', 'qty_evening', 'qty_bed'];
     const UNDO_MAX_STEPS = 50;
     let undoStack = [];
     let undoIndex = -1;
@@ -6410,6 +6668,26 @@
         undoTimer = setTimeout(saveFormStateForUndo, 400);
     }
 
+    // v1.38: การแจ้งเตือนแบบการ์ด — pxNotice({ title, html, kind: ok|err|info|warn, ms, key, actions: [{ label, onClick, sec }] })
+    window.pxNotice = function (o) {
+        let box = document.getElementById('px_notices');
+        if (!box) { box = document.createElement('div'); box.id = 'px_notices'; box.setAttribute('aria-live', 'polite'); document.body.appendChild(box); }
+        if (o.key) { const old = box.querySelector('[data-key="' + o.key + '"]'); if (old) old.remove(); }
+        const el = document.createElement('div');
+        el.className = 'px-notice ' + (o.kind || 'info'); if (o.key) el.dataset.key = o.key;
+        el.innerHTML = (o.title ? '<b>' + escapeHtml(o.title) + '</b>' : '') + '<div>' + (o.html || '') + '</div>' + '<button class="pxn-x" type="button" aria-label="ปิด">×</button>';
+        const close = () => { if (!el.isConnected) return; el.classList.add('out'); setTimeout(() => el.remove(), 230); };
+        el.querySelector('.pxn-x').onclick = close;
+        if (o.actions && o.actions.length) {
+            const act = document.createElement('div'); act.className = 'pxn-act';
+            o.actions.forEach(a => { const b = document.createElement('button'); b.type = 'button'; b.textContent = a.label; if (a.sec) b.className = 'sec'; b.onclick = () => { if (a.onClick) a.onClick(); if (a.keep !== true) close(); }; act.appendChild(b); });
+            el.appendChild(act);
+        }
+        box.appendChild(el);
+        if (o.ms) setTimeout(close, o.ms);
+        return { close, el };
+    };
+
     function showUndoToast(msg) {
         let t = document.getElementById('undo_toast');
         if (!t) {
@@ -6434,6 +6712,7 @@
             updateLabel();
             performTranslateInd();
             performTranslateAdv();
+            performTranslateFreq();
         } finally { isUndoing = false; }
     }
 
@@ -6504,6 +6783,170 @@
     //  กลับมาเปิดแท็บ (หรือเปิดเครื่องจากพัก) → ดึงทันทีถ้าข้อมูลเก่ากว่า 1 นาที · ปุ่ม "ยา N รายการ" มุมขวาบน = ดึงทันที
     const REFRESH = { drugs: 3 * 60000, glossary: 10 * 60000, branches: 30 * 60000 };
     const _lastRun = { drugs: Date.now(), glossary: Date.now(), branches: Date.now() };
+    // ===== v1.38: โหมดพรีวิวฉลาก (หน้าแอดมินเปิดใน iframe ก่อนอนุมัติยาใหม่) — index.html#pmxpreview=<JSON> =====
+    //  ใช้เส้นทางแปลจริงทุกขั้น (glossary → แท็บภาษา → พจนานุกรม → แปลสด) เหมือนตอนพิมพ์ฉลากจริง · ไม่บันทึกอะไรลงชีท
+    const PmxPreview = (function () {
+        const on = () => location.hash.indexOf('#pmxpreview=') === 0;
+        let active = false;
+        function read() { try { return JSON.parse(decodeURIComponent(location.hash.slice('#pmxpreview='.length))); } catch (e) { return null; } }
+        async function apply() {
+            const p = read(); if (!p) return;
+            let code = p.branch || '';
+            if (!code || !BranchDirectory.findRow(code)) { try { code = localStorage.getItem('pharmax_branch') || ''; } catch (e) {} }
+            if (!code) { const all = BranchDirectory.all || []; code = (all[0] && all[0].branchCode) || Object.keys(BRANCHES || {})[0] || ''; }
+            if (code && currentBranch !== code) selectBranch(code);
+            document.getElementById('home_screen').style.display = 'none';
+            document.getElementById('app_screen').style.display = 'block';
+            const rec = Object.assign({}, p.drug || {}); rec.name = String(rec.name || 'ยาใหม่').trim();
+            PharmaxSheet.setPrivate([rec]);
+            const lang = p.lang && UI_TEXT[p.lang] ? p.lang : 'en';
+            if (lang !== currentLang) setLanguage(lang);
+            document.getElementById('in_drug_name').value = rec.name.toUpperCase();
+            setPatientName(p.patient || '');
+            const se = PharmaxSheet.find(rec.name.toUpperCase()) || PharmaxSheet.find(rec.name);
+            applyLanguageToLabel();
+            if (se) PharmaxSheet.applySheetOnly(se); else { updateLabel(); performTranslateInd(); performTranslateAdv(); performTranslateFreq(); }
+        }
+        function boot() {
+            if (!on()) return;
+            active = true;
+            document.body.classList.add('pmx-preview');
+            const panel = document.querySelector('.preview-panel'); if (panel) document.body.appendChild(panel);   // ย้ายออกจากเลย์เอาต์ฟอร์ม (container query ทำให้ position:fixed ไม่คลุมทั้งจอ)
+            const go = () => apply().catch(e => console.warn('preview', e));
+            setTimeout(go, 50);
+            setTimeout(go, 2500);   // รอบสอง: หลังรายชื่อสาขา/glossary ซิงค์เสร็จ
+            window.addEventListener('hashchange', () => { if (on()) go(); });
+        }
+        return { boot, get active() { return active; } };
+    })();
+    PmxPreview.boot();   // v1.38: โหมดพรีวิวฉลากจากหน้าแอดมิน (#pmxpreview=...)
+    // ===== v1.38: หาสาขาใกล้ฉัน (GPS) — พิกัดสาขามาจากคอลัมน์ lat/lng ใน branchesTH (Apps Script ค้นจาก Google Maps ให้) =====
+    const NearBranch = (function () {
+        const AUTO_KEY = 'pharmax_geo_auto_done';
+        const $ = id => document.getElementById(id);
+        const isTouch = () => (window.matchMedia && matchMedia('(pointer: coarse)').matches) || /iPad|iPhone|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+        let busy = false;
+        function hav(a, b, c, d) {
+            const R = 6371000, r = x => x * Math.PI / 180, dLat = r(c - a), dLng = r(d - b);
+            const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(dLng / 2) ** 2;
+            return 2 * R * Math.asin(Math.sqrt(h));
+        }
+        const fmt = m => m < 1000 ? Math.round(m / 10) * 10 + ' ม.' : (m / 1000).toFixed(m < 10000 ? 1 : 0) + ' กม.';
+        function status(t) { const el = $('geo_status'); if (el) el.textContent = t || ''; }
+        function brandOf(b) { return (typeof getBrandForBranch === 'function' ? getBrandForBranch(b.branchCode) : b.brandId) || 'pharmax'; }
+        function go(code) {
+            const b = BranchDirectory.findRow(code); if (!b) return;
+            $('geo_list').innerHTML = ''; status('');
+            selectBrand(brandOf(b));
+            setTimeout(() => enterBranch(code), 520);   // ให้โลโก้ขยายก่อน แล้วค่อยลอยไปมุมซ้ายบน (เหมือนกรอกรหัส)
+        }
+        function list(top) {
+            $('geo_list').innerHTML = top.map(x => {
+                const b = x.b, nm = b.branchName || b.line1 || b.branchCode;
+                const url = 'https://www.google.com/maps/search/?api=1&query=' + b.lat + ',' + b.lng;
+                return '<button type="button" class="geo-item" data-brand="' + escapeHtml(brandOf(b)) + '" onclick="NearBranch.pick(\'' + escapeHtml(b.branchCode) + '\')">' +
+                    '<span class="gi-brand"></span><span class="gi-main"><b>' + escapeHtml(nm) + '</b><small>' + escapeHtml(b.line2 || b.line1 || '') + '</small></span>' +
+                    '<span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span class="gi-d">' + fmt(x.d) + '</span>' +
+                    '<a href="' + url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">แผนที่ ↗</a></span></button>';
+            }).join('');
+        }
+        function find(manual) {
+            if (busy) return;
+            if (!('geolocation' in navigator)) { if (manual) status('อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง'); return; }
+            if (!window.isSecureContext) { if (manual) status('ต้องเปิดผ่าน https จึงจะใช้ตำแหน่งได้'); return; }
+            const rows = (BranchDirectory.all || []).filter(b => b.lat && b.lng);
+            if (!rows.length) { if (manual) status('ยังไม่มีพิกัดสาขา — แอดมินกด "📍 หาพิกัดสาขา" ในหน้าแอดมินก่อน'); return; }
+            busy = true; const btn = $('geo_btn'); if (btn) btn.disabled = true;
+            status('กำลังหาตำแหน่งของคุณ…');
+            navigator.geolocation.getCurrentPosition(pos => {
+                busy = false; if (btn) btn.disabled = false;
+                if (document.getElementById('home_screen').style.display === 'none') return;   // ผู้ใช้เข้าหน้าฉลากไปเองแล้ว
+                const { latitude: la, longitude: lo, accuracy: acc } = pos.coords;
+                const ds = rows.map(b => ({ b, d: hav(la, lo, b.lat, b.lng) })).sort((p, q) => p.d - q.d);
+                const n = ds[0], second = ds[1];
+                const near = Math.min(400, Math.max(150, (acc || 0) + 60));
+                if (n.d <= near && (!second || second.d - n.d > 120)) {
+                    status('📍 คุณอยู่ที่ ' + (n.b.branchName || n.b.branchCode) + ' (ห่าง ' + fmt(n.d) + ')');
+                    go(n.b.branchCode);
+                    setTimeout(() => { if (typeof pxNotice === 'function') pxNotice({ key: 'geo', kind: 'ok', ms: 9000, title: '📍 เลือกสาขาให้อัตโนมัติ',
+                        html: escapeHtml(n.b.branchName || n.b.branchCode) + ' · ห่างประมาณ ' + fmt(n.d), actions: [{ label: 'ไม่ใช่สาขานี้', sec: true, onClick: () => goHome() }] }); }, 1400);
+                    return;
+                }
+                status(n.d > 20000 ? 'ไม่พบสาขาในระยะ 20 กม. — สาขาที่ใกล้ที่สุด:' : 'สาขาใกล้คุณ — แตะเพื่อเลือก' + (acc > 200 ? ' (ตำแหน่งคลาดเคลื่อน ~' + fmt(acc) + ')' : ''));
+                list(ds.slice(0, 3));
+            }, err => {
+                busy = false; if (btn) btn.disabled = false;
+                status(err.code === 1 ? (manual ? 'ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง — เปิดสิทธิ์ตำแหน่งให้เว็บนี้ในการตั้งค่าเบราว์เซอร์' : '') : 'หาตำแหน่งไม่สำเร็จ ลองใหม่อีกครั้ง');
+            }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+        }
+        async function autoRun() {
+            const hs = document.getElementById('home_screen');
+            if (!isTouch() || sessionStorage.getItem(AUTO_KEY) || !hs || hs.style.display === 'none') return;   // จำสาขาเดิมไว้แล้ว → ไม่ถามตำแหน่ง
+            sessionStorage.setItem(AUTO_KEY, '1');
+            try { if (navigator.permissions) { const p = await navigator.permissions.query({ name: 'geolocation' }); if (p.state === 'denied') return; } } catch (e) {}
+            const wait = Date.now();
+            const tick = () => {   // รอรายชื่อสาขาโหลด (มีพิกัด) ก่อน
+                if ((BranchDirectory.all || []).some(b => b.lat && b.lng)) return find(false);
+                if (Date.now() - wait < 15000) setTimeout(tick, 500);
+            };
+            tick();
+        }
+        function init() {
+            const box = $('geo_box'); if (!box) return;
+            if (!('geolocation' in navigator)) { box.style.display = 'none'; return; }
+            setTimeout(autoRun, 900);
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+        return { find, pick: go, distance: hav };
+    })();
+    // ===== v1.38: เวอร์ชันใหม่ / ไฟล์ไม่ตรงรุ่น + Service worker (ออฟไลน์ / ติดตั้งบน iPad) =====
+    const PmxUpdate = (function () {
+        const myBuild = (document.querySelector('meta[name="pmx-build"]') || {}).content || '';
+        let shown = false, lastCheck = 0, reg = null;
+        function banner(title, html) {
+            if (shown || typeof pxNotice !== 'function') return; shown = true;
+            const busy = () => { try { return (typeof labelQueue !== 'undefined' && labelQueue.length) ? ' — คิวพิมพ์ที่ค้างอยู่จะถูกกู้คืนหลังรีเฟรช' : ''; } catch (e) { return ''; } };
+            pxNotice({ key: 'upd', kind: 'warn', title, html: html + busy(),
+                actions: [{ label: '🔄 รีเฟรชตอนนี้', onClick: reloadNow }, { label: 'ภายหลัง', sec: true, onClick: () => { shown = false; lastCheck = Date.now(); } }] });
+        }
+        async function reloadNow() {
+            try { if (typeof saveQueueToStorage === 'function') saveQueueToStorage(); } catch (e) {}
+            try { if (reg) { await reg.update(); if (reg.waiting) reg.waiting.postMessage('skipWaiting'); } } catch (e) {}
+            setTimeout(() => location.reload(), 300);
+        }
+        function checkLoaded() {
+            const bad = [];
+            if (typeof DATA_BUILD === 'undefined' || DATA_BUILD !== myBuild) bad.push('data.js');
+            if (window.PMX_DS_BUILD && window.PMX_DS_BUILD !== myBuild) bad.push('drug-submit.js');
+            if (myBuild && bad.length) banner('ไฟล์โปรแกรมไม่ตรงรุ่น', 'เบราว์เซอร์ยังใช้ ' + bad.join(', ') + ' รุ่นเก่าอยู่ (หน้าเว็บรุ่น ' + myBuild + ') — กดรีเฟรชเพื่อให้ทำงานถูกต้อง');
+        }
+        async function checkRemote(force) {
+            if (!myBuild || !navigator.onLine || (!force && Date.now() - lastCheck < 55 * 60 * 1000)) return;
+            lastCheck = Date.now();
+            try {
+                const r = await fetch(location.pathname.replace(/[^/]*$/, '') + 'index.html?vcheck=' + Date.now(), { cache: 'no-store', headers: { Range: 'bytes=0-2047' } });
+                if (!r.ok && r.status !== 206) return;
+                const head = (await r.text()).slice(0, 4096);
+                const m = head.match(/name="pmx-build"\s+content="([^"]+)"/);
+                if (m && m[1] !== myBuild) banner('มีโปรแกรมเวอร์ชันใหม่', 'รุ่น ' + escapeHtml(m[1]) + ' พร้อมใช้งานแล้ว (ตอนนี้ ' + escapeHtml(myBuild) + ') — กดรีเฟรชเมื่อสะดวก');
+            } catch (e) {}
+        }
+        function registerSW() {
+            if (!('serviceWorker' in navigator) || !(location.protocol === 'https:' || location.hostname === 'localhost')) return;
+            navigator.serviceWorker.register('sw.js').then(r => {
+                reg = r;
+                r.addEventListener('updatefound', () => {
+                    const nw = r.installing; if (!nw) return;
+                    nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage('skipWaiting'); });
+                });
+            }).catch(e => console.warn('SW:', e.message));
+        }
+        window.addEventListener('load', () => { setTimeout(checkLoaded, 1500); setTimeout(() => checkRemote(true), 8000); registerSW(); });
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) checkRemote(false); });
+        setInterval(() => { if (!document.hidden) checkRemote(false); }, 10 * 60 * 1000);
+        return { checkRemote, checkLoaded, reloadNow, build: myBuild };
+    })();
+
     function refreshTick(force) {
         if (document.hidden) return;
         const now = Date.now();
@@ -6946,7 +7389,7 @@ window.PrintLog = (function () {
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
