@@ -176,6 +176,13 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
     try { localStorage.setItem(KEY, JSON.stringify(seen.concat(fresh.map(x => x.k)).slice(-200))); } catch (e) {}
     if (first || typeof window.pxNotice !== 'function') return;
     fresh.slice(-4).forEach(x => {
+      if (x.type === 'feedback') {   // แอดมินตอบความคิดเห็น
+        window.pxNotice({ kind: 'info', ms: 0, title: '💬 แอดมินตอบความคิดเห็นของคุณ',
+          html: '<b>' + esc(x.title) + '</b>' + (x.comment ? '<br><span style="color:#5b6777">คุณเขียน: ' + esc(x.comment) + '</span>' : '') +
+            '<div style="margin-top:6px;white-space:pre-wrap">' + esc(x.note) + '</div>',
+          actions: [{ label: 'ดูรายการของฉัน', sec: true, onClick: () => { try { openMine(); } catch (e) {} } }] });
+        return;
+      }
       const ok = /อนุมัติแล้ว|ดำเนินการแล้ว/.test(x.status) && !/ไม่/.test(x.status);
       window.pxNotice({
         kind: ok ? 'ok' : 'err', ms: ok ? 12000 : 0,
@@ -589,7 +596,9 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
       sec('💊 ยาที่ส่งเพิ่ม', r.drugs || [], x => item(x, x.status === 'รออนุมัติ' ? '<div class="dsm-hint" style="color:#7a5b00">🔒 ระหว่างรออนุมัติ ใช้พิมพ์ฉลากได้เฉพาะบัญชีนี้</div>' : '')) +
       sec('✏️ คำขอแก้ไข', r.edits || [], x => item(x, (x.fields && x.fields.length ? '<div class="dsm-hint">ขอแก้: ' + esc(x.fields.join(', ')) + '</div>' : '') +
         (x.comment ? '<div class="dsm-hint" style="white-space:pre-wrap">' + esc(x.comment) + '</div>' : ''))) +
-      sec('💬 ความคิดเห็น', r.feedback || [], x => item(x, '<div class="dsm-hint" style="white-space:pre-wrap">' + esc(x.comment) + '</div>')) +
+      sec('💬 ความคิดเห็น', r.feedback || [], x => item(x, '<div class="dsm-hint" style="white-space:pre-wrap">' + esc(x.comment) + '</div>' +
+        (x.reply ? '<div style="margin-top:6px;padding:7px 9px;border-left:3px solid #16478E;background:#eef4ff;border-radius:6px;font-size:.82rem"><b>💬 แอดมินตอบ</b>' +
+          (x.replyAt ? ' <span class="dsm-hint">· ' + esc(x.replyAt) + '</span>' : '') + '<div style="white-space:pre-wrap">' + esc(x.reply) + '</div></div>' : ''))) +
       '<button class="dsm-btn sec" data-close type="button">ปิด</button>';
     wireWho();
   }
