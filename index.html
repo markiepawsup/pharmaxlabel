@@ -7419,7 +7419,7 @@ window.PrintLog = (function () {
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
@@ -7452,7 +7452,8 @@ const PmxRemote = (function () {
     const KEY = 'pmx_remote_v1', HUB_KEY = 'pmx_hub_v1';
     const load = (k, d) => { try { return Object.assign(d, JSON.parse(localStorage.getItem(k) || 'null') || {}); } catch (e) { return d; } };
     const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
-    let st = load(KEY, { hubs: [], lastHub: '', preferLocal: false, deviceName: '' });
+    let st = load(KEY, { hubs: [], lastHub: '', preferLocal: false, deviceName: '', target: '' });   // target = คอมหลักที่จำไว้ ('' = ถามทุกครั้ง)
+    const targetHub = () => st.hubs.length === 1 ? st.hubs[0] : (st.hubs.find(h => h.token === st.target) || null);
     let online = {};   // token → true/false (ล่าสุดที่เช็ค)
 
     async function api(path, body) {
@@ -7502,6 +7503,10 @@ const PmxRemote = (function () {
       .rp-ok{background:#ECFDF5;color:#047857;border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:14px}
       .rp-hub{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1.5px solid #E2E8F0;background:#fff;border-radius:12px;padding:12px;margin:0 0 8px;font:inherit;cursor:pointer;color:inherit}
       .rp-hub:hover{border-color:#94A3B8}.rp-hub[disabled]{opacity:.55;cursor:wait}
+      .rp-hub.pick{cursor:pointer;transition:background .15s,border-color .15s}
+      .rp-hub.sel{border:2px solid #16478E;background:#EEF4FF;box-shadow:0 0 0 3px rgba(22,71,142,.12)}
+      .rp-hub .rp-tick{flex:none;font-size:12px;font-weight:700;color:#fff;background:#16478E;border-radius:999px;padding:3px 9px;white-space:nowrap}
+      #hdr_printer_btn{max-width:min(260px,70vw)}#hdr_printer_text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .rp-hub b{display:block}.rp-hub small{color:#64748B}
       .rp-hub .rp-grow{flex:1;min-width:0}
       .rp-dot{width:11px;height:11px;border-radius:50%;background:#CBD5E1;flex:none}.rp-dot.on{background:#16A34A}.rp-dot.off{background:#DC2626}
@@ -7546,7 +7551,9 @@ const PmxRemote = (function () {
         if (!relay() || isHub) { btn.style.display = 'none'; return; }
         btn.style.display = '';
         const n = st.hubs.length;
-        txt.textContent = (!n || st.preferLocal) ? 'พิมพ์ที่เครื่องนี้' : n === 1 ? 'พิมพ์ที่ ' + st.hubs[0].name : 'เลือกคอมตอนพิมพ์ (' + n + ')';
+        const t = targetHub();
+        txt.textContent = (!n || st.preferLocal) ? 'Print ที่เครื่องนี้' : t ? 'Print ผ่าน ' + t.name + (t.branch ? ' – ' + t.branch : '') : 'เลือกคอมตอนพิมพ์ (' + n + ')';
+        btn.title = 'กดเพื่อเลือก/เปลี่ยนเครื่องที่จะพิมพ์' + (t && !st.preferLocal ? ' (ตอนนี้: ' + t.name + (t.branch ? ' – ' + t.branch : '') + ')' : '');
     }
     async function refreshStatus() {
         if (!st.hubs.length) return;
@@ -7583,12 +7590,10 @@ const PmxRemote = (function () {
                 '<label class="rp-sub" style="display:block;margin:0">ชื่อเครื่องนี้ (ให้คอมรู้ว่าใครส่งมา)</label>' +
                 '<input class="rp-in" id="rp_devname" maxlength="40" value="' + esc(st.deviceName || guessDevice()) + '">' +
                 '<button type="button" class="rp-btn" id="rp_pair" style="width:100%">จับคู่</button></div>' +
-                (st.hubs.length ? '<label class="rp-chk"><input type="checkbox" id="rp_local"' + (st.preferLocal ? ' checked' : '') + '> พิมพ์ที่เครื่องนี้เอง (ไม่ส่งไปคอม)</label>' : '') +
                 '<div class="rp-row"><button type="button" class="rp-btn sec" id="rp_close">ปิด</button></div>';
             const card = ov.querySelector('.rp-card');
             card.querySelector('#rp_close').onclick = () => ov.remove();
             renderList();
-            const lc = card.querySelector('#rp_local'); if (lc) lc.onchange = () => { st.preferLocal = lc.checked; save(KEY, st); refreshChip(); };
             const codeIn = card.querySelector('#rp_code');
             const doPair = async () => {
                 const code = codeIn.value.replace(/\D/g, '');
@@ -7601,6 +7606,7 @@ const PmxRemote = (function () {
                     st.hubs = st.hubs.filter(h => h.hubId !== r.hubId);
                     st.hubs.push({ token: r.token, hubId: r.hubId, name: r.name, branch: r.branch, added: Date.now() });
                     st.lastHub = r.token; st.preferLocal = false;
+                    if (!st.target || !st.hubs.some(h => h.token === st.target)) st.target = r.token;   // ยังไม่ได้เลือกเครื่องไว้ → ใช้เครื่องที่เพิ่งจับคู่
                     online[r.token] = true; save(KEY, st); refreshChip();
                     render('✅ จับคู่กับ “' + r.name + '” แล้ว — ต่อไปกดพิมพ์ ฉลากจะออกที่คอมเครื่องนี้', 'ok');
                 } catch (e) { render(e.message); }
@@ -7611,13 +7617,31 @@ const PmxRemote = (function () {
         // รายชื่อคอมที่จับคู่ไว้ (วาดแยก เพื่อไม่ให้ช่องกรอกเลขถูกล้างตอนเช็คสถานะเสร็จ)
         const renderList = () => {
             const el = ov.querySelector('#rp_list'); if (!el) return;
-            el.innerHTML = st.hubs.length ? st.hubs.map((h, i) => '<div class="rp-hub" style="cursor:default">' + dot(h) +
-                '<span class="rp-grow"><b>' + esc(h.name) + '</b><small>' + esc(h.branch || '') + (h.branch ? ' · ' : '') + stateText(h) + '</small></span>' +
-                '<button type="button" class="rp-btn warn sm" data-del="' + i + '">ยกเลิกจับคู่</button></div>').join('')
-                : '<div class="rp-sub">ยังไม่ได้จับคู่กับคอมเครื่องไหน</div>';
-            el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+            if (!st.hubs.length) { el.innerHTML = '<div class="rp-sub">ยังไม่ได้จับคู่กับคอมเครื่องไหน</div>'; return; }
+            const tg = st.preferLocal ? null : targetHub();
+            const cur = st.preferLocal ? 'local' : tg ? tg.token : 'ask';
+            const card = (key, inner, extra) => '<div class="rp-hub pick' + (cur === key ? ' sel' : '') + '" data-pick="' + esc(key) + '" role="button" tabindex="0">' + inner +
+                (cur === key ? '<span class="rp-tick">✓ ใช้อยู่</span>' : '') + (extra || '') + '</div>';
+            el.innerHTML = '<div class="rp-sub" style="margin:0 0 6px">👆 แตะเพื่อเลือกเครื่องที่จะพิมพ์ — ระบบจำไว้จนกว่าจะเข้ามาเปลี่ยน</div>' +
+                st.hubs.map((h, i) => card(h.token, dot(h) + '<span class="rp-grow"><b>' + esc(h.name) + '</b><small>' + esc(h.branch || '') + (h.branch ? ' · ' : '') + stateText(h) + '</small></span>',
+                    '<button type="button" class="rp-btn warn sm" data-del="' + i + '">ยกเลิกจับคู่</button>')).join('') +
+                card('local', '<span class="rp-dot"></span><span class="rp-grow"><b>📄 พิมพ์ที่เครื่องนี้</b><small>ไม่ส่งไปคอม · เปิดหน้าต่างสั่งพิมพ์ของเครื่องนี้</small></span>') +
+                (st.hubs.length > 1 ? card('ask', '<span class="rp-dot"></span><span class="rp-grow"><b>❓ ถามทุกครั้งตอนพิมพ์</b><small>เลือกเครื่องใหม่ทุกครั้งที่กดพิมพ์</small></span>') : '');
+            el.querySelectorAll('[data-pick]').forEach(c => {
+                const pick = () => {
+                    const k = c.dataset.pick;
+                    if (k === 'local') { st.preferLocal = true; }
+                    else if (k === 'ask') { st.preferLocal = false; st.target = ''; }
+                    else { st.preferLocal = false; st.target = k; }
+                    save(KEY, st); refreshChip(); renderList();
+                };
+                c.onclick = e => { if (e.target.closest('[data-del]')) return; pick(); };
+                c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } };
+            });
+            el.querySelectorAll('[data-del]').forEach(b => b.onclick = async (ev) => {
+                ev.stopPropagation();
                 const h = st.hubs[+b.dataset.del]; if (!h || !confirm('ยกเลิกการจับคู่กับ “' + h.name + '” ?')) return;
-                st.hubs = st.hubs.filter(x => x !== h); save(KEY, st); refreshChip();
+                st.hubs = st.hubs.filter(x => x !== h); if (st.target === h.token) st.target = ''; save(KEY, st); refreshChip();
                 api('/unpair', { token: h.token }).catch(() => {});
                 render('ยกเลิกการจับคู่กับ “' + h.name + '” แล้ว', 'ok');
             });
@@ -7661,14 +7685,14 @@ const PmxRemote = (function () {
     // คืนค่า 'local' = พิมพ์ที่เครื่องนี้ (window.print) · 'sent' = ส่งไปคอมแล้ว · 'cancel' = ยกเลิก
     async function route(container, title) {
         if (isHub || !relay() || !st.hubs.length || st.preferLocal) return 'local';
-        if (st.hubs.length === 1) {
-            const h = st.hubs[0];
+        const h = targetHub();   // มีเครื่องเดียว หรือเลือก "เครื่องหลัก" ไว้ → ส่งเลย ไม่ถาม
+        if (h) {
             if (!(await ensureLogin())) return chooser(container, title, NEED_LOGIN);
             const wait = window.pxNotice ? pxNotice({ kind: 'info', title: '⏳ กำลังส่งไปพิมพ์ที่ “' + h.name + '”…', key: 'rp' }) : null;
             try { const res = await sendTo(h, container, title); if (wait) wait.close(); noticeSent(h, res); return 'sent'; }
             catch (e) {
                 if (wait) wait.close();
-                if (e.code === 'unpaired') { st.hubs = []; save(KEY, st); refreshChip(); }
+                if (e.code === 'unpaired') { st.hubs = st.hubs.filter(x => x !== h); if (st.target === h.token) st.target = ''; save(KEY, st); refreshChip(); }
                 if (e.code === 'offline') online[h.token] = false;
                 return chooser(container, title, e.message);
             }
@@ -7679,7 +7703,7 @@ const PmxRemote = (function () {
         return new Promise(resolve => {
             const pages = container.querySelectorAll('.batch-label-page').length || 1;
             const ov = modal('');
-            let busy = false;
+            let busy = false, remember = false;
             const done = v => { ov.remove(); resolve(v); };
             const render = (msg) => {
                 const hubs = st.hubs.slice().sort((a, b) => (b.token === st.lastHub) - (a.token === st.lastHub));
@@ -7689,20 +7713,26 @@ const PmxRemote = (function () {
                     hubs.map(h => '<button type="button" class="rp-hub" data-t="' + esc(h.token) + '">' + dot(h) +
                         '<span class="rp-grow"><b>' + esc(h.name) + (h.token === st.lastHub && hubs.length > 1 ? ' <small>· ใช้ล่าสุด</small>' : '') + '</b><small>' + esc(h.branch || '') + (h.branch ? ' · ' : '') + stateText(h) + '</small></span>🖨️</button>').join('') +
                     '<button type="button" class="rp-hub" data-local="1"><span class="rp-dot"></span><span class="rp-grow"><b>พิมพ์ที่เครื่องนี้</b><small>เปิดหน้าต่างสั่งพิมพ์ของเครื่องนี้ตามปกติ</small></span>📄</button>' +
+                    '<label class="rp-chk"><input type="checkbox" id="rp_remember"' + (remember ? ' checked' : '') + '> 📌 จำเครื่องที่เลือกไว้ ครั้งต่อไปไม่ต้องถาม <span class="rp-sub" style="margin:0">(เปลี่ยนได้ที่ปุ่ม 🖨️ ด้านบน)</span></label>' +
                     '<div class="rp-row"><button type="button" class="rp-btn sec" id="rp_cancel">ยกเลิก</button></div>';
                 const card = ov.querySelector('.rp-card');
                 card.querySelector('#rp_cancel').onclick = () => { if (!busy) done('cancel'); };
-                card.querySelector('[data-local]').onclick = () => { if (!busy) done('local'); };
+                const rem = card.querySelector('#rp_remember'); rem.onchange = () => { remember = rem.checked; };
+                card.querySelector('[data-local]').onclick = () => { if (busy) return; if (remember) { st.preferLocal = true; save(KEY, st); refreshChip(); } done('local'); };
                 card.querySelectorAll('[data-t]').forEach(b => b.onclick = async () => {
                     if (busy) return;
                     const h = st.hubs.find(x => x.token === b.dataset.t); if (!h) return;
                     busy = true;
                     if (!(await ensureLogin(ov))) { busy = false; render(NEED_LOGIN); return; } card.querySelectorAll('button').forEach(x => x.disabled = true);
                     b.querySelector('.rp-grow small').textContent = '⏳ กำลังส่งไปพิมพ์…';
-                    try { const res = await sendTo(h, container, title); busy = false; done('sent'); noticeSent(h, res); }
+                    try {
+                        const res = await sendTo(h, container, title); busy = false;
+                        if (remember) { st.target = h.token; st.preferLocal = false; save(KEY, st); refreshChip(); }
+                        done('sent'); noticeSent(h, res);
+                    }
                     catch (e) {
                         busy = false;
-                        if (e.code === 'unpaired') { st.hubs = st.hubs.filter(x => x !== h); save(KEY, st); refreshChip(); }
+                        if (e.code === 'unpaired') { st.hubs = st.hubs.filter(x => x !== h); if (st.target === h.token) st.target = ''; save(KEY, st); refreshChip(); }
                         if (e.code === 'offline') online[h.token] = false;
                         render(e.message);
                     }
