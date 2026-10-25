@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ทดสอบพิมพ์ตอนซ่อนหน้าต่าง</title>
+<style>
+  @page { size: 76mm 76mm; margin: 0; }
+  body { font-family: system-ui, "Sarabun", sans-serif; margin: 24px; max-width: 640px; background: #fff; color: #222; }
+  h1 { font-size: 20px; }
+  button { font-size: 16px; padding: 10px 18px; margin: 4px 4px 4px 0; cursor: pointer; }
+  #log { font: 13px/1.5 ui-monospace, monospace; background: #f4f4f4; padding: 10px; white-space: pre-wrap; min-height: 120px; }
+  .tip { color: #555; font-size: 14px; }
+  #label { display: none; }
+  @media print {
+    body { margin: 0; }
+    .screen { display: none !important; }
+    #label { display: block; width: 76mm; height: 76mm; box-sizing: border-box; padding: 5mm; font-size: 11pt; }
+    #label b { font-size: 14pt; }
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <h1>🖨️ ทดสอบ: ซ่อนหน้าต่างแล้วยังพิมพ์ได้ไหม</h1>
+  <p class="tip">1) เปิดหน้านี้ด้วย shortcut ที่ใส่ <code>--kiosk-printing</code> แล้ว · 2) กด "เริ่มทดสอบ" · 3) ย่อหน้าต่าง (Minimize) แล้วไปใช้โปรแกรมอื่นตามปกติ · 4) รอดูว่าฉลากทดสอบออกครบ 4 ใบไหม และ "ช้ากว่ากำหนด" กี่วินาที</p>
+  <button id="go">▶ เริ่มทดสอบ (1, 3, 7, 15 นาที)</button>
+  <button id="now">พิมพ์ทันที 1 ใบ</button>
+  <div id="log"></div>
+</div>
+<div id="label"></div>
+<script>
+  const log = m => { const t = new Date().toLocaleTimeString('th-TH'); document.getElementById('log').textContent += t + '  ' + m + '\n'; };
+  const ua = navigator.userAgent.includes('Edg/') ? 'Edge' : (navigator.userAgent.includes('Chrome/') ? 'Chrome' : 'อื่นๆ');
+  log('เบราว์เซอร์: ' + ua);
+  document.addEventListener('visibilitychange', () => log('หน้าต่าง: ' + (document.hidden ? 'ถูกซ่อน/ย่อ' : 'แสดงอยู่')));
+
+  function printLabel(name, plannedAt) {
+    const late = plannedAt ? Math.round((Date.now() - plannedAt) / 1000) : 0;
+    document.getElementById('label').innerHTML =
+      '<b>ฉลากทดสอบ ' + name + '</b><br>' + ua + '<br>เวลา ' + new Date().toLocaleTimeString('th-TH') +
+      '<br>ช้ากว่ากำหนด ' + late + ' วินาที<br>หน้าต่าง: ' + (document.hidden ? 'ซ่อนอยู่' : 'แสดงอยู่');
+    log('สั่งพิมพ์ ' + name + ' (ช้ากว่ากำหนด ' + late + ' วิ, หน้าต่าง' + (document.hidden ? 'ซ่อน' : 'แสดง') + ')');
+    window.print();
+    log('print() คืนค่าแล้ว ' + name);
+  }
+
+  document.getElementById('now').onclick = () => printLabel('ทันที', 0);
+  document.getElementById('go').onclick = () => {
+    const start = Date.now();
+    [1, 3, 7, 15].forEach((min, i) => {
+      const at = start + min * 60000;
+      // ใช้ setTimeout ต่อกันเป็นทอดๆ (แบบที่โดน throttle หนักสุด) — ถ้าผ่านแบบนี้ได้ ระบบจริงที่ใช้ WebSocket ก็ผ่านแน่
+      const tick = () => { const left = at - Date.now(); if (left <= 0) printLabel('#' + (i + 1) + ' (' + min + ' นาที)', at); else setTimeout(tick, Math.min(left, 5000)); };
+      setTimeout(tick, 5000);
+    });
+    log('เริ่มแล้ว — ย่อหน้าต่างได้เลย');
+  };
+</script>
+</body>
+</html>
