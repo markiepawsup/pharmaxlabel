@@ -317,6 +317,15 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
     'มหาวิทยาลัยศิลปากร', 'มหาวิทยาลัยนเรศวร', 'มหาวิทยาลัยมหาสารคาม', 'มหาวิทยาลัยอุบลราชธานี', 'มหาวิทยาลัยศรีนครินทรวิโรฒ',
     'มหาวิทยาลัยธรรมศาสตร์', 'มหาวิทยาลัยวลัยลักษณ์', 'มหาวิทยาลัยพะเยา', 'มหาวิทยาลัยบูรพา', 'มหาวิทยาลัยแม่ฟ้าหลวง',
     'มหาวิทยาลัยรังสิต', 'มหาวิทยาลัยหัวเฉียวเฉลิมพระเกียรติ', 'มหาวิทยาลัยสยาม', 'มหาวิทยาลัยพายัพ', 'มหาวิทยาลัยอีสเทิร์นเอเชีย'];
+  function branchInfo(code) {   // ข้อมูลสาขาจากหน้าเว็บ (BranchDirectory ของ index.html)
+    code = String(code || '').trim().toUpperCase();
+    try { const b = code && BranchDirectory.findRow(code); if (b) return { code: b.branchCode, name: b.branchName || '' }; } catch (e) {}
+    return { code: code, name: '' };
+  }
+  function branchDatalist() {
+    let rows = []; try { rows = BranchDirectory.all || []; } catch (e) {}
+    return '<datalist id="dsm_branch_list">' + rows.filter(b => b.branchCode).map(b => '<option value="' + esc(b.branchCode) + '">' + esc(b.branchName || '') + '</option>').join('') + '</datalist>';
+  }
   function uniDatalist() { return '<datalist id="dsm_uni_list">' + UNIS.map(u => '<option value="' + esc(u) + '"></option>').join('') + '</datalist>'; }
   const thDate = ymd => { try { return new Date(ymd + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ymd; } };
   function viewRegisterIntern() {
@@ -325,6 +334,9 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
       '<div class="dsm-hint">บัญชีจะใช้งานได้เฉพาะช่วงวันที่ฝึกงานเท่านั้น (เพื่อความปลอดภัย) · ต้องรอแอดมินอนุมัติก่อนใช้งาน</div>' +
       '<label>ชื่อ-สกุล</label><div class="dsm-pre"><span>นศภ.</span><input id="dsm_name" autocomplete="off" placeholder="ชื่อ นามสกุล"></div>' +
       '<label>มหาวิทยาลัย</label><input id="dsm_uni" autocomplete="off" list="dsm_uni_list" placeholder="เช่น มหาวิทยาลัยมหิดล">' + uniDatalist() +
+      '<label>สาขาที่ฝึกงาน <span class="dsm-hint">ระบบเลือกให้จากสาขาที่เปิดหน้าเว็บอยู่ — ถ้าไม่ถูกต้องแก้ได้</span></label>' +
+      '<div class="dsm-grid2" style="grid-template-columns:1fr 2fr"><input id="dsm_bcode" autocomplete="off" list="dsm_branch_list" placeholder="รหัสสาขา เช่น PM017" style="text-transform:uppercase">' +
+      '<input id="dsm_bname" autocomplete="off" placeholder="ชื่อสาขา"></div>' + branchDatalist() +
       '<div class="dsm-grid2"><div><label>ปีการศึกษา (พ.ศ.)</label><input id="dsm_year" inputmode="numeric" autocomplete="off" value="' + beYear + '"></div>' +
       '<div><label>ผลัดที่</label><input id="dsm_round" inputmode="numeric" autocomplete="off" placeholder="เช่น 1, 2, 3"></div></div>' +
       '<div class="dsm-grid2"><div><label>วันที่เริ่มฝึก</label><input id="dsm_start" type="date"></div>' +
@@ -336,6 +348,16 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
       '<div id="dsm_m"></div>' +
       '<button class="dsm-btn" id="dsm_go" type="button">ส่งคำขอสมัคร</button>' +
       '<button class="dsm-link" id="dsm_back" type="button">← กลับไปหน้าสมัครของเภสัชกร</button>';
+    // เติมสาขาให้จากหน้าเว็บที่เปิดอยู่ · พิมพ์/เลือกรหัสใหม่ → เติมชื่อสาขาให้
+    const cur = branchInfo(typeof currentBranch !== 'undefined' ? currentBranch : '');
+    let autoName = '';   // ชื่อสาขาที่ระบบเติมให้ (ถ้าเปลี่ยนรหัสเป็นสาขาที่ไม่รู้จัก → ล้างชื่อเดิมออก ไม่ให้ค้างผิดสาขา)
+    if (cur.code) { $('#dsm_bcode').value = cur.code; $('#dsm_bname').value = autoName = cur.name; }
+    $('#dsm_bcode').addEventListener('input', () => {
+      const v = $('#dsm_bcode').value.trim().toUpperCase().split(/[\s·]/)[0];
+      const b = branchInfo(v);
+      if (b.name) { $('#dsm_bcode').value = b.code; $('#dsm_bname').value = autoName = b.name; }
+      else if (autoName && $('#dsm_bname').value === autoName) { $('#dsm_bname').value = autoName = ''; }
+    });
     onlyDigits($('#dsm_year'), 4); onlyDigits($('#dsm_round'), 2); onlyDigits($('#dsm_emp'), 10); onlyDigits($('#dsm_pin'), 4); onlyDigits($('#dsm_pin2'), 4);
     $('#dsm_back').onclick = viewRegister;
     const period = () => {
@@ -351,13 +373,16 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
       el.textContent = days < 1 ? '⚠ วันที่ฝึกจบต้องไม่ก่อนวันที่เริ่มฝึก' : '📅 ' + thDate(s) + ' – ' + thDate(e) + ' (' + days + ' วัน)';
     };
     $('#dsm_start').addEventListener('change', period); $('#dsm_end').addEventListener('change', period);
-    enterChain(['dsm_name', 'dsm_uni', 'dsm_year', 'dsm_round', 'dsm_start', 'dsm_end', 'dsm_emp', 'dsm_pin', 'dsm_pin2'], 'dsm_go');
+    enterChain(['dsm_name', 'dsm_uni', 'dsm_bcode', 'dsm_bname', 'dsm_year', 'dsm_round', 'dsm_start', 'dsm_end', 'dsm_emp', 'dsm_pin', 'dsm_pin2'], 'dsm_go');
     $('#dsm_go').onclick = async () => {
       const name = $('#dsm_name').value.replace(/\s+/g, ' ').trim().replace(/^นศภ\.?\s*/, '');
       const university = $('#dsm_uni').value.trim(), year = $('#dsm_year').value, round = $('#dsm_round').value;
       const start = $('#dsm_start').value, end = $('#dsm_end').value, empId = $('#dsm_emp').value, pin = $('#dsm_pin').value;
       if (name.split(' ').length < 2) return setMsg('err', 'กรุณากรอกชื่อและนามสกุล (เว้นวรรคระหว่างชื่อกับนามสกุล)');
       if (university.length < 3) return setMsg('err', 'กรุณากรอกชื่อมหาวิทยาลัย');
+      const branchCode = $('#dsm_bcode').value.replace(/\s+/g, '').toUpperCase(), branchName = $('#dsm_bname').value.trim();
+      if (!branchCode) return setMsg('err', 'กรุณากรอกรหัสสาขาที่ฝึกงาน');
+      if (!branchName) return setMsg('err', 'กรุณากรอกชื่อสาขาที่ฝึกงาน');
       if (!/^25\d{2}$/.test(year)) return setMsg('err', 'ปีการศึกษาต้องเป็นปี พ.ศ. 4 หลัก เช่น ' + beYear);
       if (!/^\d{1,2}$/.test(round) || +round < 1) return setMsg('err', 'กรุณากรอกผลัดที่ เป็นตัวเลข เช่น 1, 2, 3');
       if (!start || !end) return setMsg('err', 'กรุณาเลือกวันที่เริ่มฝึกและวันที่ฝึกจบ');
@@ -366,11 +391,11 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
       const pe = pinError(pin); if (pe) return setMsg('err', pe);
       if (pin !== $('#dsm_pin2').value) return setMsg('err', 'รหัสผ่านทั้งสองช่องไม่ตรงกัน');
       const b = $('#dsm_go'); b.disabled = true; b.textContent = 'กำลังส่ง…';
-      const r = await api({ action: 'register', kind: 'intern', name, university, year, round, start, end, empId, pin });
+      const r = await api({ action: 'register', kind: 'intern', name, university, branchCode, branchName, year, round, start, end, empId, pin });
       b.disabled = false; b.textContent = 'ส่งคำขอสมัคร';
       if (!r.ok) return setMsg('err', r.message || 'สมัครไม่สำเร็จ');
       body().innerHTML = head('✅ ส่งคำขอสมัครแล้ว') +
-        msg('ok', '<b>' + esc(r.name || ('นศภ. ' + name)) + '</b><br>รอแอดมินอนุมัติ แล้วเข้าสู่ระบบด้วย<br>• เบอร์มือถือ <b>' + esc(empId) + '</b> + รหัสผ่านที่ตั้งไว้<br>' +
+        msg('ok', '<b>' + esc(r.name || ('นศภ. ' + name)) + '</b> · ฝึกที่ ' + esc(branchCode + ' ' + branchName) + '<br>รอแอดมินอนุมัติ แล้วเข้าสู่ระบบด้วย<br>• เบอร์มือถือ <b>' + esc(empId) + '</b> + รหัสผ่านที่ตั้งไว้<br>' +
           '• ใช้งานได้ ' + esc(thDate(start)) + ' – ' + esc(thDate(end)) + ' เท่านั้น') +
         '<button class="dsm-btn" data-close type="button">ตกลง</button>';
     };
