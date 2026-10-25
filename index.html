@@ -7487,7 +7487,8 @@ const PmxRemote = (function () {
       .rp-code{font-size:30px;letter-spacing:8px;text-align:center;font-weight:800}
       .rp-sec{border-top:1px solid #E2E8F0;margin-top:14px;padding-top:12px}
       .rp-chk{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:12px;cursor:pointer}
-      body.pmx-hub{background:#F4F7FB!important}
+      @media screen{body.pmx-hub{background:#F4F7FB!important}}
+      @media print{html,body.pmx-hub{background:#fff!important}}   /* หน้าเครื่องกลาง: ห้ามพิมพ์สีพื้นหลังหน้าจอ (เครื่องพิมพ์ความร้อนจะพิมพ์สีเทาอ่อนเป็นจุดๆ) */
       body.pmx-hub #home_screen,body.pmx-hub #app_screen,body.pmx-hub #fab_print,body.pmx-hub .enter-overlay,body.pmx-hub .dsm-overlay,body.pmx-hub #draft_recovery_banner{display:none!important}
       #pmx_hub_panel{max-width:560px;margin:24px auto;padding:0 16px;font-size:15px;color:#1E293B}
       #pmx_hub_panel .hub-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 4px 18px rgba(15,23,42,.08);margin-bottom:14px}
