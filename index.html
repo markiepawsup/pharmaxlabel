@@ -6982,6 +6982,10 @@ window.PharmaxScanner = (function () {
     const ZXING_URLS = ['https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js', 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js'];
     const NATIVE_FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf'];
     let ov, video, msg, torchBtn, flipBtn, stream = null, timer = null, detector = null, zx = null, onHit = null, last = '', lastAt = 0, facing = 'environment', busy = false;
+    // ใช้กล้องตัวเดิมซ้ำ: ปิดหน้าสแกนแล้ว "พักกล้อง" ไว้ 3 นาที (ไม่ส่งภาพ) → สแกนครั้งถัดไปไม่ต้องขออนุญาตใหม่ (iPhone/iPad จะถามทุกครั้งที่เปิดกล้องใหม่)
+    //  ปิดกล้องจริงเมื่อ: ไม่ได้สแกนเกิน 3 นาที · สลับไปแอปอื่น/ล็อกจอ · ปิดหน้าเว็บ
+    const PARK_MS = 3 * 60 * 1000;
+    let parkTimer = null, streamFacing = '';
     const $ = id => document.getElementById(id);
 
     function build() {
@@ -6999,7 +7003,7 @@ window.PharmaxScanner = (function () {
         video = $('pxs_video'); msg = $('pxs_msg'); torchBtn = $('pxs_torch'); flipBtn = $('pxs_flip');
         $('pxs_close').onclick = close; $('pxs_cancel').onclick = close;
         ov.addEventListener('mousedown', e => { if (e.target === ov) close(); });
-        flipBtn.onclick = () => { facing = facing === 'environment' ? 'user' : 'environment'; startCamera(); };
+        flipBtn.onclick = () => { facing = facing === 'environment' ? 'user' : 'environment'; startCamera(true); };
         torchBtn.onclick = toggleTorch;
         document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('open')) close(); });
     }
@@ -7032,14 +7036,35 @@ window.PharmaxScanner = (function () {
     }
 
     function stopCamera() {
-        clearTimeout(timer); timer = null;
+        clearTimeout(timer); timer = null; clearTimeout(parkTimer); parkTimer = null;
         if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
         if (video) video.srcObject = null;
     }
-    async function startCamera() {
+    function parkCamera() {   // ปิดหน้าสแกน แต่ยังถือสิทธิ์กล้องไว้ (ไม่ส่งภาพ) ให้สแกนครั้งต่อไปเปิดได้ทันที
+        clearTimeout(timer); timer = null;
+        if (!stream) return;
+        if (torchOn) toggleTorch();
+        stream.getVideoTracks().forEach(t => { t.enabled = false; });
+        try { video.pause(); } catch (e) {}
+        clearTimeout(parkTimer); parkTimer = setTimeout(stopCamera, PARK_MS);
+    }
+    const streamLive = () => stream && stream.getVideoTracks().some(t => t.readyState === 'live');
+    document.addEventListener('visibilitychange', () => { if (document.hidden && !(ov && ov.classList.contains('open'))) stopCamera(); });
+    window.addEventListener('pagehide', stopCamera);
+    async function startCamera(forceNew) {
+        clearTimeout(parkTimer); parkTimer = null; clearTimeout(timer); timer = null;
+        if (!forceNew && streamLive() && streamFacing === facing) {   // กล้องที่พักไว้ → ใช้ต่อเลย ไม่ขออนุญาตใหม่
+            stream.getVideoTracks().forEach(t => { t.enabled = true; });
+            if (video.srcObject !== stream) video.srcObject = stream;
+            try { await video.play(); } catch (e) {}
+            say('เล็งบาร์โค้ดให้อยู่ในกรอบสีเขียว · ถือนิ่งๆ ห่างประมาณ 10–20 ซม.');
+            loop();
+            return;
+        }
         stopCamera();
         try {
             stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+            streamFacing = facing;
         } catch (e) {
             say(e && e.name === 'NotAllowedError' ? '❌ ไม่ได้รับอนุญาตให้ใช้กล้อง — กดไอคอนกล้อง/แม่กุญแจที่แถบที่อยู่ แล้วเลือก "อนุญาต"' : '❌ เปิดกล้องไม่ได้ (' + (e && e.name || e) + ')');
             return;
@@ -7133,7 +7158,7 @@ window.PharmaxScanner = (function () {
         if (!ov.classList.contains('open')) return;
         startCamera();
     }
-    function close() { stopCamera(); if (ov) ov.classList.remove('open', 'hit'); onHit = null; }
+    function close() { parkCamera(); if (ov) ov.classList.remove('open', 'hit'); onHit = null; }
     return { open: open, close: close };
 })();
 
@@ -7394,7 +7419,7 @@ window.PrintLog = (function () {
 <script>
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
-var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+var ADMIN_WEB_APP_URL = '';
 function openAdminPage() {
     var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
     var go = function (base) {
