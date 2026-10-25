@@ -74,6 +74,11 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
   .dsm-hint{font-size:.72rem;color:#666;font-weight:400}
   .dsm-link{background:none;border:none;color:#16478E;text-decoration:underline;cursor:pointer;font:inherit;font-size:.82rem;padding:0;margin-top:10px}
   .dsm-who{font-size:.78rem;color:#555;margin-bottom:6px}
+  .dsm-ask{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 6px;padding:10px 12px;border:2px dashed #7aa2d6;border-radius:10px;background:#f3f7fd;color:#16478E;font:600 .86rem inherit;cursor:pointer;text-align:left}
+  .dsm-ask small{display:block;font-weight:400;color:#555}
+  .dsm-pre{display:flex;align-items:center;gap:6px}.dsm-pre span{font-weight:700;color:#16478E;white-space:nowrap}
+  .dsm-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dsm-grid2 label{margin-top:6px}
+  .dsm-period{font-size:.8rem;color:#1a7a3a;margin-top:4px;min-height:1em}
   #dsm_generic{text-transform:uppercase}
   .dsm-modal textarea{display:block;line-height:1.4;resize:vertical}
   .dsm-gw{position:relative;background:#fff;border-radius:6px}
@@ -211,7 +216,7 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
   // ---------- views ----------
   function viewLogin(note) {
     body().innerHTML = head('🔐 เข้าสู่ระบบ') +
-      '<label>รหัสพนักงาน (9 หลัก)</label><input id="dsm_emp" inputmode="numeric" autocomplete="off" placeholder="000000000">' +
+      '<label>รหัสพนักงาน (9 หลัก) <span class="dsm-hint">· นักศึกษาฝึกงาน ใช้เบอร์มือถือ 10 หลัก</span></label><input id="dsm_emp" inputmode="numeric" autocomplete="off" placeholder="000000000">' +
       '<label>รหัสผ่าน (ตัวเลข 4 หลัก)</label><input id="dsm_pin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••">' +
       '<div id="dsm_m">' + (note || '') + '</div>' +
       '<button class="dsm-btn" id="dsm_go" type="button">เข้าสู่ระบบ</button>' +
@@ -219,13 +224,13 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
         '<button class="dsm-link" id="dsm_forgot" type="button">ลืมรหัสผ่าน?</button>' +
         '<button class="dsm-link" id="dsm_reg" type="button">ยังไม่มีบัญชี? สมัครใช้งาน</button>' +
       '</div>';
-    onlyDigits($('#dsm_emp'), 9); onlyDigits($('#dsm_pin'), 4);
+    onlyDigits($('#dsm_emp'), 10); onlyDigits($('#dsm_pin'), 4);
     $('#dsm_reg').onclick = viewRegister;
     $('#dsm_forgot').onclick = viewReset;
     enterChain(['dsm_emp', 'dsm_pin'], 'dsm_go');
     $('#dsm_go').onclick = async () => {
       const empId = $('#dsm_emp').value, pin = $('#dsm_pin').value;
-      if (!/^\d{9}$/.test(empId)) return setMsg('err', 'รหัสพนักงานต้องเป็นตัวเลข 9 หลัก');
+      if (!/^(\d{9}|0\d{9})$/.test(empId)) return setMsg('err', 'รหัสพนักงานต้องเป็นตัวเลข 9 หลัก (นักศึกษาฝึกงาน: เบอร์มือถือ 10 หลัก ขึ้นต้นด้วย 0)');
       if (!/^\d{4}$/.test(pin)) return setMsg('err', 'รหัสผ่านต้องเป็นตัวเลข 4 หลัก');
       const b = $('#dsm_go'); b.disabled = true; b.textContent = 'กำลังตรวจสอบ…';
       const r = await api({ action: 'login', empId, pin });
@@ -244,24 +249,30 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
   function viewReset() {
     body().innerHTML = head('🔑 ลืมรหัสผ่าน') +
       '<div class="dsm-hint" style="margin-bottom:6px">ตั้งรหัสผ่านใหม่แล้วส่งให้แอดมินอนุมัติ — เมื่อแอดมินอนุมัติแล้วจึงเข้าระบบด้วยรหัสใหม่ได้ (ระหว่างรอ ยังใช้รหัสเดิมได้ถ้าจำได้)</div>' +
-      '<label>รหัสพนักงาน (9 หลัก)</label><input id="dsm_emp" inputmode="numeric" autocomplete="off">' +
-      '<label>เลขที่ใบอนุญาตประกอบวิชาชีพเภสัชกรรม (5 หลัก) ที่ใช้สมัคร</label><input id="dsm_lic" inputmode="numeric" autocomplete="off" placeholder="เฉพาะตัวเลข">' +
+      '<label>รหัสพนักงาน (9 หลัก) <span class="dsm-hint">· นักศึกษาฝึกงาน ใช้เบอร์มือถือ 10 หลัก</span></label><input id="dsm_emp" inputmode="numeric" autocomplete="off">' +
+      '<div id="dsm_lic_box"><label>เลขที่ใบอนุญาตประกอบวิชาชีพเภสัชกรรม (5 หลัก) ที่ใช้สมัคร</label><input id="dsm_lic" inputmode="numeric" autocomplete="off" placeholder="เฉพาะตัวเลข"></div>' +
+      '<div id="dsm_uni_box" style="display:none"><label>มหาวิทยาลัยที่ใช้สมัคร (นักศึกษาฝึกงาน)</label><input id="dsm_uni" autocomplete="off" list="dsm_uni_list" placeholder="เช่น มหาวิทยาลัยมหิดล">' + uniDatalist() + '</div>' +
       '<label>ตั้งรหัสผ่านใหม่ (ตัวเลข 4 หลัก ไม่เรียงกัน) <span class="dsm-hint">เช่น 2580, 1379 — ห้าม 1234 / 4321 / 1111</span></label><input id="dsm_pin" type="password" inputmode="numeric" autocomplete="off">' +
       '<label>ยืนยันรหัสผ่านใหม่อีกครั้ง</label><input id="dsm_pin2" type="password" inputmode="numeric" autocomplete="off">' +
       '<div id="dsm_m"></div>' +
       '<button class="dsm-btn" id="dsm_go" type="button">ส่งคำขอเปลี่ยนรหัสผ่าน</button>' +
       '<button class="dsm-link" id="dsm_back" type="button">← กลับไปเข้าสู่ระบบ</button>';
-    onlyDigits($('#dsm_emp'), 9); onlyDigits($('#dsm_lic'), 5); onlyDigits($('#dsm_pin'), 4); onlyDigits($('#dsm_pin2'), 4);
+    onlyDigits($('#dsm_emp'), 10); onlyDigits($('#dsm_lic'), 5); onlyDigits($('#dsm_pin'), 4); onlyDigits($('#dsm_pin2'), 4);
+    const isIntern = () => /^0\d{9}$/.test($('#dsm_emp').value);
+    $('#dsm_emp').addEventListener('input', () => {   // พิมพ์เบอร์มือถือ 10 หลัก → เปลี่ยนช่องยืนยันเป็น "มหาวิทยาลัย"
+      $('#dsm_lic_box').style.display = isIntern() ? 'none' : ''; $('#dsm_uni_box').style.display = isIntern() ? '' : 'none';
+    });
     $('#dsm_back').onclick = () => viewLogin();
     enterChain(['dsm_emp', 'dsm_lic', 'dsm_pin', 'dsm_pin2'], 'dsm_go');
     $('#dsm_go').onclick = async () => {
-      const empId = $('#dsm_emp').value, licenseNo = $('#dsm_lic').value, pin = $('#dsm_pin').value;
-      if (!/^\d{9}$/.test(empId)) return setMsg('err', 'รหัสพนักงานต้องเป็นตัวเลข 9 หลัก');
-      if (!/^\d{5}$/.test(licenseNo)) return setMsg('err', 'เลขที่ใบอนุญาตต้องเป็นตัวเลข 5 หลัก');
+      const empId = $('#dsm_emp').value, licenseNo = $('#dsm_lic').value, pin = $('#dsm_pin').value, university = $('#dsm_uni').value.trim();
+      if (!/^(\d{9}|0\d{9})$/.test(empId)) return setMsg('err', 'รหัสพนักงานต้องเป็นตัวเลข 9 หลัก (นักศึกษาฝึกงาน: เบอร์มือถือ 10 หลัก)');
+      if (!isIntern() && !/^\d{5}$/.test(licenseNo)) return setMsg('err', 'เลขที่ใบอนุญาตต้องเป็นตัวเลข 5 หลัก');
+      if (isIntern() && university.length < 3) return setMsg('err', 'กรุณากรอกชื่อมหาวิทยาลัยที่ใช้สมัคร');
       const pe = pinError(pin); if (pe) return setMsg('err', pe);
       if (pin !== $('#dsm_pin2').value) return setMsg('err', 'รหัสผ่านทั้งสองช่องไม่ตรงกัน');
       const b = $('#dsm_go'); b.disabled = true; b.textContent = 'กำลังส่ง…';
-      const r = await api({ action: 'requestReset', empId, licenseNo, pin });
+      const r = await api({ action: 'requestReset', empId, licenseNo, university, pin });
       b.disabled = false; b.textContent = 'ส่งคำขอเปลี่ยนรหัสผ่าน';
       if (!r.ok) return setMsg('err', r.message || 'ส่งคำขอไม่สำเร็จ');
       body().innerHTML = head('✅ ส่งคำขอแล้ว') +
@@ -272,6 +283,7 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
 
   function viewRegister() {
     body().innerHTML = head('📝 สมัครใช้งาน') +
+      '<button class="dsm-ask" id="dsm_intern" type="button"><span style="font-size:1.6rem">🎓</span><span>เป็นนักศึกษา/นิสิต ฝึกงานใช่ไหม?<small>ไม่มีรหัสพนักงานและเลขที่ใบอนุญาต → กดที่นี่เพื่อสมัครแบบนักศึกษาฝึกงาน</small></span></button>' +
       '<label>รหัสพนักงาน (9 หลัก)</label><input id="dsm_emp" inputmode="numeric" autocomplete="off">' +
       '<label>เลขที่ใบอนุญาตประกอบวิชาชีพเภสัชกรรม (5 หลัก)</label><input id="dsm_lic" inputmode="numeric" autocomplete="off" placeholder="เฉพาะตัวเลข">' +
       '<label>ตั้งรหัสผ่าน (ตัวเลข 4 หลัก ไม่เรียงกัน) <span class="dsm-hint">เช่น 2580, 1379 — ห้าม 1234 / 4321 / 1111</span></label><input id="dsm_pin" type="password" inputmode="numeric" autocomplete="off">' +
@@ -281,6 +293,7 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
       '<button class="dsm-link" id="dsm_back" type="button">← กลับไปเข้าสู่ระบบ</button>';
     onlyDigits($('#dsm_emp'), 9); onlyDigits($('#dsm_lic'), 5); onlyDigits($('#dsm_pin'), 4); onlyDigits($('#dsm_pin2'), 4);
     $('#dsm_back').onclick = () => viewLogin();
+    $('#dsm_intern').onclick = viewRegisterIntern;
     enterChain(['dsm_emp', 'dsm_lic', 'dsm_pin', 'dsm_pin2'], 'dsm_go');
     $('#dsm_go').onclick = async () => {
       const empId = $('#dsm_emp').value, pin = $('#dsm_pin').value;
@@ -297,6 +310,71 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
         msg('ok', (r.pharmacistName ? 'พบข้อมูลในทะเบียนสภาเภสัชกรรม: <b>' + esc(r.pharmacistName) + '</b><br>' : '') + 'กรุณารอแอดมินตรวจสอบข้อมูล แล้วกลับมาเข้าสู่ระบบภายหลัง') +
         '<button class="dsm-btn" data-close type="button">ตกลง</button>';
     };
+  }
+
+  // ---------- นักศึกษาฝึกงาน: สมัครด้วยเบอร์มือถือ · ใช้ได้เฉพาะช่วงวันฝึก ----------
+  const UNIS = ['จุฬาลงกรณ์มหาวิทยาลัย', 'มหาวิทยาลัยมหิดล', 'มหาวิทยาลัยเชียงใหม่', 'มหาวิทยาลัยขอนแก่น', 'มหาวิทยาลัยสงขลานครินทร์',
+    'มหาวิทยาลัยศิลปากร', 'มหาวิทยาลัยนเรศวร', 'มหาวิทยาลัยมหาสารคาม', 'มหาวิทยาลัยอุบลราชธานี', 'มหาวิทยาลัยศรีนครินทรวิโรฒ',
+    'มหาวิทยาลัยธรรมศาสตร์', 'มหาวิทยาลัยวลัยลักษณ์', 'มหาวิทยาลัยพะเยา', 'มหาวิทยาลัยบูรพา', 'มหาวิทยาลัยแม่ฟ้าหลวง',
+    'มหาวิทยาลัยรังสิต', 'มหาวิทยาลัยหัวเฉียวเฉลิมพระเกียรติ', 'มหาวิทยาลัยสยาม', 'มหาวิทยาลัยพายัพ', 'มหาวิทยาลัยอีสเทิร์นเอเชีย'];
+  function uniDatalist() { return '<datalist id="dsm_uni_list">' + UNIS.map(u => '<option value="' + esc(u) + '"></option>').join('') + '</datalist>'; }
+  const thDate = ymd => { try { return new Date(ymd + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ymd; } };
+  function viewRegisterIntern() {
+    const beYear = new Date().getFullYear() + 543;
+    body().innerHTML = head('🎓 สมัครใช้งาน — นักศึกษาฝึกงาน') +
+      '<div class="dsm-hint">บัญชีจะใช้งานได้เฉพาะช่วงวันที่ฝึกงานเท่านั้น (เพื่อความปลอดภัย) · ต้องรอแอดมินอนุมัติก่อนใช้งาน</div>' +
+      '<label>ชื่อ-สกุล</label><div class="dsm-pre"><span>นศภ.</span><input id="dsm_name" autocomplete="off" placeholder="ชื่อ นามสกุล"></div>' +
+      '<label>มหาวิทยาลัย</label><input id="dsm_uni" autocomplete="off" list="dsm_uni_list" placeholder="เช่น มหาวิทยาลัยมหิดล">' + uniDatalist() +
+      '<div class="dsm-grid2"><div><label>ปีการศึกษา (พ.ศ.)</label><input id="dsm_year" inputmode="numeric" autocomplete="off" value="' + beYear + '"></div>' +
+      '<div><label>ผลัดที่</label><input id="dsm_round" inputmode="numeric" autocomplete="off" placeholder="เช่น 1, 2, 3"></div></div>' +
+      '<div class="dsm-grid2"><div><label>วันที่เริ่มฝึก</label><input id="dsm_start" type="date"></div>' +
+      '<div><label>วันที่ฝึกจบ</label><input id="dsm_end" type="date"></div></div>' +
+      '<div class="dsm-period" id="dsm_period"></div>' +
+      '<label>เบอร์มือถือ (10 หลัก) <span class="dsm-hint">ใช้แทนรหัสพนักงานตอนเข้าสู่ระบบ</span></label><input id="dsm_emp" inputmode="numeric" autocomplete="off" placeholder="08xxxxxxxx">' +
+      '<label>ตั้งรหัสผ่าน (ตัวเลข 4 หลัก ไม่เรียงกัน) <span class="dsm-hint">เช่น 2580, 1379 — ห้าม 1234 / 4321 / 1111</span></label><input id="dsm_pin" type="password" inputmode="numeric" autocomplete="off">' +
+      '<label>ยืนยันรหัสผ่านอีกครั้ง</label><input id="dsm_pin2" type="password" inputmode="numeric" autocomplete="off">' +
+      '<div id="dsm_m"></div>' +
+      '<button class="dsm-btn" id="dsm_go" type="button">ส่งคำขอสมัคร</button>' +
+      '<button class="dsm-link" id="dsm_back" type="button">← กลับไปหน้าสมัครของเภสัชกร</button>';
+    onlyDigits($('#dsm_year'), 4); onlyDigits($('#dsm_round'), 2); onlyDigits($('#dsm_emp'), 10); onlyDigits($('#dsm_pin'), 4); onlyDigits($('#dsm_pin2'), 4);
+    $('#dsm_back').onclick = viewRegister;
+    const period = () => {
+      const a = $('#dsm_start').value, b = $('#dsm_end').value, el = $('#dsm_period');
+      if (a && !b) {   // ยังไม่ได้เลือกวันจบ → เติมให้ก่อน 40 วัน (ประมาณ 1.5 เดือน แก้ได้)
+        const d = new Date(a + 'T00:00:00'); d.setDate(d.getDate() + 39);
+        $('#dsm_end').value = [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+      }
+      const s = $('#dsm_start').value, e = $('#dsm_end').value;
+      if (!s || !e) { el.textContent = ''; return; }
+      const days = Math.round((new Date(e + 'T00:00:00') - new Date(s + 'T00:00:00')) / 86400000) + 1;
+      el.style.color = days < 1 ? '#b3261e' : '#1a7a3a';
+      el.textContent = days < 1 ? '⚠ วันที่ฝึกจบต้องไม่ก่อนวันที่เริ่มฝึก' : '📅 ' + thDate(s) + ' – ' + thDate(e) + ' (' + days + ' วัน)';
+    };
+    $('#dsm_start').addEventListener('change', period); $('#dsm_end').addEventListener('change', period);
+    enterChain(['dsm_name', 'dsm_uni', 'dsm_year', 'dsm_round', 'dsm_start', 'dsm_end', 'dsm_emp', 'dsm_pin', 'dsm_pin2'], 'dsm_go');
+    $('#dsm_go').onclick = async () => {
+      const name = $('#dsm_name').value.replace(/\s+/g, ' ').trim().replace(/^นศภ\.?\s*/, '');
+      const university = $('#dsm_uni').value.trim(), year = $('#dsm_year').value, round = $('#dsm_round').value;
+      const start = $('#dsm_start').value, end = $('#dsm_end').value, empId = $('#dsm_emp').value, pin = $('#dsm_pin').value;
+      if (name.split(' ').length < 2) return setMsg('err', 'กรุณากรอกชื่อและนามสกุล (เว้นวรรคระหว่างชื่อกับนามสกุล)');
+      if (university.length < 3) return setMsg('err', 'กรุณากรอกชื่อมหาวิทยาลัย');
+      if (!/^25\d{2}$/.test(year)) return setMsg('err', 'ปีการศึกษาต้องเป็นปี พ.ศ. 4 หลัก เช่น ' + beYear);
+      if (!/^\d{1,2}$/.test(round) || +round < 1) return setMsg('err', 'กรุณากรอกผลัดที่ เป็นตัวเลข เช่น 1, 2, 3');
+      if (!start || !end) return setMsg('err', 'กรุณาเลือกวันที่เริ่มฝึกและวันที่ฝึกจบ');
+      if (end < start) return setMsg('err', 'วันที่ฝึกจบต้องไม่ก่อนวันที่เริ่มฝึก');
+      if (!/^0\d{9}$/.test(empId)) return setMsg('err', 'เบอร์มือถือต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0');
+      const pe = pinError(pin); if (pe) return setMsg('err', pe);
+      if (pin !== $('#dsm_pin2').value) return setMsg('err', 'รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+      const b = $('#dsm_go'); b.disabled = true; b.textContent = 'กำลังส่ง…';
+      const r = await api({ action: 'register', kind: 'intern', name, university, year, round, start, end, empId, pin });
+      b.disabled = false; b.textContent = 'ส่งคำขอสมัคร';
+      if (!r.ok) return setMsg('err', r.message || 'สมัครไม่สำเร็จ');
+      body().innerHTML = head('✅ ส่งคำขอสมัครแล้ว') +
+        msg('ok', '<b>' + esc(r.name || ('นศภ. ' + name)) + '</b><br>รอแอดมินอนุมัติ แล้วเข้าสู่ระบบด้วย<br>• เบอร์มือถือ <b>' + esc(empId) + '</b> + รหัสผ่านที่ตั้งไว้<br>' +
+          '• ใช้งานได้ ' + esc(thDate(start)) + ' – ' + esc(thDate(end)) + ' เท่านั้น') +
+        '<button class="dsm-btn" data-close type="button">ตกลง</button>';
+    };
+    setTimeout(() => { try { $('#dsm_name').focus(); } catch (e) {} }, 50);
   }
 
   // v1.36: ตัวเลือกมาจากคำศัพท์มาตรฐานใน data.js (ข้อความไทย = ค่าที่บันทึกลง drugTH และตรงกับ medical_glossary)
