@@ -132,7 +132,18 @@ window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <
   const openMine = () => { afterLogin = viewMine; overlay.classList.add('open'); session ? viewMine() : viewLogin(); };
   const close = () => overlay.classList.remove('open');
   fab.addEventListener('click', open);
-  window.PharmaxDrugSubmit = { open: open, openFeedback: openFeedback, openMine: openMine, webAppUrl: WEB_APP_URL,
+  // พิมพ์ผ่านคอม: ขอให้เข้าสู่ระบบก่อน → คืนค่า true เมื่อเข้าสู่ระบบสำเร็จ / false ถ้าปิดหน้าต่างไปก่อน
+  const requireLogin = (note) => new Promise(resolve => {
+    if (session) return resolve(true);
+    let done = false;
+    const mo = new MutationObserver(() => { if (!overlay.classList.contains('open')) finish(!!session); });
+    const finish = v => { if (done) return; done = true; mo.disconnect(); resolve(v); };
+    afterLogin = () => { finish(true); close(); };
+    overlay.classList.add('open');
+    viewLogin(note ? msg('warn', note) : '');
+    mo.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+  });
+  window.PharmaxDrugSubmit = { open: open, openFeedback: openFeedback, openMine: openMine, requireLogin: requireLogin, webAppUrl: WEB_APP_URL,
     token: () => (session && session.token) || '', user: () => session ? { empId: session.empId, name: session.name } : null, refreshMine: () => refreshPrivate() };
 
   // ---------- v1.38: ยาที่ฉันส่งและยังรออนุมัติ → ใช้พิมพ์ฉลากได้ทันทีเฉพาะบัญชีนี้ (ต้องล็อกอิน) ----------

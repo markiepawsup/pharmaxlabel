@@ -7549,7 +7549,7 @@ const PmxRemote = (function () {
         const render = (msg, kind) => {
             ov.querySelector('.rp-card').innerHTML =
                 '<h3>🖨️ พิมพ์ผ่านคอมหน้าร้าน</h3>' +
-                '<div class="rp-sub">ใช้มือถือ/แท็บเล็ตสั่ง แล้วให้คอมหน้าร้านพิมพ์ฉลากออกเครื่องพิมพ์ Label</div>' +
+                '<div class="rp-sub">ใช้มือถือ/แท็บเล็ตสั่ง แล้วให้คอมหน้าร้านพิมพ์ฉลากออกเครื่องพิมพ์ Label · ต้องเข้าสู่ระบบก่อนส่งพิมพ์</div>' +
                 (msg ? '<div class="' + (kind === 'ok' ? 'rp-ok' : 'rp-err') + '">' + esc(msg) + '</div>' : '') +
                 '<div id="rp_list"></div>' +
                 '<div class="rp-sec"><b>➕ จับคู่คอมเครื่องใหม่</b>' +
@@ -7603,7 +7603,22 @@ const PmxRemote = (function () {
         refreshStatus().then(() => { if (ov.isConnected) renderList(); });
     }
 
+    // ส่งไปพิมพ์ที่คอมเครื่องอื่น ต้องเข้าสู่ระบบก่อน (พิมพ์ที่เครื่องตัวเองไม่บังคับ)
+    const loggedUser = () => { try { return window.PharmaxDrugSubmit && PharmaxDrugSubmit.token() ? PharmaxDrugSubmit.user() : null; } catch (e) { return null; } };
+    async function ensureLogin(hideEl) {
+        if (loggedUser()) return true;
+        const D = window.PharmaxDrugSubmit;
+        if (!D || !D.requireLogin) return false;
+        if (hideEl) hideEl.style.display = 'none';
+        const ok = await D.requireLogin('ต้องเข้าสู่ระบบก่อน ถึงจะส่งไปพิมพ์ที่คอมเครื่องอื่นได้ (พิมพ์ที่เครื่องนี้ไม่ต้องเข้าสู่ระบบ)');
+        if (hideEl) hideEl.style.display = '';
+        return ok && !!loggedUser();
+    }
+    const NEED_LOGIN = 'ยังไม่ได้เข้าสู่ระบบ — ส่งไปพิมพ์ที่คอมเครื่องอื่นไม่ได้ (เลือก “พิมพ์ที่เครื่องนี้” ได้โดยไม่ต้องเข้าสู่ระบบ)';
+
     async function sendTo(h, container, title) {
+        const u = loggedUser();
+        if (u && u.name) title = (title || 'ฉลาก') + ' · โดย ' + u.name;
         const html = container.innerHTML;
         const pages = container.querySelectorAll('.batch-label-page').length || 1;
         const p = await gz(html);
@@ -7623,6 +7638,7 @@ const PmxRemote = (function () {
         if (isHub || !relay() || !st.hubs.length || st.preferLocal) return 'local';
         if (st.hubs.length === 1) {
             const h = st.hubs[0];
+            if (!(await ensureLogin())) return chooser(container, title, NEED_LOGIN);
             const wait = window.pxNotice ? pxNotice({ kind: 'info', title: '⏳ กำลังส่งไปพิมพ์ที่ “' + h.name + '”…', key: 'rp' }) : null;
             try { const res = await sendTo(h, container, title); if (wait) wait.close(); noticeSent(h, res); return 'sent'; }
             catch (e) {
@@ -7655,7 +7671,8 @@ const PmxRemote = (function () {
                 card.querySelectorAll('[data-t]').forEach(b => b.onclick = async () => {
                     if (busy) return;
                     const h = st.hubs.find(x => x.token === b.dataset.t); if (!h) return;
-                    busy = true; card.querySelectorAll('button').forEach(x => x.disabled = true);
+                    busy = true;
+                    if (!(await ensureLogin(ov))) { busy = false; render(NEED_LOGIN); return; } card.querySelectorAll('button').forEach(x => x.disabled = true);
                     b.querySelector('.rp-grow small').textContent = '⏳ กำลังส่งไปพิมพ์…';
                     try { const res = await sendTo(h, container, title); busy = false; done('sent'); noticeSent(h, res); }
                     catch (e) {
