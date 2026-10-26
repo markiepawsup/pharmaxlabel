@@ -1,9 +1,9 @@
-/* Pharmax Label — service worker (v1.38)
+/* Pharmax Label — service worker (v1.39)
  * - ไฟล์หลักของเว็บ (index / data.js / drug-submit.js): ดึงจากเน็ตก่อนเสมอ (ได้รุ่นล่าสุด) · เน็ตช้าเกิน 5 วิ หรือออฟไลน์ → ใช้สำเนาในเครื่อง
  * - รูป/ไอคอน/ฟอนต์/ไลบรารีกล้อง: ใช้สำเนาในเครื่อง แล้วอัปเดตเบื้องหลัง
  * - Google Sheet (gviz) และ Apps Script: ไม่แตะ (ไปที่เน็ตตรงๆ — หน้าเว็บมีแคชข้อมูลยาของตัวเองอยู่แล้ว)
  * เปลี่ยนเลข BUILD ทุกครั้งที่อัปโหลดไฟล์ชุดใหม่ (ให้ตรงกับ <meta name="pmx-build"> ใน index.html) */
-const BUILD = '20261025-1';
+const BUILD = '20261026-1';
 const CORE = 'pmx-core-' + BUILD;
 const ASSET = 'pmx-asset-v1';
 const PRECACHE = ['./', 'index.html', 'data.js', 'drug-submit.js', 'manifest.webmanifest',
@@ -23,14 +23,16 @@ const isCore = url => url.origin === self.location.origin && (/\/$|\.html$|\/dat
 const isAsset = url => (url.origin === self.location.origin && /\.(png|jpe?g|svg|webp|ico|woff2?)$/.test(url.pathname)) ||
   /^(fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.com|cdn\.jsdelivr\.net)$/.test(url.hostname);
 
+// v1.39: หน้าเว็บหลัก (/ หรือ index.html?...) เก็บรวมเป็น index.html · หน้าอื่น (admin.html) เก็บแยก ไม่ให้ทับกัน
+const isIndex = req => { const p = new URL(req.url).pathname; return /\/$|\/index\.html$/.test(p); };
 function networkFirst(req) {
   return caches.open(CORE).then(cache => new Promise(resolve => {
     let done = false;
-    const fromCache = () => cache.match(req, { ignoreSearch: true }).then(r => r || (req.mode === 'navigate' ? cache.match('index.html') : null));
+    const fromCache = () => cache.match(isIndex(req) ? 'index.html' : req, { ignoreSearch: true }).then(r => r || (isIndex(req) ? cache.match('index.html') : null));
     const timer = setTimeout(() => fromCache().then(r => { if (r && !done) { done = true; resolve(r); } }), 5000);
     fetch(req).then(res => {
       clearTimeout(timer);
-      if (res && res.ok && res.status === 200) cache.put(req.mode === 'navigate' ? 'index.html' : req, res.clone()).catch(() => {});
+      if (res && res.ok && res.status === 200) cache.put(isIndex(req) ? 'index.html' : req, res.clone()).catch(() => {});
       if (!done) { done = true; resolve(res); }
     }).catch(() => { clearTimeout(timer); fromCache().then(r => { if (!done) { done = true; resolve(r || Response.error()); } }); });
   }));

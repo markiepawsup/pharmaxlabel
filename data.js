@@ -1,10 +1,10 @@
 
 // ==========================================
-// PHARMAX LABEL APP - DATA FILE (v1.38)
+// PHARMAX LABEL APP - DATA FILE (v1.39)
 // ==========================================
 
-const APP_VERSION = 'v1.38';
-const DATA_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <meta name="pmx-build"> ใน index.html — ไม่ตรง = เบราว์เซอร์ค้างไฟล์เก่า → หน้าเว็บขึ้นแถบให้รีเฟรช
+const APP_VERSION = 'v1.39';
+const DATA_BUILD = '20261026-1';   // v1.38: ต้องตรงกับ <meta name="pmx-build"> ใน index.html — ไม่ตรง = เบราว์เซอร์ค้างไฟล์เก่า → หน้าเว็บขึ้นแถบให้รีเฟรช
 
 // ===== v1.36: คำศัพท์มาตรฐาน — แหล่งเดียวของ dropdown (index.html, ฟอร์มเพิ่มยา, หน้าแอดมิน) และคำแปลตั้งต้นของ medical_glossary =====
 // ข้อความไทย (th) ตรงกับที่บันทึกใน drugTH ทุกตัว · tr = คำแปล 15 ภาษา (ปุ่ม "🔄 ซิงก์ glossary" ในหน้าแอดมินเขียนชุดนี้ลง medical_glossary)
