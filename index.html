@@ -1554,6 +1554,10 @@
         .brand-bg-layer[data-home-brand="pharmax"] { --hb: #16478E; } .brand-bg-layer[data-home-brand="icare"] { --hb: #1A1290; } .brand-bg-layer[data-home-brand="superdrug"] { --hb: #00774A; }
         .brand-picker.logos-intro .brand-logo-btn img { opacity: 0 !important; animation: none !important; }
         .no-trans, .no-trans *, .no-trans *::before, .no-trans *::after { transition: none !important; }
+        /* v1.38: ป้ายสาขาบนหัว = ปุ่มเปลี่ยนสาขา (แบรนด์เดิม) */
+        .hdr-actions .current-branch-badge { cursor: pointer; transition: filter .15s, box-shadow .15s; }
+        .hdr-actions .current-branch-badge:hover { filter: brightness(1.12); box-shadow: 0 0 0 3px rgba(22,71,142,.15); }
+        .badge-fly { position: fixed; margin: 0; z-index: 9950; pointer-events: none; box-sizing: border-box; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
         .brand-picker .brand-logo-btn img { transition: height 0.55s cubic-bezier(.2,.8,.2,1), filter 0.5s ease, opacity 0.5s ease; }
         #home_screen .home-title, #home_screen .home-subtitle, #home_screen .home-prompt { transition: opacity 0.5s ease, color 0.45s ease, font-size 0.45s ease, max-height 0.5s ease, margin 0.5s ease, padding 0.5s ease; }
         #app_header_logo.logo-aura { animation: logoHeartbeat 1.1s ease-in-out 3; position: relative; z-index: 2; }
@@ -1667,7 +1671,7 @@
     </div>
     <div class="hdr-spacer"></div>
     <div class="hdr-actions">
-            <span class="current-branch-badge" id="current_branch_badge"></span>
+            <span class="current-branch-badge" id="current_branch_badge" role="button" tabindex="0" title="เปลี่ยนสาขา (แบรนด์เดิม) — แสดงรายการสาขา" onclick="goBranchList()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goBranchList();}"></span>
             <span class="conn-status-badge" id="conn_status_badge" title="สถานะการเชื่อมต่อฐานข้อมูล (ยา/สาขา/ที่อยู่) แบบเรียลไทม์">
                 <span class="conn-dot" id="conn_status_dot"></span>
                 <span id="conn_status_text">กำลังเชื่อมต่อ…</span>
@@ -2059,7 +2063,7 @@
         <ul>
             <li>หน้าแรก: แตะโลโก้ร้าน แล้วพิมพ์รหัสสาขา 3 หลัก (เช่น 001) — ระบบเข้าหน้าฉลากให้เองเมื่อครบ 3 หลัก</li>
             <li>มือถือ/แท็บเล็ต: กด <b>📍 หาสาขาใกล้ฉัน</b> (หรือระบบหาให้อัตโนมัติ) — ถ้าอยู่ในร้านจะเลือกสาขาให้ทันที</li>
-            <li>เปลี่ยนสาขา: กดโลโก้มุมซ้ายบน หรือปุ่ม <b>เปลี่ยนสาขา</b></li>
+            <li>เปลี่ยนสาขา: กด <b>ป้ายชื่อสาขา</b> บนหัว = เลือกสาขาอื่นของแบรนด์เดิม (มีรายการสาขาให้กด) · กดโลโก้มุมซ้ายบน หรือปุ่ม <b>เปลี่ยนสาขา</b> = เลือกแบรนด์ใหม่</li>
         </ul>
         <h3>2. หายาด้วยบาร์โค้ด</h3>
         <ul>
@@ -4051,20 +4055,89 @@
         }
         const from = srcImg.getBoundingClientRect();
         const fromFilter = getComputedStyle(srcImg).filter;
+        // v1.38: ถ้ารายการสาขาเปิดอยู่ → ปุ่มสาขาที่เลือกลอยขึ้นไปเป็นป้ายสาขาบนหัว (พร้อมโลโก้)
+        const pill = _branchBtnSnapshot(code);
         const bg = _brandBgLayer(brand);                 // พื้นสีแบรนด์ค้างไว้ระหว่างสลับหน้า แล้วค่อยเฟดหาย
         selectBranch(code);                              // แสดงหน้าสร้างฉลากด้านหลัง (ใช้วัดตำแหน่งโลโก้ปลายทาง)
         const target = document.getElementById('app_header_logo');
+        const badge = document.getElementById('current_branch_badge');
         target.style.visibility = 'hidden';
+        if (pill && badge) badge.style.visibility = 'hidden';
         await new Promise(r => requestAnimationFrame(r));
         const to = target.getBoundingClientRect();
         const fly = _flyClone(srcImg, from, to, fromFilter, 'none', 950);
+        const bub = (pill && badge) ? _flyBubble(pill.rect, pill.style, badge.getBoundingClientRect(), getComputedStyle(badge), badge.textContent || pill.text, 1000, 60) : null;
         bg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 750, delay: 200, easing: 'ease', fill: 'forwards' });
-        await fly.done;
+        await Promise.all([fly.done, bub ? bub.done : null]);
         target.style.visibility = '';
-        fly.el.remove(); bg.remove();
+        if (badge) badge.style.visibility = '';
+        fly.el.remove(); bg.remove(); if (bub) bub.el.remove();
         pulseHeaderLogo();
         _entering = false;
         const bc = document.getElementById('in_barcode_scan'); if (bc) bc.focus();
+    }
+
+    // v1.38: ตำแหน่ง/สีของปุ่มสาขาในรายการ (เฉพาะตอนรายการเปิดอยู่และมองเห็นปุ่ม)
+    function _branchBtnSnapshot(code) {
+        const list = document.getElementById('home_branch_switch');
+        if (!list || !list.classList.contains('show') || list.offsetParent === null) return null;
+        const btn = Array.from(list.querySelectorAll('.branch-btn')).find(b => b.dataset.branch === code); if (!btn) return null;
+        const r = btn.getBoundingClientRect(), lr = list.getBoundingClientRect();
+        if (r.width < 1 || r.bottom < lr.top || r.top > lr.bottom) return null;
+        return { rect: r, style: getComputedStyle(btn), text: btn.textContent, el: btn };
+    }
+    // ป้ายลอยจากตำแหน่งหนึ่งไปอีกตำแหน่ง พร้อมเปลี่ยนสี/ขนาด/มุมโค้ง (ใช้ทั้งขาเข้าและขากลับ)
+    function _flyBubble(fromR, fs, toR, ts, text, ms, delay) {
+        const bc = st => parseFloat(st.borderTopWidth) ? st.borderTopColor : st.backgroundColor;   // ไม่มีขอบ = ขอบสีเดียวกับพื้น
+        const fB = bc(fs), tB = bc(ts);
+        const c = document.createElement('div');
+        c.className = 'badge-fly'; c.textContent = text;
+        Object.assign(c.style, { left: fromR.left + 'px', top: fromR.top + 'px', width: fromR.width + 'px', height: fromR.height + 'px',
+            background: fs.backgroundColor, color: fs.color, borderRadius: fs.borderRadius, fontFamily: fs.fontFamily, fontWeight: fs.fontWeight, fontSize: fs.fontSize,
+            border: '1.5px solid ' + fB });
+        document.body.appendChild(c);
+        const a = c.animate([
+            { left: fromR.left + 'px', top: fromR.top + 'px', width: fromR.width + 'px', height: fromR.height + 'px', backgroundColor: fs.backgroundColor, color: fs.color,
+              borderRadius: fs.borderRadius, fontSize: fs.fontSize, borderColor: fB, boxShadow: '0 0 0 rgba(0,0,0,0)' },
+            { offset: 0.5, boxShadow: '0 14px 34px rgba(0,0,0,.28)' },
+            { left: toR.left + 'px', top: toR.top + 'px', width: toR.width + 'px', height: toR.height + 'px', backgroundColor: ts.backgroundColor, color: ts.color,
+              borderRadius: ts.borderRadius, fontSize: ts.fontSize, borderColor: tB, boxShadow: '0 0 0 rgba(0,0,0,0)' }
+        ], { duration: ms, delay: delay || 0, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'both' });
+        return { el: c, done: a.finished.catch(() => {}) };
+    }
+
+    // v1.38: กดป้ายสาขาบนหัว → กลับหน้าเลือกสาขาของแบรนด์เดิม (เปิดรายการสาขาไว้) แล้วป้ายลอยกลับเข้าไปอยู่ในตำแหน่งของมันในรายการ
+    async function goBranchList() {
+        const app = document.getElementById('app_screen'), home = document.getElementById('home_screen');
+        if (!currentBranch || app.style.display === 'none' || _entering) return;
+        const code = currentBranch, brand = getBrandForBranch(code) || 'pharmax';
+        const badge = document.getElementById('current_branch_badge');
+        const canAnim = badge && typeof badge.animate === 'function' && !_reduceMotion();
+        const from = badge.getBoundingClientRect(), bs = getComputedStyle(badge);
+        const picker = document.getElementById('brand_picker');
+        home.classList.add('no-trans'); picker.classList.add('no-trans');          // จัดหน้าปลายทางทันที เพื่อวัดตำแหน่งปุ่มสาขาให้ตรง
+        app.style.display = 'none';
+        home.style.display = 'flex';
+        selectBrand(brand);
+        const section = document.getElementById('home_branch_section');
+        section.style.display = 'block'; section.classList.add('show');
+        setBranchListVisible(true);
+        void home.offsetHeight;
+        const list = document.getElementById('home_branch_switch');
+        const target = list && list.querySelector('.branch-btn[data-branch="' + (window.CSS && CSS.escape ? CSS.escape(code) : code) + '"]');
+        if (target) {
+            const lr = list.getBoundingClientRect(), tr0 = target.getBoundingClientRect();   // เลื่อนรายการให้เห็นปุ่มสาขาเดิม
+            if (tr0.top < lr.top || tr0.bottom > lr.bottom) list.scrollTop += (tr0.top - lr.top) - (lr.height - tr0.height) / 2;
+        }
+        requestAnimationFrame(() => { home.classList.remove('no-trans'); picker.classList.remove('no-trans'); });
+        if (!canAnim || !target) return;
+        const to = target.getBoundingClientRect(), ts = getComputedStyle(target);
+        target.style.visibility = 'hidden';
+        home.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 380, easing: 'ease-out' });
+        const bub = _flyBubble(from, bs, to, ts, badge.textContent, 900, 0);
+        await bub.done;
+        target.style.visibility = '';
+        bub.el.remove();
     }
 
     async function goHome() {
@@ -8048,5 +8121,34 @@ const PmxRemote = (function () {
 })();
 </script>
 <script src="drug-submit.js"></script>
+<script>
+/* v1.38: ปิด auto-fill / คำแนะนำจากเบราว์เซอร์และคีย์บอร์ด ทุกช่องกรอก (เช่น ช่องบาร์โค้ดโผล่รหัสไปรษณีย์/ที่อยู่ที่บันทึกไว้)
+   - ใช้ค่า autocomplete ที่เบราว์เซอร์ไม่รู้จัก ("pmx-off") เพราะ Chrome มักไม่สน autocomplete="off" กับการเติมที่อยู่
+   - ช่องรหัสผ่าน → "new-password" (ไม่เสนอรหัสที่บันทึกไว้) · ครอบคลุมช่องที่สร้างทีหลังด้วย (หน้าต่างเพิ่มยา ฯลฯ) */
+(function () {
+  const SKIP = /^(checkbox|radio|file|hidden|range|color|button|submit|reset|image)$/i;
+  function off(el) {
+    if (!el || el.dataset.pmxNoAf) return;
+    const tag = el.tagName;
+    if (tag === 'INPUT') {
+      if (SKIP.test(el.type)) return;
+      el.setAttribute('autocomplete', el.type === 'password' ? 'new-password' : 'pmx-off');
+      el.setAttribute('autocorrect', 'off'); el.setAttribute('autocapitalize', 'off'); el.setAttribute('spellcheck', 'false');
+      el.setAttribute('data-lpignore', 'true'); el.setAttribute('data-1p-ignore', ''); el.setAttribute('data-form-type', 'other');   // ตัวจัดการรหัสผ่าน (LastPass / 1Password / Dashlane)
+    } else if (tag === 'TEXTAREA') {
+      el.setAttribute('autocomplete', 'pmx-off'); el.setAttribute('autocorrect', 'off');
+    } else if (tag === 'FORM') {
+      el.setAttribute('autocomplete', 'off');
+    } else return;
+    el.dataset.pmxNoAf = '1';
+  }
+  function scan(root) { (root.querySelectorAll ? root : document).querySelectorAll('input, textarea, form').forEach(off); if (root.tagName) off(root); }
+  function start() {
+    scan(document);
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) scan(n); }))).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
 </body>
 </html>
