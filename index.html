@@ -1166,6 +1166,12 @@
         .c4-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 10px 6px; line-height: 1.25; cursor: pointer; }
         .c4-btn-main { font-size: 0.95rem; font-weight: 700; }
         .c4-btn-sub { font-size: 0.72rem; font-weight: 400; opacity: 0.85; }
+        /* v1.39.1: บอกปลายทางใต้ปุ่มพิมพ์ (เครื่องไหน สาขาไหน) — ใช้ข้อมูลเดียวกับปุ่มเขียว "Print ผ่าน …" ด้านบน */
+        .print-dest { display: block; margin: 4px auto 0; max-width: 100%; width: fit-content; padding: 2px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; line-height: 1.35;
+            background: #e7f6ee; color: #146c43; border: 1px solid #a8dcc0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .print-dest[hidden] { display: none; }
+        .print-dest.local { background: #eef1f5; color: #334155; border-color: #cbd5e1; }
+        .print-dest.ask { background: #fff6e0; color: #8a5a00; border-color: #f0d58a; }
         details.c4-more { margin-top: 10px; border: 1px dashed #cfd6e4; border-radius: 8px; padding: 6px 10px; }
         details.c4-more > summary { cursor: pointer; font-size: 0.8rem; font-weight: 600; color: #5a6785; }
         /* ลิงก์แอดมิน: เล็กและจางมากในส่วนท้ายหน้า (ไม่ให้คนทั่วไปสังเกต/กดโดยไม่ตั้งใจ) — เมาส์ชี้ถึงจะเห็นชัดขึ้น */
@@ -1969,6 +1975,7 @@
                     <button type="button" class="btn-action-secondary c4-btn" onclick="printSingleCurrentItem()">
                         <span class="c4-btn-main">🖨️ พิมพ์ทันที <kbd class="kb-hint">F4</kbd></span>
                         <span class="c4-btn-sub">เฉพาะฉลากตัวนี้</span>
+                        <span class="print-dest" hidden></span>
                     </button>
                 </div>
                 <label class="print-thai-toggle no-print">
@@ -1998,7 +2005,7 @@
                 <div class="widget-empty">ยังไม่มีรายการในคิว</div>
             </div>
             <div>
-                <button type="button" class="btn-action-primary" style="width: 100%; padding: 8px; font-size: 0.8rem; margin-top: 4px;" onclick="safeBatchPrint()">🖨️ สั่งพิมพ์ทั้งหมดในคิว (Batch Print)</button>
+                <button type="button" class="btn-action-primary" style="width: 100%; padding: 8px; font-size: 0.8rem; margin-top: 4px;" onclick="safeBatchPrint()">🖨️ สั่งพิมพ์ทั้งหมดในคิว (Batch Print)<span class="print-dest" hidden></span></button>
                 <div class="hint" style="text-align:center; margin-top:3px;">(เลือกเครื่องปริ้นที่ชื่อ Label)</div>
             </div>
         </div>
@@ -2020,7 +2027,7 @@
 
                 <!-- ปุ่มพิมพ์หลัก อยู่ใต้รายการคิว -->
                 <div class="btn-row" style="margin-top: 10px;">
-                    <button class="btn-action-primary" id="btn_batch_print" onclick="safeBatchPrint()" style="width: 100%; padding: 12px; font-size: 0.95rem;">🖨️ พิมพ์ทั้งหมดในคิว (Batch Print) <kbd class="kb-hint">F8</kbd></button>
+                    <button class="btn-action-primary" id="btn_batch_print" onclick="safeBatchPrint()" style="width: 100%; padding: 12px; font-size: 0.95rem;">🖨️ พิมพ์ทั้งหมดในคิว (Batch Print) <kbd class="kb-hint">F8</kbd><span class="print-dest" hidden></span></button>
                 </div>
 
                 <!-- กู้คืนคิว: พับเก็บไว้ (ใช้เฉพาะตอนกระดาษหมด/เครื่องพิมพ์ค้าง/กดล้างผิด) -->
@@ -7773,11 +7780,15 @@ const PmxRemote = (function () {
     function refreshChip() {
         const btn = $('hdr_printer_btn'), txt = $('hdr_printer_text');
         if (!btn || !txt) return;
-        if (!relay() || isHub) { btn.style.display = 'none'; return; }
+        if (!relay() || isHub) { btn.style.display = 'none'; document.querySelectorAll('.print-dest').forEach(el => { el.hidden = true; }); return; }
         btn.style.display = '';
         const n = st.hubs.length;
         const t = targetHub();
         txt.textContent = (!n || st.preferLocal) ? 'Print ที่เครื่องนี้' : t ? 'Print ผ่าน ' + t.name + (t.branch ? ' – ' + t.branch : '') : 'เลือกคอมตอนพิมพ์ (' + n + ')';
+        // v1.39.1: ป้ายใต้ปุ่ม "พิมพ์ทันที" / "พิมพ์ทั้งหมดในคิว" — กดแล้วออกเลย จึงต้องเห็นปลายทางก่อนกด
+        const kind = (!n || st.preferLocal) ? 'local' : t ? 'hub' : 'ask';
+        const label = kind === 'local' ? '→ พิมพ์ที่เครื่องนี้' : kind === 'hub' ? '→ ' + t.name + (t.branch ? ' – ' + t.branch : '') : '→ จะถามว่าพิมพ์ที่คอมไหน';
+        document.querySelectorAll('.print-dest').forEach(el => { el.hidden = false; el.textContent = label; el.className = 'print-dest' + (kind === 'hub' ? '' : ' ' + kind); el.title = kind === 'hub' ? 'กดแล้วส่งไปพิมพ์ที่ ' + label.slice(2) + ' ทันที · เปลี่ยนได้ที่ปุ่มเครื่องพิมพ์ด้านบน' : ''; });
         btn.title = 'กดเพื่อเลือก/เปลี่ยนเครื่องที่จะพิมพ์' + (t && !st.preferLocal ? ' (ตอนนี้: ' + t.name + (t.branch ? ' – ' + t.branch : '') + ')' : '');
     }
     async function refreshStatus() {
