@@ -3,7 +3,7 @@
  * - รูป/ไอคอน/ฟอนต์/ไลบรารีกล้อง: ใช้สำเนาในเครื่อง แล้วอัปเดตเบื้องหลัง
  * - Google Sheet (gviz) และ Apps Script: ไม่แตะ (ไปที่เน็ตตรงๆ — หน้าเว็บมีแคชข้อมูลยาของตัวเองอยู่แล้ว)
  * เปลี่ยนเลข BUILD ทุกครั้งที่อัปโหลดไฟล์ชุดใหม่ (ให้ตรงกับ <meta name="pmx-build"> ใน index.html) */
-const BUILD = '20261026-1';
+const BUILD = '20261027-1';
 const CORE = 'pmx-core-' + BUILD;
 const ASSET = 'pmx-asset-v1';
 const PRECACHE = ['./', 'index.html', 'data.js', 'drug-submit.js', 'manifest.webmanifest',

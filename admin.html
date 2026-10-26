@@ -153,6 +153,17 @@
 
   /* v1.38: หน้าต่างลอย (พรีวิวฉลาก / บรรทัดเกือบตรง glossary / แจ้งเตือนอีเมล) */
   .amodal{position:fixed;inset:0;background:rgba(15,23,35,.45);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;z-index:900;overflow:auto}
+  /* v1.39.1: หน้าต่างรอ — บังทั้งหน้าระหว่างโหลด/บันทึก กดอย่างอื่นไม่ได้ */
+  .abusy{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,35,0);cursor:wait;transition:background .2s}
+  .abusy.show{background:rgba(15,23,35,.5)}
+  .abusy-box{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:min(420px,100%);padding:20px 22px;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s}
+  .abusy.show .abusy-box{opacity:1;transform:none}
+  .abusy-t{font-weight:700;font-size:16px;margin-bottom:4px}
+  .abusy-s{font-size:13px;color:#5b6675;margin-bottom:14px;min-height:18px}
+  .abusy-bar{height:10px;border-radius:99px;background:#e7ecf2;overflow:hidden}
+  .abusy-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#1f7a5a,#38b07f);transition:width .3s linear}
+  .abusy-f{display:flex;justify-content:space-between;font-size:12px;color:#5b6675;margin-top:8px}
+  .abusy-warn{font-size:12px;color:#a15c00;margin-top:12px}
   .amodal-box{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);width:min(760px,100%);padding:18px 20px 20px;position:relative}
   .amodal-box.wide{width:min(1180px,100%)}
   .amodal-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}.amodal-h b{font-size:17px}.amodal-h .sp{flex:1}
@@ -277,7 +288,65 @@ function gasUrl() {
   return _gasUrl;
 }
 gasUrl();
+// v1.39.1: ทุกครั้งที่เรียก Apps Script (โหลด/บันทึก) → เด้งหน้าต่างรอพร้อมแถบความคืบหน้า บังทั้งหน้า กด/พิมพ์อย่างอื่นไม่ได้จนกว่าจะเสร็จ
+const Busy = (() => {
+  const DL = /^admin_(load|login|list|read|gloss(Pending|NearMatches)|printStats|archive(List|File|Zip)|selfUpdateStatus|.*Preview$)/;
+  const MSG = {
+    admin_login: 'กำลังตรวจรหัสผ่าน', admin_load: 'กำลังโหลดข้อมูลจากชีท', admin_selfUpdate: 'กำลังอัปเดต Code.gs และสร้างเวอร์ชันใหม่',
+    admin_selfUpdateStatus: 'กำลังตรวจสถานะการอัปเดต', admin_archiveZip: 'กำลังสร้างไฟล์ ZIP', admin_archiveSnapshot: 'กำลังสำรองข้อมูล',
+    admin_approveDrug: 'กำลังอนุมัติยาและบันทึกลงชีท', admin_prepareLangTabs: 'กำลังเตรียมแท็บภาษา', admin_geocodeBranches: 'กำลังหาพิกัดสาขา',
+    admin_printDailyNow: 'กำลังส่งรายงาน', admin_glossSave: 'กำลังบันทึกคำแปล', admin_saveTranslation: 'กำลังบันทึกคำแปล'
+  };
+  // เวลาที่คาดว่าใช้ (วินาที) — ใช้คำนวณความเร็วแถบ (Apps Script ไม่บอกความคืบหน้าจริง แถบจะวิ่งไม่เกิน 95% จนกว่าจะเสร็จ)
+  const EST = { admin_load: 6, admin_selfUpdate: 30, admin_archiveZip: 25, admin_archiveSnapshot: 15, admin_prepareLangTabs: 30, admin_upgradeLangFormulas: 30,
+    admin_geocodeBranches: 40, admin_glossarySyncApply: 20, admin_glossaryFixApply: 20, admin_recatApply: 15, admin_approveDrug: 8 };
+  let n = 0, el = null, t0 = 0, est = 4, label = '', timer = null, showT = null, kill = null;
+  const block = e => { if (n > 0) { e.preventDefault(); e.stopPropagation(); } };
+  function setInert(on) { Array.from(document.body.children).forEach(c => { if (c !== el && c.tagName !== 'SCRIPT') { if (on) c.setAttribute('inert', ''); else c.removeAttribute('inert'); } }); }
+  function tick() {
+    if (!el) return;
+    const s = (Date.now() - t0) / 1000;
+    const pct = 95 * (1 - Math.exp(-s / est));   // วิ่งเร็วช่วงแรก แล้วค่อยๆ ช้าลงเข้าใกล้ 95%
+    el.querySelector('.abusy-fill').style.width = pct.toFixed(1) + '%';
+    el.querySelector('.abusy-p').textContent = Math.floor(pct) + '%';
+    el.querySelector('.abusy-e').textContent = 'ผ่านไป ' + Math.floor(s) + ' วินาที';
+    el.querySelector('.abusy-s').textContent = s > est * 2.5 ? 'ยังทำงานอยู่ — ข้อมูลเยอะ/อินเทอร์เน็ตช้า อาจใช้เวลานานกว่าปกติ ไม่ได้ค้างครับ' : label;
+  }
+  function start(fn) {
+    n++;
+    const m = MSG[fn] || (DL.test(fn) ? 'กำลังโหลดข้อมูล' : 'กำลังบันทึกลงชีท');
+    if (n > 1) { if (!/โหลดข้อมูลจากชีท/.test(label)) { label = m; } est = Math.max(est, EST[fn] || 4); return; }
+    if (kill) { clearTimeout(kill); kill = null; }
+    label = m; est = EST[fn] || 4; t0 = Date.now();
+    if (!el) {
+      el = document.createElement('div'); el.className = 'abusy'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-busy', 'true');
+      el.innerHTML = '<div class="abusy-box"><div class="abusy-t">⏳ กรุณารอสักครู่</div><div class="abusy-s"></div><div class="abusy-bar"><div class="abusy-fill"></div></div>' +
+        '<div class="abusy-f"><span class="abusy-e"></span><b class="abusy-p">0%</b></div><div class="abusy-warn">ระหว่างนี้กดหรือพิมพ์อย่างอื่นไม่ได้ เพื่อไม่ให้ระบบรวน</div></div>';
+      ['click', 'mousedown', 'touchstart', 'keydown', 'wheel'].forEach(ev => el.addEventListener(ev, e => { if (ev !== 'wheel') e.preventDefault(); e.stopPropagation(); }, { passive: false }));
+      document.body.appendChild(el);
+    } else el.classList.remove('show');
+    el.style.display = 'flex'; el.querySelector('.abusy-fill').style.transition = 'none'; tick(); el.querySelector('.abusy-fill').offsetWidth; el.querySelector('.abusy-fill').style.transition = '';
+    try { document.activeElement && document.activeElement.blur(); } catch (e) {}
+    setInert(true);
+    showT = setTimeout(() => el && el.classList.add('show'), 120);   // งานเร็วมาก (<0.12 วิ) ไม่ต้องเห็นกล่อง แต่ยังกดไม่ได้อยู่ดี
+    timer = setInterval(tick, 250);
+  }
+  function end() {
+    n = Math.max(0, n - 1);
+    if (n > 0 || !el) return;
+    clearInterval(timer); clearTimeout(showT);
+    el.querySelector('.abusy-fill').style.width = '100%'; el.querySelector('.abusy-p').textContent = '100%';
+    const box = el;
+    kill = setTimeout(() => { kill = null; if (n > 0) return; box.style.display = 'none'; box.classList.remove('show'); setInert(false); }, el.classList.contains('show') ? 280 : 0);
+  }
+  document.addEventListener('keydown', block, true);
+  return { start, end, active: () => n > 0 };
+})();
 async function run(fn, ...a) {
+  Busy.start(fn);
+  try { return await run_(fn, ...a); } finally { Busy.end(); }
+}
+async function run_(fn, ...a) {
   let r;
   try {
     r = await fetch(await gasUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'admin', fn: fn, args: a, pw: PW }) });
