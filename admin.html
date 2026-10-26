@@ -468,7 +468,7 @@ function render() {
     });
 
     userControls = `<div class="dt-bar" style="margin-bottom:12px; background:#fff; padding:10px; border-radius:8px; border:1px solid var(--line);">
-      <input type="search" placeholder="🔍 ค้นหา รหัส, ใบอนุญาต, ชื่อ-สกุล..." value="${esc(USER_SEARCH)}" oninput="USER_SEARCH=this.value;render()" style="flex:1; min-width:200px;">
+      <input type="search" placeholder="🔍 ค้นหา รหัส, ใบอนุญาต, ชื่อ-สกุล..." value="${esc(USER_SEARCH)}" oninput="filterUsersDOM(this.value)" style="flex:1; min-width:200px;">
       <select onchange="USER_TYPE=this.value;render()" style="width:auto;">
         <option value="all" ${USER_TYPE==='all'?'selected':''}>ผู้ใช้ทั้งหมด</option>
         <option value="intern" ${USER_TYPE==='intern'?'selected':''}>เฉพาะ นศภ. ฝึกงาน</option>
@@ -1550,6 +1550,13 @@ async function saveBranch(row) {
     alert('ติดต่อระบบหลังบ้านไม่ได้: ' + err.message);
     if (btn) { btn.innerText = '💾 เซฟสาขา'; btn.disabled = false; }
   }
+}
+function filterUsersDOM(q) {
+  USER_SEARCH = q;
+  const text = q.trim().toLowerCase();
+  document.querySelectorAll('#list .card').forEach(card => {
+    card.style.display = card.innerText.toLowerCase().includes(text) ? '' : 'none';
+  });
 }
 </script>
 </body>
