@@ -1524,19 +1524,34 @@ async function glossFix() {
 PW ? load() : loginView();
 async function saveBranch(row) {
   const newBranch = document.getElementById('ub' + row).value.trim();
-  const btn = event.target;
-  const oldTxt = btn.innerText;
-  btn.innerText = '⏳...';
+  const btn = window.event ? window.event.target : null;
+  if (btn) { btn.innerText = '⏳...'; btn.disabled = true; }
 
-  const res = await api({ action: 'updateBranch', row: row, branchCode: newBranch });
+  try {
+    // ส่งข้อมูลไปหา Code.gs โดยตรง
+    const r = await fetch(await gasUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'updateBranch', row: row, branchCode: newBranch })
+    });
+    const res = await r.json();
 
-  if (res && res.ok) {
-    btn.innerText = '✅ เรียบร้อย';
-    setTimeout(() => btn.innerText = oldTxt, 2000);
-  } else {
-    alert('เกิดข้อผิดพลาด: ' + (res?.msg || 'ไม่สามารถบันทึกได้'));
-    btn.innerText = oldTxt;
+    if (res && res.ok) {
+      if (btn) { 
+        btn.innerText = '✅ เรียบร้อย'; 
+        setTimeout(() => { btn.innerText = '💾 เซฟสาขา'; btn.disabled = false; }, 2000); 
+      }
+      toast('✅ บันทึกสาขาเรียบร้อยแล้ว');
+    } else {
+      alert('เกิดข้อผิดพลาด: ' + (res?.msg || 'ไม่สามารถบันทึกได้'));
+      if (btn) { btn.innerText = '💾 เซฟสาขา'; btn.disabled = false; }
+    }
+  } catch (err) {
+    alert('ติดต่อระบบหลังบ้านไม่ได้: ' + err.message);
+    if (btn) { btn.innerText = '💾 เซฟสาขา'; btn.disabled = false; }
   }
+}
+
 }
 </script>
 </body>
