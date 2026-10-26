@@ -1,9 +1,9 @@
-<!-- Pharmax multi-language label printer (v1.38 — เลขบนฉลากมาจาก APP_VERSION ใน data.js). Built for Pharmax Pharmacy by Mark Sirikorn. Unauthorized copying/redistribution of this file is prohibited. Requires data.js (same folder) for BRANCHES, UI_TEXT, indicationsDB, advicesDB, DRUG_PRESETS, DRUG_REFERENCE_DB, CATEGORY_DEFAULTS, etc. -->
+<!-- Pharmax multi-language label printer (v1.39 — เลขบนฉลากมาจาก APP_VERSION ใน data.js). Built for Pharmax Pharmacy by Mark Sirikorn. Unauthorized copying/redistribution of this file is prohibited. Requires data.js (same folder) for BRANCHES, UI_TEXT, indicationsDB, advicesDB, DRUG_PRESETS, DRUG_REFERENCE_DB, CATEGORY_DEFAULTS, etc. -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="pmx-build" content="20261025-1"><!-- v1.38: เลขชุดไฟล์ — ต้องตรงกับ DATA_BUILD (data.js), PMX_DS_BUILD (drug-submit.js), BUILD (sw.js) · อัปโหลดชุดใหม่ = เปลี่ยนเลขทั้ง 4 ที่ -->
+    <meta name="pmx-build" content="20261026-1"><!-- v1.38: เลขชุดไฟล์ — ต้องตรงกับ DATA_BUILD (data.js), PMX_DS_BUILD (drug-submit.js), BUILD (sw.js) · อัปโหลดชุดใหม่ = เปลี่ยนเลขทั้ง 4 ที่ -->
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#16478E">
     <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
@@ -2329,6 +2329,35 @@
         else text.textContent = 'ออฟไลน์ - ใช้ข้อมูลสำรอง';
     }
 
+    // ==========================================================================
+    // v1.39: ที่เก็บข้อมูลในเครื่อง (IndexedDB) — ข้อมูลยาทุกภาษา/สาขา ใหญ่เกินกว่า localStorage จะเก็บไหว
+    //  ใช้ไม่ได้ (เช่นโหมดส่วนตัวบางเบราว์เซอร์) → ทำงานต่อได้ แค่ไม่จำข้ามการเปิดหน้าเว็บ
+    // ==========================================================================
+    const PxDB = (() => {
+        let dbp = null;
+        function open() {
+            if (dbp) return dbp;
+            dbp = new Promise(res => {
+                try {
+                    const rq = indexedDB.open('pharmax', 1);
+                    rq.onupgradeneeded = () => { try { rq.result.createObjectStore('kv'); } catch (e) {} };
+                    rq.onsuccess = () => res(rq.result);
+                    rq.onerror = () => res(null); rq.onblocked = () => res(null);
+                } catch (e) { res(null); }
+            });
+            return dbp;
+        }
+        async function get(k) {
+            const db = await open(); if (!db) return null;
+            return new Promise(res => { try { const r = db.transaction('kv').objectStore('kv').get(k); r.onsuccess = () => res(r.result == null ? null : r.result); r.onerror = () => res(null); } catch (e) { res(null); } });
+        }
+        async function set(k, v) {
+            const db = await open(); if (!db) return false;
+            return new Promise(res => { try { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = () => res(true); t.onerror = () => res(false); } catch (e) { res(false); } });
+        }
+        return { get, set };
+    })();
+
     const PharmaxSheet = (() => {
         const CFG = {
             spreadsheetId: '1yZa_R-Sdbh6fzBTXEytIkqu5Re9kJqjNNwjarqqYxdQ',
@@ -2337,8 +2366,15 @@
             // เมื่อใส่แล้วจะใช้ URL นี้แทนการอ่านชีตตรงๆ (รูปแบบ JSON ดูในคำอธิบายท้ายไฟล์)
             webAppUrl: '',
             timeoutMs: 10000,
-            cacheKey: 'pharmax_sheet_cache_v1_10'
+            cacheKey: 'pharmax_sheet_cache_v1_10',   // แคชรุ่นเก่า (localStorage) — v1.39 ย้ายไป IndexedDB แล้ว ใช้แค่ตอนอัปเกรดครั้งแรก
+            idbKey: 'sheet_v2'
         };
+        // v1.39: ภาษาทั้งหมดของฉลาก (ยกเว้นไทย) — โหลดคำแปลทุกภาษามาเก็บในเครื่องล่วงหน้า
+        const ALL_LANGS = () => { try { return Object.keys(UI_TEXT).filter(l => l !== 'th'); } catch (e) { return []; } };
+        const tabOfLang = lang => 'drug' + lang.toUpperCase();
+        const langOfTab = tab => ALL_LANGS().find(l => tabOfLang(l) === tab) || '';
+        let meta = { epoch: '', seq: 0, tabs: {}, fullAt: 0 };   // ซิงก์แบบเฉพาะตัวที่เปลี่ยน (ผ่าน Apps Script action 'sync')
+        let apiOk = null;          // null = ยังไม่รู้ · true = Code.gs รองรับ sync · false = Code.gs รุ่นเก่า → ใช้วิธีเดิม (ดึงทั้งแท็บเป็นระยะ)
         const FIELDS = ['drugType', 'meal', 'morning', 'noon', 'evening', 'bed', 'indication', 'advice'];
         const SLOTS = ['morning', 'noon', 'evening', 'bed'];
 
@@ -2526,6 +2562,12 @@
             rows.forEach((r, i) => {
                 const se = keyed ? (byCodeOf(r) || byNameOf(r)) : state.drugs[i];
                 if (!se) return;
+                const t = langRowToTr(c, r, se);
+                if (t) out[se.key] = t;
+            });
+            return out;
+        }
+        function langRowToTr(c, r, se) {
                 const t = {};
                 FIELDS.forEach(f => {
                     if (c[f] === undefined) return;
@@ -2539,9 +2581,7 @@
                 // คอลัมน์ "ตรวจคำแปลแล้ว": ว่าง / "ตรวจแล้ว…" = คำแปลที่คนเตรียมไว้ (เชื่อถือได้) · "แปลอัตโนมัติ…" / "รอตรวจ…" = ระบบแปลให้ ยังไม่มีคนตรวจ
                 const st = c.checked !== undefined ? String(r[c.checked] == null ? '' : r[c.checked]).trim() : '';
                 if (Object.keys(t).length && /^(แปลอัตโนมัติ|รอตรวจ)/.test(st)) t._auto = true;
-                if (Object.keys(t).length) out[se.key] = t;
-            });
-            return out;
+                return Object.keys(t).length ? t : null;
         }
 
         // ---------- Web App (JSON) mode ----------
@@ -2581,21 +2621,34 @@
         }
 
         // ---------- cache (เปิดครั้งถัดไปได้ข้อมูล Sheet ทันทีแม้ออฟไลน์) ----------
+        // v1.39: เก็บใน IndexedDB (ยา + คำแปลทุกภาษา + สถานะซิงก์) · localStorage เก่าใช้แค่ตอนอัปเกรดครั้งแรก
         function saveCache() {
             clearTimeout(saveTimer);
             saveTimer = setTimeout(() => {
-                try { localStorage.setItem(CFG.cacheKey, JSON.stringify({ v: 1, ts: Date.now(), drugs: state.drugs, tr: state.tr })); } catch (e) {}
+                PxDB.set(CFG.idbKey, { v: 2, ts: Date.now(), drugs: state.drugs, tr: state.tr, langs: Array.from(langFetched), meta: meta });
             }, 300);
         }
-        function loadCache() {
+        function useCached(c) {
+            state.drugs = c.drugs.map(makeEntry).filter(Boolean);
+            state.tr = c.tr || {};
+            rebuildIndex();
+        }
+        function loadCacheSync() {   // แคชรุ่นเก่า (localStorage) → แสดงได้ทันทีระหว่างรอ IndexedDB
             try {
                 const c = JSON.parse(localStorage.getItem(CFG.cacheKey) || 'null');
-                if (c && c.v === 1 && Array.isArray(c.drugs)) {
-                    state.drugs = c.drugs.map(makeEntry).filter(Boolean);
-                    state.tr = c.tr || {};
-                    rebuildIndex();
-                }
+                if (c && c.v === 1 && Array.isArray(c.drugs)) useCached(c);
             } catch (e) {}
+        }
+        async function loadCache() {
+            const c = await PxDB.get(CFG.idbKey);
+            if (c && c.v === 2 && Array.isArray(c.drugs) && c.drugs.length) {
+                useCached(c);
+                (c.langs || []).forEach(l => langFetched.add(l));
+                if (c.meta && c.meta.epoch) meta = Object.assign({ tabs: {} }, c.meta);
+                try { localStorage.removeItem(CFG.cacheKey); } catch (e) {}   // ย้ายมา IndexedDB แล้ว คืนพื้นที่ localStorage
+                return true;
+            }
+            return false;
         }
 
         // ---------- UI ----------
@@ -2614,22 +2667,18 @@
             if (typeof renderConnBadge === 'function') renderConnBadge();
         }
 
-        // ชื่อยาที่มีเฉพาะใน Sheet -> เพิ่มเข้า autocomplete (ต่อท้าย data.js เสมอ เพื่อให้ data.js มาก่อน)
+        // v1.39: ชื่อยาสำหรับ ghost text / ดรอปดาวน์ = ข้อมูลยาใน Google Sheet เท่านั้น (ไม่ใช้รายชื่อใน data.js แล้ว)
         function applyToUI() {
             if (typeof presetNameCandidates === 'undefined') return;
-            addedCandidates.forEach(n => {
-                const i = presetNameCandidates.indexOf(n);
-                if (i >= 0) presetNameCandidates.splice(i, 1);
-            });
-            addedCandidates = [];
-            const seen = new Set(presetNameCandidates.map(x => x.toLowerCase()));
-            state.drugs.concat(state.priv || []).forEach(se => {
+            const seen = new Set(), list = [];
+            (state.priv || []).concat(state.drugs).forEach(se => {
                 const low = se.name.toLowerCase();
                 if (seen.has(low)) return;
-                seen.add(low);
-                presetNameCandidates.push(se.name);
-                presetNameCandidates.unshift(se.name); addedCandidates.push(se.name); return;
+                seen.add(low); list.push(se.name);
             });
+            list.sort((a, b) => a.localeCompare(b));
+            presetNameCandidates.length = 0;
+            Array.prototype.push.apply(presetNameCandidates, list);
         }
 
         function rerenderIfMatched() {
@@ -2728,7 +2777,7 @@
             const p = (async () => {
                 try {
                     // v1.21: แท็บคำแปลยาตั้งชื่อว่า drug + รหัสภาษาตัวใหญ่ เช่น drugEN, drugJA, drugZH-CN (แพทเทิร์นเดียวกับ branches + ภาษา)
-                    const { headers, rows } = await fetchTab('drug' + lang.toUpperCase());
+                    const { headers, rows } = await fetchTab(tabOfLang(lang));
                     state.tr[lang] = parseLangRows(headers, rows);
                     langFetched.add(lang);
                     saveCache();
@@ -2740,30 +2789,110 @@
             langInflight.set(lang, p);
             return p;
         }
+        // v1.39: โหลดคำแปลทุกภาษามาเก็บในเครื่อง (ภาษาที่ใช้อยู่ก่อน ที่เหลือทยอยโหลดเบื้องหลังทีละภาษา)
+        let prefetching = null;
+        function prefetchAllLangs(force) {
+            if (prefetching && !force) return prefetching;
+            const order = [currentLang].concat(ALL_LANGS().filter(l => l !== currentLang)).filter(l => l && l !== 'th');
+            prefetching = (async () => {
+                for (const l of order) {
+                    if (!force && langFetched.has(l)) continue;
+                    await loadLang(l, force);
+                    await new Promise(r => setTimeout(r, 150));
+                }
+            })().finally(() => { prefetching = null; });
+            return prefetching;
+        }
 
-        function sync() {
+        // โหลดใหม่ทั้งหมด: drugTH + ทุกภาษา
+        async function fullSync() {
+            const { headers, rows } = await fetchTab(CFG.drugSheetName);
+            const drugs = parseDrugRows(headers, rows);
+            if (!drugs.length) throw new Error('drug tab returned no rows');
+            state.drugs = drugs;
+            state.tr = {};              // ลำดับ/รายการยาอาจเปลี่ยน -> โหลดคำแปลใหม่ทุกภาษา
+            langFetched.clear();
+            rebuildIndex();
+            applyToUI();
+            await loadLang(currentLang, true);
+            meta.fullAt = Date.now();
+            saveCache();
+            prefetchAllLangs(false);    // ภาษาอื่นทยอยโหลดเบื้องหลัง (langFetched ถูกล้างแล้ว → โหลดใหม่ทุกภาษา)
+        }
+        // ยาที่เปลี่ยน (จาก Apps Script) → แทนที่เฉพาะตัวนั้นทุกภาษา
+        function applyDelta(r) {
+            const H = r.headers || {}, cols = {};
+            Object.keys(H).forEach(tab => { cols[tab] = detectCols(H[tab]); });
+            (r.keys || []).forEach(k => {
+                const rec = (r.recs || {})[k] || {};
+                // ลบตัวเดิม (หาด้วยบาร์โค้ด หรือชื่อยา)
+                const old = k.indexOf('b:') === 0 ? state.drugs.find(x => x.barcodeNo === k.slice(2)) : state.drugs.find(x => x.key === k.slice(2));
+                if (old) {
+                    state.drugs = state.drugs.filter(x => x !== old);
+                    Object.keys(state.tr).forEach(l => { if (state.tr[l]) delete state.tr[l][old.key]; });
+                }
+                const thRow = rec[CFG.drugSheetName];
+                if (!thRow || !H[CFG.drugSheetName]) return;            // ไม่มีใน drugTH แล้ว = ยาถูกลบ
+                const se = parseDrugRows(H[CFG.drugSheetName], [thRow])[0];
+                if (!se) return;
+                const dup = state.drugs.find(x => x.key === se.key || (se.barcodeNo && x.barcodeNo === se.barcodeNo));
+                if (dup) state.drugs = state.drugs.filter(x => x !== dup);
+                state.drugs.push(se);
+                Object.keys(rec).forEach(tab => {
+                    const lang = langOfTab(tab); if (!lang || !cols[tab]) return;
+                    const t = langRowToTr(cols[tab], rec[tab], se);
+                    if (!state.tr[lang]) state.tr[lang] = {};
+                    if (t) state.tr[lang][se.key] = t; else delete state.tr[lang][se.key];
+                });
+            });
+            rebuildIndex();
+        }
+        // ถาม Apps Script ว่ามีอะไรเปลี่ยนตั้งแต่ครั้งก่อน (เร็วมาก ถ้าไม่มีอะไรเปลี่ยน)
+        async function askServer() {
+            const url = (window.PharmaxDrugSubmit && PharmaxDrugSubmit.webAppUrl) || '';
+            if (!url) return null;
+            const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+            try {
+                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, signal: ctl.signal,
+                    body: JSON.stringify({ action: 'sync', epoch: meta.epoch || '', since: meta.seq || 0 }) });
+                const j = await res.json();
+                if (j && j.ok && j.epoch) return j;
+                if (j && j.error === 'unknown_action') return false;     // Code.gs รุ่นเก่า
+                return null;
+            } catch (e) { return null; } finally { clearTimeout(t); }
+        }
+        let lastLegacy = 0;
+        function sync(opt) {
             if (syncPromise) return syncPromise;
+            const force = opt === true || (opt && opt.force);
             setStatus('syncing');
             syncPromise = (async () => {
                 try {
                     if (CFG.webAppUrl) {
                         ingestPayload(await (await fetchWithTimeout(CFG.webAppUrl)).json());
                     } else {
-                        const { headers, rows } = await fetchTab(CFG.drugSheetName);
-                        const drugs = parseDrugRows(headers, rows);
-                        if (!drugs.length) throw new Error('drug tab returned no rows');
-                        state.drugs = drugs;
-                        state.tr = {};              // ลำดับ/รายการยาอาจเปลี่ยน -> โหลดคำแปลใหม่ตามภาษาที่ใช้
-                        langFetched.clear();
-                        rebuildIndex();
-                        await loadLang(currentLang, true);
+                        const r = apiOk === false ? false : await askServer();
+                        if (r === false) apiOk = false; else if (r) apiOk = true;
+                        const stale = !meta.fullAt || Date.now() - meta.fullAt > 7 * 86400000;   // กันพลาด: โหลดใหม่ทั้งหมดอย่างน้อยสัปดาห์ละครั้ง
+                        if (r) {
+                            const tabsBefore = meta.tabs || {};
+                            if (r.full || force || stale || !state.drugs.length) await fullSync();
+                            else if (r.keys && r.keys.length) { applyDelta(r); applyToUI(); }
+                            const changedTabs = Object.keys(r.tabs || {}).filter(t => (r.tabs[t] || 0) !== (tabsBefore[t] || 0));
+                            meta = Object.assign(meta, { epoch: r.epoch, seq: r.seq, tabs: r.tabs || {} });
+                            saveCache();
+                            if (changedTabs.length) document.dispatchEvent(new CustomEvent('pmx-tabs-changed', { detail: changedTabs }));
+                            if (ALL_LANGS().some(l => !langFetched.has(l))) prefetchAllLangs();   // ภาษาที่ยังไม่มีในเครื่อง
+                        } else {
+                            // ติดต่อ Apps Script ไม่ได้ / Code.gs รุ่นเก่า → วิธีเดิม: โหลดทั้งแท็บ (ไม่เกินทุก 3 นาที)
+                            if (force || !state.drugs.length || Date.now() - lastLegacy > 3 * 60000) { lastLegacy = Date.now(); await fullSync(); }
+                        }
                     }
                     applyToUI();
-                    saveCache();
                     setStatus('ok');
                     rerenderIfMatched();
                 } catch (e) {
-                    console.warn('[PharmaxSheet] sync failed – continuing with data.js' + (state.drugs.length ? ' + cached sheet' : ''), e);
+                    console.warn('[PharmaxSheet] sync failed – using cached data' + (state.drugs.length ? ' (' + state.drugs.length + ')' : ''), e);
                     setStatus('offline');
                 } finally { syncPromise = null; }
             })();
@@ -2780,10 +2909,14 @@
         }
 
         function init() {
-            loadCache();            // 1) แคชของ Sheet (ถ้ามี) + data.js พร้อมใช้ทันที
+            loadCacheSync();        // แคชรุ่นเก่า (ถ้ามี) ใช้ได้ทันที
             applyToUI();
             if (state.drugs.length) setStatus('syncing');
-            sync();  // v1.13: ซิงค์เบื้องหลัง ไม่บล็อกการเปิดเว็บ
+            // v1.39: ข้อมูลยาทุกภาษาในเครื่อง (IndexedDB) → พร้อมใช้ภายในเสี้ยววินาที แล้วค่อยถามว่ามีอะไรเปลี่ยน
+            loadCache().then(had => {
+                if (had) { applyToUI(); setStatus('ok'); rerenderIfMatched(); }
+                setTimeout(() => sync(), had ? 1200 : 0);   // รอ drug-submit.js โหลด (ใช้ URL ของ Apps Script)
+            });
         }
 
         // v1.38: ยารออนุมัติของผู้ใช้ที่ล็อกอินอยู่ (drug-submit.js เรียกหลังล็อกอิน/ส่งยา/ออกจากระบบ)
@@ -2799,6 +2932,8 @@
             init, sync, find, findByCode, overlay, applySheetOnly, whenReady, setPrivate, isPrivate,
             privateCount: () => (state.priv || []).length,
             ensureLang: lang => loadLang(lang),
+            get apiOk() { return apiOk; },   // v1.39
+            stats: () => ({ drugs: state.drugs.length, langs: Array.from(langFetched), meta: meta }),
             fetchTab: fetchTab, // v1.10: ใช้ร่วมกับ ClinicalSheet
             overrideDrugType, overrideMeal, overrideDose, overrideLine, overrideLineInfo,
             debug: () => ({ config: CFG, drugs: state.drugs, translations: state.tr })
@@ -2844,7 +2979,8 @@
         // v1.38: คีย์สำรองแบบตัดช่องว่างทั้งหมด — กันเคสเว้นวรรคต่างกัน (เช่น "ผื่นขึ้น ดื่มน้ำ" กับ "ผื่นขึ้นดื่มน้ำ")
         const tightKey = s => loose(s).replace(/\s+/g, '');
         function rebuildTight() { tight = {}; Object.keys(map).forEach(k => { const t = tightKey(k); if (!tight[t]) tight[t] = k; }); }
-        function loadCache() { try { const c = JSON.parse(localStorage.getItem(KEY) || 'null'); if (c && c.map) { map = c.map; ready = true; rebuildTight(); } } catch (e) {} }
+        let cacheTs = 0;
+        function loadCache() { try { const c = JSON.parse(localStorage.getItem(KEY) || 'null'); if (c && c.map) { map = c.map; ready = true; cacheTs = c.ts || 0; rebuildTight(); } } catch (e) {} }
         function sync() {
             if (inflight) return inflight;
             const before = Object.keys(map).length;
@@ -2853,7 +2989,7 @@
                 if (m) {
                     const changed = JSON.stringify(m) !== JSON.stringify(map);
                     map = m; rebuildTight(); lastSync = Date.now();
-                    try { localStorage.setItem(KEY, JSON.stringify({ ts: Date.now(), map: m })); } catch (e) {}
+                    cacheTs = Date.now(); try { localStorage.setItem(KEY, JSON.stringify({ ts: cacheTs, map: m })); } catch (e) {}
                     // ชีทมีคำใหม่ และฉลากที่เปิดอยู่มีบรรทัดที่ยังไม่เจอใน glossary → แปลใหม่ทันที
                     if (changed && typeof _glossMiss !== 'undefined' && (_glossMiss.ind.length || _glossMiss.adv.length)) {
                         try { performTranslateInd(); performTranslateAdv(); } catch (e) {}
@@ -2905,9 +3041,11 @@
             return lookup(plain, lang);
         }
         loadCache();
-        return { sync, whenReady, refresh, lookup, lookupOption, has, isPending, nearest, size: () => Object.keys(map).length };
+        // v1.39: แคชในเครื่องยังใหม่ (ไม่เกิน ms) → ไม่ต้องโหลดทั้งแท็บตอนเปิดหน้าเว็บ (ถ้าแอดมินแก้ glossary ระบบซิงก์จะสั่งโหลดใหม่เอง)
+        const fresh = ms => ready && Object.keys(map).length > 0 && Date.now() - cacheTs < ms;
+        return { sync, whenReady, refresh, lookup, lookupOption, has, isPending, nearest, fresh, size: () => Object.keys(map).length };
     })();
-    setTimeout(() => Glossary.sync(), 0);
+    setTimeout(() => { if (!Glossary.fresh(12 * 3600000)) Glossary.sync(); }, 0);   // v1.39: มีในเครื่องแล้ว (ไม่เกิน 12 ชม.) ไม่ต้องโหลดใหม่ทุกครั้ง
 
     // ==========================================================================
     // v1.37: วิธีใช้ยาตามโรค — แท็บ diseaseRegimen ในไฟล์ druginfo (แก้ในชีทได้เลย ไม่ต้องแก้โค้ด)
@@ -3162,14 +3300,34 @@
         }
 
         // โหลดคำแปลที่อยู่/เวลาเปิดปิดของภาษาอื่นแบบ lazy ตอนผู้ใช้เปลี่ยนภาษา (merge เข้า DYNAMIC_BRANCHES)
-        async function ensureLang(lang) {
-            if (!lang || lang === 'th' || langLoaded[lang]) return;
+        // v1.39: ที่อยู่สาขาทุกภาษาเก็บไว้ในเครื่อง (localStorage) — ใช้ของในเครื่องก่อน โหลดใหม่เมื่อแอดมินแก้แท็บสาขา หรือเก่ากว่า 1 วัน
+        const LANG_CACHE = l => 'pharmax_branch_lang_v1_' + l;
+        async function ensureLang(lang, force) {
+            if (!lang || lang === 'th' || (langLoaded[lang] && !force)) return;
             langLoaded[lang] = true; // กันยิงซ้ำระหว่างรอผลลัพธ์
+            let cached = null;
+            try { cached = JSON.parse(localStorage.getItem(LANG_CACHE(lang)) || 'null'); } catch (e) {}
+            if (cached && Array.isArray(cached.list) && !force) {
+                mergeLang(lang, cached.list);
+                if (Date.now() - (cached.ts || 0) < 86400000) return;
+            }
             try {
                 const tabName = 'branches' + lang.toUpperCase();
                 const { headers, rows: rawRows } = await PharmaxSheet.fetchTab(tabName);
                 const list = parseBranchRows(headers, rawRows);
                 if (!list || !list.length) return; // แท็บนี้ยังไม่มี/คอลัมน์ไม่ตรง -> ใช้ภาษาไทยสำรองต่อไป (ไม่ error ออกมาให้ผู้ใช้เห็น)
+                try { localStorage.setItem(LANG_CACHE(lang), JSON.stringify({ ts: Date.now(), list: list.map(b => ({ branchCode: b.branchCode, line1: b.line1, line2: b.line2, line3: b.line3 })) })); } catch (e) {}
+                mergeLang(lang, list);
+            } catch (e) {
+                console.warn('[BranchDirectory] ensureLang(' + lang + ') failed, using Thai fallback:', e);
+            }
+        }
+        // โหลดที่อยู่สาขาทุกภาษามาเก็บในเครื่อง (ทยอยทีละภาษา)
+        async function prefetchLangs(force) {
+            let langs = []; try { langs = Object.keys(UI_TEXT).filter(l => l !== 'th'); } catch (e) {}
+            for (const l of langs) { await ensureLang(l, force); await new Promise(r => setTimeout(r, 120)); }
+        }
+        function mergeLang(lang, list) {
                 list.forEach(b => {
                     if (!DYNAMIC_BRANCHES[b.branchCode]) DYNAMIC_BRANCHES[b.branchCode] = {};
                     DYNAMIC_BRANCHES[b.branchCode][lang] = {
@@ -3180,11 +3338,8 @@
                 });
                 // ถ้ากำลังดูสาขา/ภาษานี้อยู่พอดี ให้รีเฟรชหัวฉลากทันทีที่คำแปลโหลดเสร็จ
                 if (typeof currentBranch !== 'undefined' && typeof currentLang !== 'undefined' && currentLang === lang) {
-                    applyLanguageToLabel();
+                    try { applyLanguageToLabel(); } catch (e) {}
                 }
-            } catch (e) {
-                console.warn('[BranchDirectory] ensureLang(' + lang + ') failed, using Thai fallback:', e);
-            }
         }
 
         function findRow(code) { return byCode.get(code) || null; }
@@ -3196,7 +3351,7 @@
         function byBrand(brand) { return rows.filter(b => effectiveBrand(b) === brand); }
 
         return {
-            load, loadFromCacheSync, ensureLang, findRow, byBrand,
+            load, loadFromCacheSync, ensureLang, prefetchLangs, findRow, byBrand,
             get isLoaded() { return loaded; },
             get all() { return rows; }
         };
@@ -3336,15 +3491,7 @@
         const sheetEntry = PharmaxSheet.find(full);
         if (sheetEntry) {
             PharmaxSheet.applySheetOnly(sheetEntry);   // ล้างฟอร์มแล้วเติมจาก Sheet ล้วนๆ (Sheet มาก่อนเสมอ)
-        } else {
-            if (window.Regimen) window.Regimen.hide();   // v1.37
-            const matched = DRUG_PRESETS.find(p => p.name.toUpperCase() === full.toUpperCase());
-            if (matched) applyPreset(matched.name);
-            else {
-                const refEntry = findReferenceEntry(full);
-                if (refEntry) applyCategoryDefaults(refEntry);
-            }
-        }
+        } else if (window.Regimen) window.Regimen.hide();   // v1.39: ไม่มีใน Google Sheet → ไม่เติมจาก data.js แล้ว (ข้อมูลไม่ครบ) ให้กรอกเอง
         const popup = document.getElementById('drug_popup_list');
         if (popup) popup.style.display = 'none';
         if (typeof clinicalCheckOnSelect === 'function') clinicalCheckOnSelect();
@@ -3428,7 +3575,8 @@
         if (!el || !popup) return;
         const val = el.value.trim().toLowerCase();
         if (val.length < 2) { popup.style.display = 'none'; return; }
-        const matches = presetNameCandidates.filter(n => n.toLowerCase().includes(val)).slice(0, 8);
+        const all = presetNameCandidates.filter(n => n.toLowerCase().includes(val));   // v1.39: ขึ้นต้นด้วยคำที่พิมพ์มาก่อน แล้วค่อยที่มีคำนั้นอยู่ข้างใน (เช่น ชื่อสามัญในวงเล็บ)
+        const matches = all.filter(n => n.toLowerCase().startsWith(val)).concat(all.filter(n => !n.toLowerCase().startsWith(val))).slice(0, 10);
         if (!matches.length) { popup.style.display = 'none'; return; }
         popup.innerHTML = matches.map(n =>
             `<div class="smart-popup-item" onclick="applyDrugNameSelection('${n.replace(/'/g, "\\'")}')">${escapeHtml(n)}</div>`
@@ -4903,7 +5051,7 @@
         clinicalCheckOnSelect(); // v1.9
     }
 
-    const presetNameCandidates = DRUG_PRESETS.map(p => p.name).concat(drugReferenceCandidates);
+    const presetNameCandidates = [];   // v1.39: เติมจากข้อมูลยาใน Google Sheet เท่านั้น (PharmaxSheet.applyToUI) — ไม่ใช้รายชื่อใน data.js แล้ว
 
     function ghostSuggestionFor(typed, candidates) {
         if (!typed) return null;
@@ -6952,16 +7100,30 @@
         return { checkRemote, checkLoaded, reloadNow, build: myBuild };
     })();
 
+    // v1.39: ถาม Apps Script ทุก 3 นาทีว่ามีอะไรเปลี่ยน → โหลดเฉพาะยาที่เปลี่ยน / แท็บที่เปลี่ยน (glossary, สาขา, วิธีใช้ตามโรค)
+    //  Code.gs รุ่นเก่า (ยังไม่มี sync) → ใช้วิธีเดิม: โหลดทั้งแท็บเป็นระยะ
     function refreshTick(force) {
         if (document.hidden) return;
         const now = Date.now();
-        if (force || now - _lastRun.drugs >= REFRESH.drugs) { _lastRun.drugs = now; PharmaxSheet.sync(); Regimen.sync(); }
+        if (force || now - _lastRun.drugs >= REFRESH.drugs) {
+            _lastRun.drugs = now;
+            PharmaxSheet.sync();
+            if (PharmaxSheet.apiOk !== true) Regimen.sync();
+        }
+        if (PharmaxSheet.apiOk === true) return;
         if (now - _lastRun.glossary >= REFRESH.glossary) { _lastRun.glossary = now; Glossary.sync(); }
         if (now - _lastRun.branches >= REFRESH.branches) {
             _lastRun.branches = now;
             BranchDirectory.load().then(() => { if (currentHomeBrand) renderBranchButtons(currentHomeBrand); });
         }
     }
+    document.addEventListener('pmx-tabs-changed', e => {
+        const t = e.detail || [];
+        if (t.indexOf('glossary') >= 0) Glossary.sync();
+        if (t.indexOf('regimen') >= 0) Regimen.sync();
+        if (t.indexOf('branches') >= 0) BranchDirectory.load().then(() => { if (currentHomeBrand) renderBranchButtons(currentHomeBrand); BranchDirectory.prefetchLangs(true); });
+    });
+    setTimeout(() => BranchDirectory.prefetchLangs(false), 15000);   // v1.39: ที่อยู่สาขาทุกภาษาเก็บไว้ในเครื่อง
     setInterval(() => refreshTick(false), 30000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - _lastRun.drugs > 60000) refreshTick(true); });
     updateLabel();
@@ -7420,18 +7582,8 @@ window.PrintLog = (function () {
 /* ปุ่มแอดมิน: เปิดหน้าล็อกอินแอดมิน = Web App URL + ?page=admin (แท็บใหม่)
    ปกติดึง URL ให้อัตโนมัติจาก WEB_APP_URL ใน drug-submit.js — ถ้าดึงไม่ได้ ให้ใส่ URL (ลงท้าย /exec) ที่ ADMIN_WEB_APP_URL ด้านล่าง */
 var ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
-function openAdminPage() {
-    var w = window.open('', '_blank');   // เปิดแท็บก่อน เพื่อไม่ให้ถูกบล็อกป๊อปอัป
-    var go = function (base) {
-        if (!base) { if (w) w.close(); alert('ยังไม่ได้ตั้งค่า URL ของหน้าแอดมิน (ADMIN_WEB_APP_URL ใน index.html)'); return; }
-        var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'page=admin';
-        if (w) w.location.href = url; else window.location.href = url;
-    };
-    if (ADMIN_WEB_APP_URL) return go(ADMIN_WEB_APP_URL);
-    fetch('drug-submit.js').then(function (r) { return r.text(); }).then(function (t) {
-        var m = t.match(/WEB_APP_URL\s*=\s*['"](https:\/\/script\.google\.com\/[^'"]+)['"]/);
-        go(m ? m[1] : '');
-    }).catch(function () { go(''); });
+function openAdminPage() {   // v1.39: หน้าแอดมินอยู่บนเว็บนี้แล้ว (admin.html) — เปิดเร็วกว่าแบบ Apps Script มาก
+    window.open('admin.html', '_blank');
 }
 </script>
 <script>

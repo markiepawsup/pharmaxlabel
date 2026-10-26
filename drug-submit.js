@@ -1,6 +1,6 @@
-/* Pharmax – เพิ่มข้อมูลยาใหม่ผ่านหน้าเว็บ (login / สมัคร / ส่งข้อมูลให้แอดมินตรวจ)  ·  v1.38
+/* Pharmax – เพิ่มข้อมูลยาใหม่ผ่านหน้าเว็บ (login / สมัคร / ส่งข้อมูลให้แอดมินตรวจ)  ·  v1.39
  * ใช้คู่กับ Code.gs (Apps Script Web App)  —  วางไฟล์นี้ไว้โฟลเดอร์เดียวกับ index.html */
-window.PMX_DS_BUILD = '20261025-1';   // v1.38: ต้องตรงกับ <meta name="pmx-build"> ใน index.html
+window.PMX_DS_BUILD = '20261026-1';   // v1.38: ต้องตรงกับ <meta name="pmx-build"> ใน index.html
 (function () {
   'use strict';
 

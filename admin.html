@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<!-- Pharmax Admin · v1.39 (อยู่บนเว็บ Cloudflare · ข้อมูลผ่าน Apps Script) -->
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Pharmax Admin</title>
+<meta name="robots" content="noindex,nofollow">
+<base target="_top">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#16478E;--green:#04B085;--bg:#F2F7FB;--line:#e6edf5}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:'Noto Sans Thai',system-ui,sans-serif;color:#222;font-size:15px}
+  header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5}
+  header b{font-size:1.05rem}
+  header button{background:transparent;color:#fff;border:1px solid #fff8;border-radius:6px;padding:4px 10px;cursor:pointer}
+  .wrap{max-width:900px;margin:0 auto;padding:12px}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .tab{flex:1;min-width:120px;padding:10px;border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit}
+  .tab.on{background:var(--navy);color:#fff}
+  .badge{background:#e53935;color:#fff;border-radius:999px;padding:1px 7px;font-size:.75rem;margin-left:4px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:0 2px 8px #16478e10}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .muted{color:#666;font-size:.8rem}
+  .pill{font-size:.72rem;padding:2px 8px;border-radius:999px;font-weight:700}
+  .w{background:#fff3cd;color:#7a5b00}.ok{background:#d9f3e6;color:#1a7a3a}.no{background:#fde0de;color:#b3261e}.dn{background:#e3e8ef;color:#445}
+  input,select,textarea{width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:6px;font:inherit;font-size:.88rem}
+  label{display:block;font-size:.72rem;font-weight:600;margin:8px 0 2px;color:#444}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .btn{padding:8px 14px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;color:#fff;background:var(--navy)}
+  .btn.g{background:var(--green)}.btn.r{background:#d9534f}.btn.s{background:#fff;color:var(--navy);border:2px solid var(--navy)}
+  .btn:disabled{opacity:.5}
+  .login{max-width:340px;margin:12vh auto;background:#fff;padding:22px;border-radius:14px;box-shadow:0 6px 24px #0002}
+  .err{color:#b3261e;font-size:.85rem;margin-top:8px}
+  #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:9px 16px;border-radius:8px;display:none;z-index:20}
+  .filter{display:flex;gap:6px;margin-bottom:10px}
+  .filter button{padding:5px 12px;border:1px solid #bbb;background:#fff;border-radius:999px;cursor:pointer;font-family:inherit}
+  .filter button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .wrap.wide{max-width:1500px}
+  .dt-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .dt-bar select{width:auto;min-width:230px}.dt-bar input[type=search]{flex:1;min-width:160px}
+  .note{background:#fff6dd;color:#7a5b00;border-radius:8px;padding:7px 10px;font-size:.8rem;margin-bottom:10px;line-height:1.45}
+  .tbl-wrap{overflow:auto;max-height:68vh;border:1px solid var(--line);border-radius:10px;background:#fff}
+  table.dt{border-collapse:collapse;width:max-content;min-width:100%;font-size:.85rem}
+  .dt th{position:sticky;top:0;background:#e6edf5;color:var(--navy);text-align:left;padding:6px 8px;font-size:.74rem;white-space:nowrap;z-index:2;border-bottom:1px solid #cdd8e6}
+  .dt td{padding:3px;border-bottom:1px solid var(--line);vertical-align:top}
+  .dt td.act{white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1;padding:4px 6px;border-right:1px solid var(--line)}
+  .dt th.act{left:0;z-index:3}
+  .dt input,.dt textarea,.dt select{min-width:130px;width:100%;padding:4px 6px;font-size:.82rem;border:1px solid #e0e6ee;border-radius:4px}
+  .dt textarea{min-height:30px;height:30px;resize:vertical}.dt td.long textarea{min-width:260px}
+  .dt tr.dirty td,.dt tr.dirty td.act{background:#fffbe6}
+  .dt .locked{background:#f1f1f1;color:#999}.dt .fx{background:#eef3ff;color:#556}
+  .btn.sm{padding:4px 9px;font-size:.78rem}
+  .pager{display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0}
+  .addgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+  /* ghost text + dropdown (เหมือนหน้าเว็บหลัก) */
+  .gw{position:relative;background:#fff;border-radius:6px}
+  .gw textarea{position:relative;z-index:1;background:transparent !important;display:block;line-height:1.4;resize:vertical}
+  .gov{position:absolute;inset:0;padding:6px 8px;border:1px solid transparent;border-radius:6px;font:inherit;font-size:.88rem;line-height:1.4;color:transparent;white-space:pre-wrap;word-wrap:break-word;overflow:hidden;pointer-events:none;z-index:0}
+  .gov .gs{color:#b0b0b0}
+  .pop{position:absolute;left:0;right:0;top:100%;z-index:30;background:#fff;border:1px solid #ccc;border-radius:6px;max-height:190px;overflow:auto;box-shadow:0 6px 16px rgba(0,0,0,.18);display:none}
+  .pop div{padding:8px 10px;font-size:.84rem;cursor:pointer;border-bottom:1px solid #f0f0f0;line-height:1.35}
+  .pop div:hover{background:#eaf4fc}
+  .hintk{font-weight:400;color:#777;font-size:.7rem}
+  table.ed{width:100%;border-collapse:collapse;margin:8px 0;font-size:.85rem}
+  table.ed th{background:#e6edf5;color:var(--navy);text-align:left;padding:5px 7px;font-size:.74rem}
+  table.ed td{border-bottom:1px solid var(--line);padding:5px 7px;vertical-align:top;white-space:pre-wrap}
+  table.ed td.old{color:#8a4b4b;background:#fff6f6;width:34%}.ed .new{color:#1a7a3a;font-weight:600}
+  .trgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .trgrid .th{background:#f6f8fb;border:1px solid var(--line);border-radius:6px;padding:6px 8px;white-space:pre-wrap;font-size:.85rem;min-height:30px}
+  .trgrid textarea{min-height:60px}
+  @media (max-width:700px){.trgrid{grid-template-columns:1fr}}
+</style>
+<style>
+  /* ===== v1.38: หน้าตาแบบ A — เมนูข้าง + การ์ดสรุป ===== */
+  :root{--navy:#16478E;--green:#04B085;--bg:#F3F5F9;--line:#E2E7EF;--ink:#18212E;--muted:#6B7789;--soft:#EAF0F9}
+  body{font-family:'IBM Plex Sans Thai','Noto Sans Thai',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14.5px}
+  .shell{display:flex;flex-wrap:wrap;min-height:100vh}
+  .side{flex:1 1 230px;max-width:250px;min-width:210px;background:#fff;border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow:auto}
+  .side .logo{display:flex;align-items:center;gap:10px;padding:4px 8px 16px}
+  .side .logo i{width:34px;height:34px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-style:normal}
+  .side .logo b{display:block;font-size:15px}.side .logo small{color:var(--muted);font-size:12px}
+  .side .sec{font-size:11px;font-weight:600;color:var(--muted);padding:12px 10px 4px;letter-spacing:.5px}
+  .nav{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:none;border-radius:8px;background:none;color:#33415A;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+  .nav:hover{background:#F3F6FA}.nav.on{background:var(--soft);color:var(--navy);font-weight:600}
+  .nav svg{flex:none}.nav .badge{margin-left:auto}
+  .side .grow{flex:1 1 auto}
+  .side .foot{display:flex;flex-direction:column;gap:6px;padding:8px}
+  .side .foot button{height:36px;border:1px solid var(--line);background:#fff;border-radius:8px;font:inherit;font-size:13px;color:#33415A;cursor:pointer}
+  .side .foot button:hover{background:#F3F6FA}
+  .main{flex:999 1 600px;min-width:0;padding:22px 28px 40px}
+  .main .wrap{max-width:1100px;margin:0;padding:0}.main .wrap.wide{max-width:none}
+  .topline{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:16px}
+  .topline h1{margin:0;font-size:22px;font-weight:700}
+  .topline .sp{flex:1 1 auto}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+  .stat:hover{border-color:#C7D3E4}.stat small{display:block;font-size:12px;color:var(--muted)}.stat b{font-size:26px;color:var(--navy)}
+  .stat.zero b{color:#A3AEBD}
+  .badge{background:#D9362B;font-weight:700;font-size:11px;padding:1px 7px}
+  .filter{gap:2px;background:#E6EAF1;padding:3px;border-radius:9px;margin:0}
+  .filter button{border:none;background:transparent;border-radius:7px;padding:6px 14px;font-size:13px;color:#4B5B72}
+  .filter button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .card{border-radius:14px;padding:16px 18px;margin-bottom:12px;box-shadow:none;border:1px solid var(--line)}
+  .card > .row:first-child{padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #EEF1F5}
+  .card > .row:first-child b{font-size:16px}
+  label{font-size:12px;color:#4B5B72;margin:10px 0 4px}
+  input,select,textarea{border:1px solid #D5DCE6;border-radius:8px;padding:8px 10px;font-size:14px;background:#fff}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px var(--soft)}
+  input:disabled,select:disabled,textarea:disabled{background:#F6F8FB;color:#556}
+  .g2,.g3,.g4{gap:10px 14px}
+  .btn{border-radius:9px;padding:9px 16px;font-size:14px;font-weight:600}
+  .btn.r{background:#fff;color:#A3271D;border:1px solid #E8B4AF}.btn.r:hover{background:#FDF2F1}
+  .btn.s{border-width:1px}
+  .pill{padding:2px 9px}
+  .w{background:#FFF3CD;color:#6E5200}
+  .note{border-radius:10px;padding:10px 12px}
+  .muted{color:var(--muted)}
+  .login{max-width:380px;margin:14vh auto;padding:28px;border-radius:16px;border:1px solid var(--line);box-shadow:0 10px 30px rgba(22,71,142,.08)}
+  .login h3{font-size:20px}
+  .tbl-wrap{border-radius:12px}
+  .dt th{background:#F0F3F8}
+  #toast{border-radius:10px;font-size:14px}
+  @media (max-width:760px){.side{position:static;height:auto;max-width:none;flex-basis:100%}.main{padding:16px}}
+
+  /* v1.38: สถิติการพิมพ์ */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:12px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+  .kpi small{font-size:12px;color:var(--muted)}.kpi b{font-size:28px;line-height:1.15;color:var(--ink);font-weight:700;letter-spacing:-.5px}.kpi span{font-size:12px;color:var(--muted)}
+  .sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px}
+  .card.sc{margin-bottom:0}
+  .sc-h{font-weight:700;font-size:14px;margin-bottom:10px;color:var(--ink)}
+  .hb{display:flex;flex-direction:column;gap:7px}
+  .hb-row{display:grid;grid-template-columns:minmax(0,42%) 1fr 52px;align-items:center;gap:10px;font-size:13px}
+  .hb-lab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#33415A}
+  .hb-rk{display:inline-block;width:22px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .hb-track{height:10px;background:#EEF2F7;border-radius:999px;overflow:hidden}
+  .hb-fill{height:100%;background:var(--navy);border-radius:999px}
+  .hb-row:hover .hb-fill{background:#0f3568}
+  .hb-val{text-align:right;font-variant-numeric:tabular-nums;color:#33415A;font-weight:600}
+  .trend{position:relative}.trend svg{width:100%;height:auto;display:block}
+  .trend .tg{stroke:#E6EAF1;stroke-width:1}.trend .tl{font-size:11px;fill:#6B7789}
+  .trend .ta{fill:var(--navy);opacity:.10}.trend .tline{fill:none;stroke:var(--navy);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+  .trend .tx{stroke:#9AA6B6;stroke-width:1;stroke-dasharray:3 3}.trend .td{fill:var(--navy);stroke:#fff;stroke-width:2}
+  .ttip{position:absolute;top:4px;width:124px;background:#18212E;color:#fff;font-size:12px;border-radius:8px;padding:6px 9px;pointer-events:none;text-align:center;line-height:1.35}
+  .hrs{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:3px;height:150px;align-items:end;padding-top:6px}
+  .hr{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+  .hr-bar{width:100%;background:var(--navy);border-radius:4px 4px 0 0}
+  .hr:hover .hr-bar{background:#0f3568}
+  .hr span{font-size:10px;color:var(--muted);height:12px}
+
+  /* v1.38: หน้าต่างลอย (พรีวิวฉลาก / บรรทัดเกือบตรง glossary / แจ้งเตือนอีเมล) */
+  .amodal{position:fixed;inset:0;background:rgba(15,23,35,.45);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;z-index:900;overflow:auto}
+  .amodal-box{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);width:min(760px,100%);padding:18px 20px 20px;position:relative}
+  .amodal-box.wide{width:min(1180px,100%)}
+  .amodal-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}.amodal-h b{font-size:17px}.amodal-h .sp{flex:1}
+  .amodal-x{border:0;background:#EEF2F7;border-radius:8px;width:32px;height:32px;font-size:18px;cursor:pointer}
+  .pv-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .pv-grid iframe{width:100%;height:640px;border:1px solid var(--line);border-radius:12px;background:#F4F6FA}
+  @media(max-width:900px){.pv-grid{grid-template-columns:1fr}}
+  .nm-t{width:100%;border-collapse:collapse;font-size:13px}.nm-t th,.nm-t td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+  .nm-t th{font-size:12px;color:var(--muted);font-weight:600}.nm-t td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .nm-t .old{color:#9b2c2c}.nm-t .new{color:#14633f}.nm-t ins{background:#d9f3e6;text-decoration:none;border-radius:3px}.nm-t del{background:#fde2e2;text-decoration:none;border-radius:3px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<script>
+const ADMIN_VERSION = 'v1.39';
+const ST = { WAIT: 'รออนุมัติ', OK: 'อนุมัติแล้ว', NO: 'ไม่อนุมัติ', DONE: 'ดำเนินการแล้ว' };
+let PW = sessionStorage.getItem('adm_pw') || '';
+let DATA = null, TAB = 'drugs', FILTER = 'wait';
+// ===== ชนิดยา / เวลาใช้ยา / สรรพคุณ / คำแนะนำสำเร็จรูป: อ่านจาก data.js ของหน้าเว็บหลัก (แหล่งเดียวกับ index.html) =====
+// ตั้ง URL หน้าเว็บที่ Script properties > SITE_URL · ถ้าโหลดไม่ได้ ใช้ค่าที่มีอยู่แล้วใน drugTH แทน
+let TYPES = [], MEALS = [], PRESET = { ind: [], adv: [] }, SITE_OK = null, SITE_WHY = '', SITE_TRIED = '';
+function loadSiteData(url) {
+  return new Promise(res => {
+    if (SITE_OK !== null) return res(SITE_OK);
+    if (!url) { SITE_OK = false; SITE_WHY = 'notset'; return res(false); }
+    SITE_TRIED = url + 'data.js';
+    let done = false;
+    const fin = ok => { if (done) return; done = true; SITE_OK = ok; res(ok); };
+    const sc = document.createElement('script');
+    sc.src = url + 'data.js?v=' + Date.now();
+    sc.onload = () => {
+      try {
+        TYPES = SHEET_DRUG_TYPES.slice(); MEALS = SHEET_MEALS.slice();
+        PRESET = { ind: indicationsDB.map(x => x && x.th).filter(Boolean), adv: advicesDB.map(x => x && x.th).filter(Boolean) };
+        fin(true);
+      } catch (e) { SITE_WHY = 'old'; fin(false); }
+    };
+    sc.onerror = () => { SITE_WHY = 'loaderr'; fin(false); };
+    document.head.appendChild(sc);
+    setTimeout(() => { if (!done) SITE_WHY = 'loaderr'; fin(false); }, 8000);
+  });
+}
+let _cands = null;
+function candsFor(kind) {            // kind: 'ind' | 'adv'  (สำเร็จรูปมาก่อน แล้วตามด้วยของยาตัวอื่นในชีท)
+  const key = kind === 'ind' ? 'indications' : 'advices';
+  if (!_cands || _cands.n !== DATA) {
+    const mk = (base, extra) => { const seen = {}, out = []; base.concat(extra || []).forEach(t => { t = String(t || '').trim(); if (t && !seen[t]) { seen[t] = true; out.push(t); } }); return out; };
+    _cands = { n: DATA, ind: mk(PRESET.ind, DATA && DATA.indications), adv: mk(PRESET.adv, DATA && DATA.advices) };
+  }
+  return _cands[kind];
+}
+const smartField = (id, val, dis, kind) => '<div class="gw"><div class="gov" id="' + id + '_g" aria-hidden="true"></div>' +
+  '<textarea id="' + id + '" rows="2" autocomplete="off" data-smart="' + (kind || (id[1] === 'i' ? 'ind' : 'adv')) + '" ' + (dis || '') + '>' + esc(val) + '</textarea><div class="pop" id="' + id + '_p"></div></div>';
+
+function suggest(typed, cands) {
+  if (!typed || !typed.trim()) return null;
+  const lo = typed.toLowerCase();
+  const p = cands.find(c => c.length > typed.length && c.toLowerCase().startsWith(lo));
+  if (p) return { type: 'prefix', text: p.slice(typed.length), full: p };
+  const m = cands.find(c => c.toLowerCase().includes(lo) && c.toLowerCase() !== lo);
+  if (m) return { type: 'substring', text: '  (👉 กด Tab: ' + m + ')', full: m };
+  return null;
+}
+function wireSmart(id, kind) {
+  const ta = document.getElementById(id), ov = document.getElementById(id + '_g'), pop = document.getElementById(id + '_p');
+  if (!ta || ta.disabled) return;
+  const cands = () => candsFor(kind);
+  const lastLine = v => v.slice(v.lastIndexOf('\n') + 1);
+  function setGhost(sug) {
+    ta.dataset.gt = sug ? sug.type : ''; ta.dataset.gf = sug ? sug.full : ''; ta.dataset.gs = sug ? sug.text : '';
+    ov.innerHTML = esc(ta.value) + (sug ? '<span class="gs">' + esc(sug.text) + '</span>' : '');
+    ov.scrollTop = ta.scrollTop;
+  }
+  function refresh() {
+    const v = ta.value, atEnd = ta.selectionStart === v.length && ta.selectionEnd === v.length;
+    const cur = lastLine(v), key = cur.trim().toLowerCase();
+    setGhost(atEnd && key ? suggest(cur, cands()) : null);
+    if (!key) { pop.style.display = 'none'; return; }
+    const m = cands().filter(c => c.toLowerCase().includes(key)).slice(0, 10);
+    if (!m.length || (m.length === 1 && m[0].toLowerCase() === key)) { pop.style.display = 'none'; return; }
+    pop._items = m;
+    pop.innerHTML = m.map((c, i) => '<div data-i="' + i + '">' + esc(c) + '</div>').join('');
+    pop.style.display = 'block';
+  }
+  function pick(text) {
+    const L = ta.value.split('\n'); L[L.length - 1] = text;
+    ta.value = L.join('\n') + '\n';
+    pop.style.display = 'none'; setGhost(null); ta.focus();
+    ta.selectionStart = ta.selectionEnd = ta.value.length;
+  }
+  pop.addEventListener('mousedown', e => { const d = e.target.closest('[data-i]'); if (!d) return; e.preventDefault(); pick(pop._items[+d.dataset.i]); });
+  ta.addEventListener('keydown', e => {
+    const t = ta.dataset.gt; if (!t || e.key !== 'Tab') return;   // รับข้อความเงาด้วย Tab เท่านั้น (Space = เว้นวรรคปกติ)
+    e.preventDefault();
+    if (t === 'prefix') ta.value += ta.dataset.gs;
+    else { const L = ta.value.split('\n'); L[L.length - 1] = ta.dataset.gf; ta.value = L.join('\n'); }
+    ta.selectionStart = ta.selectionEnd = ta.value.length;
+    refresh();
+  });
+  ['input', 'keyup', 'click'].forEach(ev => ta.addEventListener(ev, refresh));
+  ta.addEventListener('scroll', () => { ov.scrollTop = ta.scrollTop; });
+  ta.addEventListener('blur', () => setTimeout(() => { pop.style.display = 'none'; }, 120));
+  refresh();
+}
+function wireAllSmart() {
+  document.querySelectorAll('#list textarea[data-smart]').forEach(el => { if (!el.dataset.wired) { el.dataset.wired = '1'; wireSmart(el.id, el.dataset.smart); } });
+}
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// v1.39: หน้าแอดมินอยู่บนเว็บ (Cloudflare) แล้ว → เรียกฟังก์ชัน admin_* ใน Apps Script ผ่าน fetch (doPost action 'admin')
+//  URL ของ Apps Script อ่านจาก drug-submit.js (ที่เดียวกับหน้าพิมพ์ฉลาก) · ถ้าอ่านไม่ได้ใช้ค่าสำรองด้านล่าง
+const GAS_URL_FALLBACK = 'https://script.google.com/macros/s/AKfycbxKCFW2aoJ4hQZJjLMsqsuzyxGxUxukM0FlFYxTvi3_Ay-dwsBYpXu1G-ad5dSfPjtG/exec';
+const SITE_BASE = new URL('./', location.href).href;
+let _gasUrl = null;
+function gasUrl() {
+  if (!_gasUrl) _gasUrl = fetch('drug-submit.js', { cache: 'no-store' }).then(r => r.text())
+    .then(t => { const m = t.match(/WEB_APP_URL\s*=\s*['"](https:\/\/script\.google\.com\/[^'"]+)['"]/); return m ? m[1] : GAS_URL_FALLBACK; })
+    .catch(() => GAS_URL_FALLBACK);
+  return _gasUrl;
+}
+gasUrl();
+async function run(fn, ...a) {
+  let r;
+  try {
+    r = await fetch(await gasUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'admin', fn: fn, args: a, pw: PW }) });
+  } catch (e) { throw new Error('ติดต่อ Apps Script ไม่ได้ — ตรวจอินเทอร์เน็ต'); }
+  let j = null; try { j = await r.json(); } catch (e) {}
+  if (!j) throw new Error('Apps Script ตอบกลับผิดรูปแบบ (HTTP ' + r.status + ')');
+  if (j.error === 'unknown_action') throw new Error('Code.gs ยังเป็นรุ่นเก่า — วาง Code.gs v1.39 แล้วกด ทำให้ใช้งานได้ → เวอร์ชันใหม่');
+  if (!j.ok) throw new Error(j.message || 'ผิดพลาด');
+  return j.result;
+}
+let _toastT = null;
+function openModal(title, body, wide) {
+  closeModal();
+  const m = document.createElement('div'); m.className = 'amodal'; m.id = 'amodal';
+  m.innerHTML = '<div class="amodal-box' + (wide ? ' wide' : '') + '" role="dialog" aria-modal="true"><div class="amodal-h"><b>' + title + '</b><span class="sp"></span><button class="amodal-x" type="button" onclick="closeModal()" aria-label="ปิด">×</button></div><div id="amodal_body">' + body + '</div></div>';
+  m.addEventListener('mousedown', e => { if (e.target === m) closeModal(); });
+  document.body.appendChild(m);
+  return m;
+}
+function closeModal() { const m = document.getElementById('amodal'); if (m) m.remove(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+function toast(t) { const el = $('#toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(_toastT); _toastT = setTimeout(() => el.style.display = 'none', /^❌/.test(t) ? 6000 : 2600); }
+
+function loginView(err) {
+  $('#app').innerHTML = '<div class="login"><h3 style="margin:0 0 12px;color:#16478E">🛠 Pharmax Admin</h3>' +
+    '<label>รหัสผ่านแอดมิน</label><input id="pw" type="password">' +
+    '<button class="btn" style="width:100%;margin-top:12px" id="go">เข้าสู่ระบบ</button><div class="err">' + esc(err || '') + '</div></div>';
+  const doLogin = async () => {
+    PW = $('#pw').value;
+    try { await run('admin_login'); sessionStorage.setItem('adm_pw', PW); load(); }
+    catch (e) { loginView(e.message); }
+  };
+  $('#pw').onkeydown = e => { if (e.key === 'Enter') doLogin(); };
+  $('#go').onclick = doLogin;
+  $('#pw').focus();
+}
+
+async function load() {
+  $('#app').innerHTML = '<div class="wrap">กำลังโหลดข้อมูลจาก Google Sheet…</div>';
+  try {
+    const got = await Promise.all([run('admin_load'), loadSiteData(SITE_BASE)]);   // v1.39: โหลดพร้อมกัน
+    DATA = got[0];
+    DATA.siteUrl = SITE_BASE;   // หน้าแอดมินอยู่เว็บเดียวกับหน้าพิมพ์ฉลากแล้ว
+    if (!SITE_OK) { TYPES = DATA.types || []; MEALS = DATA.meals || []; }
+    render();
+  }
+  catch (e) { sessionStorage.removeItem('adm_pw'); loginView(e.message); }
+}
+
+const pill = s => '<span class="pill ' + (s === ST.WAIT ? 'w' : s === ST.OK ? 'ok' : s === ST.NO ? 'no' : 'dn') + '">' + esc(s) + '</span>';
+
+function render() {
+  const cu = DATA.users.filter(x => x.status === ST.WAIT).length;
+  const cd = DATA.drugs.filter(x => x.status === ST.WAIT).length;
+  const ce = DATA.edits.filter(x => x.status === ST.WAIT).length;
+  const cf = (DATA.feedback || []).filter(x => x.status === ST.WAIT).length;
+  const tab = (k, t, n) => '<button class="tab ' + (TAB === k ? 'on' : '') + '" onclick="switchTab(\'' + k + '\')">' + t + (n ? '<span class="badge">' + n + '</span>' : '') + '</button>';
+  const IC = {
+    drugs: '<rect x="3" y="8" width="18" height="8" rx="4"></rect><path d="M12 8v8"></path>',
+    users: '<circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path>',
+    edits: '<path d="M4 20h4L19 9l-4-4L4 16v4z"></path>',
+    feedback: '<path d="M4 5h16v11H8l-4 4z"></path>',
+    tr: '<circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"></path>',
+    data: '<rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18M9 4v16"></path>',
+    ver: '<path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8"></path>',
+    gloss: '<path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"></path><path d="M8 9h6M8 13h4"></path>',
+    stats: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path>'
+  };
+  const TITLES = { drugs: 'ยาใหม่ที่รอตรวจ', users: 'ผู้ใช้ / คำขอสมัคร', edits: 'คำขอแก้ไขข้อมูลยา', feedback: 'ฟีดแบ็ก', tr: 'ตรวจคำแปล', data: 'ข้อมูลทั้งหมด', ver: 'เวอร์ชันไฟล์หน้าเว็บ', gloss: 'Glossary รอตรวจ (คำแปลเครื่องที่ระบบเพิ่มให้)', stats: 'สถิติการพิมพ์ฉลาก' };
+  const nav = (k, t, n) => '<button type="button" class="nav ' + (TAB === k ? 'on' : '') + '" onclick="switchTab(\'' + k + '\')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' + IC[k] + '</svg>' + t + (n ? '<span class="badge">' + n + '</span>' : '') + '</button>';
+  const isQueue = !(TAB === 'data' || TAB === 'tr' || TAB === 'ver' || TAB === 'gloss' || TAB === 'stats');
+  const stat = (k, t, n) => '<button type="button" class="stat' + (n ? '' : ' zero') + '" onclick="switchTab(\'' + k + '\')"><small>' + t + '</small><b>' + n + '</b></button>';
+  $('#app').innerHTML = '<div class="shell"><nav class="side" aria-label="เมนูแอดมิน">' +
+      '<div class="logo"><i>P</i><div><b>Pharmax Admin</b><small>' + ADMIN_VERSION + '</small></div></div>' +
+      '<div class="sec">รอตรวจ</div>' + nav('drugs', 'ยาใหม่', cd) + nav('users', 'ผู้ใช้', cu) + nav('edits', 'คำขอแก้ไข', ce) + nav('feedback', 'ฟีดแบ็ก', cf) + nav('gloss', 'Glossary รอตรวจ', DATA.glossPending || 0) +
+      '<div class="sec">ข้อมูล</div>' + nav('stats', 'สถิติการพิมพ์', 0) + nav('tr', 'ตรวจคำแปล', 0) + nav('data', 'ข้อมูลทั้งหมด', 0) + nav('ver', 'เวอร์ชันไฟล์', DATA.archived === false ? '!' : 0) +
+      '<div class="grow"></div><div class="foot"><button type="button" onclick="refreshAll()">รีเฟรช</button><button type="button" onclick="sessionStorage.removeItem(\'adm_pw\');PW=\'\';loginView()">ออกจากระบบ</button></div>' +
+    '</nav><main class="main"><div class="wrap' + (TAB === 'data' || TAB === 'tr' || TAB === 'stats' ? ' wide' : '') + '">' +
+    '<div class="topline"><h1>' + TITLES[TAB] + '</h1><div class="sp"></div>' +
+      (isQueue || TAB === 'gloss' ? '<div class="filter">' + [['wait', 'รอดำเนินการ'], ['all', 'ทั้งหมด']].map(f => '<button class="' + (FILTER === f[0] ? 'on' : '') + '" onclick="FILTER=\'' + f[0] + '\';render()">' + f[1] + '</button>').join('') + '</div>' : '') +
+    '</div>' +
+    (isQueue ? '<div class="stats">' + stat('drugs', 'ยาใหม่รอตรวจ', cd) + stat('users', 'ผู้ใช้รออนุมัติ', cu) + stat('edits', 'คำขอแก้ไข', ce) + stat('feedback', 'ฟีดแบ็กใหม่', cf) + '</div>' : '') +
+    (SITE_OK ? '' : '<div class="note">⚠ โหลดรายการชนิดยา/สรรพคุณสำเร็จรูปจาก data.js ไม่ได้ (ระหว่างนี้ใช้ค่าที่มีใน drugTH แทน)<br>' +
+      (SITE_WHY === 'notset' ? 'สาเหตุ: ยังไม่ได้ตั้ง <b>SITE_URL</b> ใน Apps Script > Project Settings > Script properties'
+        : SITE_WHY === 'old' ? 'สาเหตุ: โหลด <b>' + esc(SITE_TRIED) + '</b> ได้ แต่เป็น data.js รุ่นเก่า — อัปโหลด data.js v1.30 ขึ้นเว็บ (GitHub Pages อาจใช้เวลา 1–2 นาทีกว่าจะอัปเดต)'
+        : 'สาเหตุ: เปิด <b>' + esc(SITE_TRIED) + '</b> ไม่ได้ — ตรวจว่า SITE_URL เป็น URL ที่เปิดหน้าเว็บได้จริง (เช่น https://ชื่อ.github.io/pharmaxlabel/) ไม่ใช่ลิงก์ github.com หรือ raw.githubusercontent.com') + '</div>') +
+    '<div id="list"></div></div></main></div>';
+  if (TAB === 'data') return renderData();
+  if (TAB === 'tr') return renderTr();
+  if (TAB === 'ver') return renderVer();
+  if (TAB === 'gloss') return renderGloss();
+  if (TAB === 'stats') return renderStats();
+  const show = x => FILTER === 'all' || x.status === ST.WAIT;
+  const items = (DATA[TAB] || []).filter(show).reverse();
+  const nWait = TAB === 'drugs' ? items.filter(x => x.status === ST.WAIT).length : 0;
+  $('#list').innerHTML = (nWait ? bulkBar(nWait) : '') +
+    (items.length ? items.map({ users: userCard, drugs: drugCard, edits: editCard, feedback: feedbackCard }[TAB]).join('') : '<div class="card muted">ไม่มีรายการ</div>');
+  wireAllSmart();
+}
+
+// นักศึกษาฝึกงาน: ไม่มีเลขใบอนุญาต · ใช้ได้เฉพาะช่วงวันฝึก (แก้/ขยายวันได้ที่การ์ดนี้)
+const INTERN = 'นักศึกษาฝึกงาน';
+const thD = ymd => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd || ''); if (!m) return ymd || '-';
+  return (+m[3]) + ' ' + ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][+m[2] - 1] + ' ' + (+m[1] + 543); };
+function internCard(u) {
+  const inWin = !u.windowNote;
+  const days = (u.start && u.end) ? Math.round((new Date(u.end) - new Date(u.start)) / 86400000) + 1 : 0;
+  return '<div class="card"><div class="row"><b>📱 ' + esc(u.empId) + '</b>' + pill(u.status) +
+    '<span style="background:#e8eefc;color:#16478E;border-radius:999px;padding:2px 10px;font-size:.85em;font-weight:600">🎓 นักศึกษาฝึกงาน</span><span class="muted">สมัคร ' + esc(u.created) + '</span></div>' +
+    '<div style="margin:6px 0"><span class="muted">สาขาที่ฝึกงาน</span> <b>' + esc(u.branchCode || '-') + '</b> ' + esc(u.branchName || '') + '</div>' +
+    '<div class="g3"><div><span class="muted">มหาวิทยาลัย</span><br><b>' + esc(u.university || '-') + '</b></div>' +
+    '<div><span class="muted">ปีการศึกษา / ผลัด</span><br><b>' + esc(u.year || '-') + ' / ผลัดที่ ' + esc(u.round || '-') + '</b></div>' +
+    '<div><span class="muted">ช่วงฝึกงาน</span><br><b>' + esc(thD(u.start)) + ' – ' + esc(thD(u.end)) + '</b>' + (days ? ' <span class="muted">(' + days + ' วัน)</span>' : '') + '</div></div>' +
+    '<div style="margin:8px 0;padding:8px;border-left:3px solid ' + (inWin ? '#04B085' : '#ff9800') + ';background:' + (inWin ? '#d9f3e6' : '#fff3e0') + '">' +
+      (inWin ? '✔ อยู่ในช่วงฝึกงาน — ใช้งานได้ (ถ้าอนุมัติแล้ว)' : '⏳ ' + esc(u.windowNote)) + '</div>' +
+    (u.resetAt ? '<div style="margin:8px 0;padding:10px;border:2px solid #ff9800;border-radius:8px;background:#fff8e1"><b>🔑 ขอรีเซ็ตรหัสผ่าน</b> <span class="muted">เมื่อ ' + esc(u.resetAt) + '</span>' +
+      '<div class="muted" style="margin:4px 0 8px">ผู้ขอกรอกเบอร์มือถือ + ชื่อมหาวิทยาลัยตรงกับที่สมัครไว้แล้ว — กรุณาตรวจสอบว่าเป็นเจ้าของบัญชีจริงก่อนอนุมัติ</div>' +
+      '<div class="row"><button class="btn g" onclick="approveReset(' + u.row + ')">✅ อนุมัติรหัสใหม่</button><button class="btn r" onclick="rejectReset(' + u.row + ')">⛔ ปฏิเสธ</button></div></div>' : '') +
+    '<label>ชื่อ-สกุล (ขึ้นต้นด้วย นศภ.) — ตรวจกับบัตรนักศึกษา/หนังสือส่งตัวก่อนอนุมัติ</label><input id="un' + u.row + '" value="' + esc(u.name) + '">' +
+    '<div class="row" style="margin-top:8px;align-items:end;gap:8px">' +
+      '<div><label>เริ่มฝึก</label><input type="date" id="is' + u.row + '" value="' + esc(u.start) + '"></div>' +
+      '<div><label>ฝึกจบ</label><input type="date" id="ie' + u.row + '" value="' + esc(u.end) + '"></div>' +
+      '<button class="btn s" onclick="setIntern(' + u.row + ')">📅 บันทึกช่วงฝึก</button></div>' +
+    '<div class="row" style="margin-top:10px">' +
+    (u.status !== ST.OK ? '<button class="btn g" onclick="setUser(' + u.row + ',\'' + ST.OK + '\')">✅ อนุมัติ</button>' : '<button class="btn s" onclick="setUser(' + u.row + ',\'' + ST.OK + '\')">💾 บันทึกชื่อ</button>') +
+    (u.status !== ST.NO ? '<button class="btn r" onclick="setUser(' + u.row + ',\'' + ST.NO + '\')">⛔ ไม่อนุมัติ / ระงับ</button>' : '') +
+    '</div></div>';
+}
+function setIntern(row) {
+  const s = $('#is' + row).value, e = $('#ie' + row).value;
+  if (!s || !e) return toast('กรุณาเลือกวันที่ให้ครบ');
+  if (e < s) return toast('วันที่ฝึกจบต้องไม่ก่อนวันที่เริ่มฝึก');
+  act('admin_setIntern', [row, s, e], 'บันทึกช่วงฝึกงานแล้ว');
+}
+
+function userCard(u) {
+  if (u.kind === INTERN) return internCard(u);
+  const verifyOk = u.check && u.check.indexOf('✔') === 0;
+  return '<div class="card"><div class="row"><b>' + esc(u.empId) + '</b>' + pill(u.status) + '<span class="muted">สมัคร ' + esc(u.created) + '</span></div>' +
+    '<div class="g3"><div><span class="muted">ใบอนุญาต</span><br><b>' + esc(u.license || '-') + '</b></div>' +
+    '<div><span class="muted">สถานะ</span><br><b>' + esc(u.licStatus || '-') + '</b></div>' +
+    '<div><span class="muted">หมดอายุ</span><br><b>' + esc(u.licExpiry || '-') + '</b></div></div>' +
+    '<div class="muted">สภาเภสัชกรรม: <b>' + esc(u.councilName || '-') + '</b></div>' +
+    (u.qualification ? '<div class="muted" style="font-size:0.9em">คุณวุฒิ: ' + esc(u.qualification) + '</div>' : '') +
+    (u.check ? '<div style="margin:8px 0;padding:8px;border-left:3px solid ' + (verifyOk ? '#04B085' : '#ff9800') + ';background:' + (verifyOk ? '#d9f3e6' : '#fff3e0') + '">' + esc(u.check) + '</div>' : '') +
+    (u.resetAt ? '<div style="margin:8px 0;padding:10px;border:2px solid #ff9800;border-radius:8px;background:#fff8e1"><b>🔑 ขอรีเซ็ตรหัสผ่าน</b> <span class="muted">เมื่อ ' + esc(u.resetAt) + '</span>' +
+      '<div class="muted" style="margin:4px 0 8px">ผู้ขอกรอกรหัสพนักงาน + เลขที่ใบอนุญาตตรงกับที่สมัครไว้แล้ว — กรุณาตรวจสอบว่าเป็นเจ้าของบัญชีจริง (เช่น ถามตัวต่อตัว) ก่อนอนุมัติ ถ้าไม่ใช่ให้ปฏิเสธ รหัสเดิมจะไม่ถูกเปลี่ยน</div>' +
+      '<div class="row"><button class="btn g" onclick="approveReset(' + u.row + ')">✅ อนุมัติรหัสใหม่</button><button class="btn r" onclick="rejectReset(' + u.row + ')">⛔ ปฏิเสธ</button></div></div>' : '') +
+    '<label>ระบบดึงข้อมูลมาจากสภาเภสัชกรรม กรุณาตรวจสอบ ชื่อ-สกุล ก่อนอนุมัติ</label><input id="un' + u.row + '" value="' + esc(u.name) + '">' +
+    '<div class="row" style="margin-top:10px">' +
+    (u.status !== ST.OK ? '<button class="btn g" onclick="setUser(' + u.row + ',\'' + ST.OK + '\')">✅ อนุมัติ</button>' : '<button class="btn s" onclick="setUser(' + u.row + ',\'' + ST.OK + '\')">💾 บันทึกชื่อ</button>') +
+    (u.status !== ST.NO ? '<button class="btn r" onclick="setUser(' + u.row + ',\'' + ST.NO + '\')">⛔ ไม่อนุมัติ / ระงับ</button>' : '') +
+    (u.status === ST.OK && !verifyOk ? '<button class="btn" style="background:#ff9800" onclick="setUser(' + u.row + ',\'' + ST.OK + '\')">🔄 ลองตรวจสอบอีกครั้ง</button>' : '') +
+    '<button class="btn" style="background:#2196F3;margin-left:6px" onclick="fillUserData(' + u.row + ')">📋 ดึงข้อมูลทั้งหมด</button>' +
+    (u.status === ST.OK && u.license && u.name && u.licStatus && u.licExpiry ? '<button class="btn g" style="margin-left:6px" onclick="verifyUserData(' + u.row + ')">✔️ ตรวจสอบข้อมูลให้เป็นปัจจุบัน</button>' : '') +
+    '</div></div>';
+}
+
+function sel(id, label, val, list, dis) {
+  const L = list.slice(); if (val && L.indexOf(val) < 0) L.unshift(val);
+  return '<div><label>' + label + '</label><select id="' + id + '" ' + dis + '><option value="">-- ไม่ระบุ --</option>' +
+    L.map(o => '<option value="' + esc(o) + '"' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select></div>';
+}
+
+function drugCard(d) {
+  const w = d.status === ST.WAIT, dis = w ? '' : 'disabled';
+  const f = (id, label, val, extra) => '<div><label>' + label + '</label><input id="d' + id + d.row + '" value="' + esc(val) + '" ' + dis + ' ' + (extra || '') + '></div>';
+  return '<div class="card" id="dcard' + d.row + '"><div class="row">' +
+    (w ? '<input type="checkbox" class="dsel" value="' + d.row + '" onchange="updBulk()" title="เลือกเพื่ออนุมัติพร้อมกัน" style="width:20px;height:20px;margin:0;flex:none">' : '') +
+    '<b>' + esc(d.tradeName) + '</b>' + pill(d.status) + '<span class="muted">โดย ' + esc(d.by || '-') + ' (' + esc(d.empId) + ') · ' + esc(d.date) + '</span></div>' +
+    '<div class="muted">บาร์โค้ดแผง (ขายแยกชิ้น) ' + esc(d.barcodeNo) + (d.barcodePack ? ' · บาร์โค้ดกล่อง ' + esc(d.barcodePack) : '') + ' · Item ' + esc(d.itemNo) + '</div>' +
+    '<div class="g2">' + f('t', 'ชื่อการค้า', d.tradeName) + f('g', 'ชื่อยาสามัญ', d.genericName, 'style="text-transform:uppercase"') + sel('dy' + d.row, 'ชนิดยา', d.drugType, TYPES, dis) + sel('dm' + d.row, 'เวลาที่ใช้ยา', d.meal, MEALS, dis) + sel('dc' + d.row, 'กลุ่มยา', d.category, catList(), dis) + '</div>' +
+    '<div class="g4">' + f('1', 'เช้า', d.morning) + f('2', 'กลางวัน', d.noon) + f('3', 'เย็น', d.evening) + f('4', 'ก่อนนอน', d.bed) + '</div>' +
+    '<label>สรรพคุณ <span class="hintk">พิมพ์แล้วมีตัวเลือก · กด Tab รับข้อความเงา</span></label>' + smartField('di' + d.row, d.indication, dis) +
+    '<label>คำแนะนำเพิ่มเติม <span class="hintk">พิมพ์แล้วมีตัวเลือก · กด Tab รับข้อความเงา</span></label>' + smartField('da' + d.row, d.advice, dis) +
+    (d.note ? '<div class="muted" style="margin-top:6px">หมายเหตุ: ' + esc(d.note) + '</div>' : '') +
+    '<div class="row" style="margin-top:10px">' + '<button class="btn s" onclick="previewDrug(' + d.row + ')" title="ดูฉลากจริงจากหน้าเว็บ (ใช้คำแปลจริง) ก่อนอนุมัติ">👁 ตัวอย่างฉลาก</button>' +
+    (w ? '<button class="btn g" onclick="approveDrug(' + d.row + ')">✅ อนุมัติ → ย้ายเข้า drugTH</button><button class="btn r" onclick="rejectDrug(' + d.row + ')">⛔ ไม่อนุมัติ</button>' : '') + '</div></div>';
+}
+// v1.38: พรีวิวฉลากจริง — เปิดหน้าเว็บพิมพ์ฉลาก (SITE_URL) ในโหมดพรีวิว ใช้ข้อมูลในการ์ด (รวมที่แอดมินแก้แล้ว)
+const PV_LANGS = [['en', 'อังกฤษ'], ['zh-CN', 'จีนย่อ'], ['zh-TW', 'จีนเต็ม'], ['ja', 'ญี่ปุ่น'], ['ko', 'เกาหลี'], ['my', 'พม่า'], ['km', 'เขมร'], ['vi', 'เวียดนาม'], ['ru', 'รัสเซีย'], ['ar', 'อาหรับ'], ['hi', 'ฮินดี'], ['fr', 'ฝรั่งเศส'], ['de', 'เยอรมัน'], ['es', 'สเปน'], ['it', 'อิตาลี']];
+let PV_LANG = 'en';
+function pvUrl(drug, lang) {
+  let base = String((DATA && DATA.siteUrl) || '').trim(); if (!base) return '';
+  base = base.replace(/[#?].*$/, ''); if (!/\.html?$/i.test(base)) base = base.replace(/\/?$/, '/') + 'index.html';
+  return base + '#pmxpreview=' + encodeURIComponent(JSON.stringify({ drug: drug, lang: lang }));
+}
+function previewDrug(row) {
+  const e = drugEdited(row);
+  if (!(DATA && DATA.siteUrl)) return toast('❌ ยังไม่ได้ตั้ง SITE_URL ใน Script properties — พรีวิวต้องเปิดหน้าเว็บจริง');
+  const drug = { name: e.tradeName + (e.genericName ? ' (' + e.genericName + ')' : ''), drugType: e.drugType, meal: e.meal, morning: e.morning, noon: e.noon, evening: e.evening, bed: e.bed,
+    indication: e.indication, advice: e.advice, category: e.category };
+  window._pvDrug = drug;
+  openModal('👁 ตัวอย่างฉลาก — ' + esc(drug.name),
+    '<div class="row" style="margin-bottom:10px"><span class="muted">ภาษาที่ 2</span><select id="pv_lang" style="width:auto" onchange="PV_LANG=this.value;document.getElementById(\'pv_f2\').src=pvUrl(window._pvDrug,PV_LANG)">' +
+      PV_LANGS.map(l => '<option value="' + l[0] + '"' + (l[0] === PV_LANG ? ' selected' : '') + '>' + l[1] + ' (' + l[0] + ')</option>').join('') + '</select>' +
+      '<span class="muted" style="flex:1">ฉลากจริงจากหน้าเว็บ · กล่องเตือนใต้ฉลาก = ประโยคที่ยังไม่อยู่ใน glossary (แปลอัตโนมัติ) — อนุมัติแล้วระบบเพิ่มเข้า glossary ให้ตรวจ</span></div>' +
+    '<div class="pv-grid"><iframe id="pv_f1" title="ฉลากภาษาไทย" src="' + esc(pvUrl(drug, 'th')) + '"></iframe><iframe id="pv_f2" title="ฉลากภาษาที่ 2" src="' + esc(pvUrl(drug, PV_LANG)) + '"></iframe></div>' +
+    '<div class="row" style="margin-top:12px;justify-content:flex-end">' + (DATA.drugs.some(x => x.row === row && x.status === ST.WAIT) ? '<button class="btn g" onclick="closeModal();approveDrug(' + row + ')">✅ อนุมัติ</button>' : '') + '<button class="btn s" onclick="closeModal()">ปิด</button></div>', true);
+}
+
+function feedbackCard(f) {
+  return '<div class="card"><div class="row"><b>' + esc(f.category || 'ฟีดแบ็ก') + '</b>' + pill(f.status) + '</div>' +
+    '<div class="muted">โดย ' + esc(f.by || '-') + ' (' + esc(f.empId) + ') · ' + esc(f.date) + (f.ref ? ' · เกี่ยวกับ: ' + esc(f.ref) : '') + '</div>' +
+    '<div style="margin:8px 0;white-space:pre-wrap">' + esc(f.message) + '</div>' +
+    (f.reply ? '<div style="margin:8px 0;padding:10px;border-left:3px solid #16478E;background:#eef4ff;border-radius:6px"><b>💬 คำตอบของแอดมิน</b> <span class="muted">· ' + esc(f.replyAt) + '</span>' +
+      '<div style="white-space:pre-wrap;margin-top:4px">' + esc(f.reply) + '</div></div>' : '') +
+    '<details' + (f.reply ? '' : ' open') + ' style="margin-top:6px"><summary style="cursor:pointer;color:#16478E;font-weight:600">' + (f.reply ? '✏️ แก้คำตอบ / ตอบเพิ่ม' : '💬 ตอบกลับผู้ส่ง') + '</summary>' +
+      '<textarea id="fr' + f.row + '" rows="3" style="width:100%;margin-top:6px" placeholder="พิมพ์คำตอบ — ผู้ส่งจะเห็นแจ้งเตือนที่หน้าเว็บพิมพ์ฉลาก และใน รายการของฉัน">' + esc(f.reply || '') + '</textarea>' +
+      '<div class="row" style="margin-top:6px"><button class="btn g" onclick="replyFeedback(' + f.row + ')">📨 ส่งคำตอบ</button>' +
+      (f.status === ST.WAIT ? '<button class="btn s" onclick="doneFeedback(' + f.row + ')">✔ ดำเนินการแล้ว (ไม่ตอบ)</button>' : '') + '</div></details></div>';
+}
+function replyFeedback(row) {
+  const el = $('#fr' + row), t = el ? el.value.trim() : '';
+  if (!t) return toast('กรุณาพิมพ์คำตอบ');
+  act('admin_replyFeedback', [row, t], 'ส่งคำตอบแล้ว — ผู้ส่งจะเห็นแจ้งเตือนเมื่อเปิดหน้าเว็บ');
+}
+
+function editCtrl(id, key, val) {
+  if (key === 'drugtype' || key === 'meal') {
+    const L = (key === 'drugtype' ? TYPES : MEALS).slice(); if (val && L.indexOf(val) < 0) L.unshift(val);
+    return '<select id="' + id + '"><option value="">-- ไม่ระบุ --</option>' + L.map(o => '<option value="' + esc(o) + '"' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select>';
+  }
+  if (key === 'indication' || key === 'advice') return smartField(id, val, '', key === 'indication' ? 'ind' : 'adv');
+  return '<input id="' + id + '" value="' + esc(val) + '">';
+}
+function editCard(e) {
+  const w = e.status === ST.WAIT, ch = e.changes || [];
+  let h = '<div class="card"><div class="row"><b>' + esc(e.drugName || ('บาร์โค้ด ' + e.barcodeNo)) + '</b>' + pill(e.status) + '</div>' +
+    '<div class="muted">บาร์โค้ด ' + esc(e.barcodeNo) + ' · โดย ' + esc(e.by || '-') + ' · ' + esc(e.date) + '</div>';
+  if (ch.length) {
+    if (w && !e.found) h += '<div class="note">⚠ ไม่พบยาบาร์โค้ดนี้ใน drugTH แล้ว (อาจถูกลบ/เปลี่ยนบาร์โค้ด) — อนุมัติไม่ได้</div>';
+    h += '<table class="ed"><tr><th>ช่อง</th><th>ค่าปัจจุบัน</th><th>ขอแก้เป็น' + (w ? ' <span class="hintk">(แอดมินแก้ได้ก่อนอนุมัติ)</span>' : '') + '</th></tr>' +
+      ch.map((c, i) => {
+        const cur = w && c.current != null ? c.current : c.from;
+        const moved = w && c.current != null && String(c.current) !== String(c.from);
+        return '<tr><td><b>' + esc(c.label) + '</b></td><td class="old">' + esc(cur) +
+          (moved ? '<div class="hintk">⚠ ถูกแก้ไปแล้วหลังผู้ใช้ส่งคำขอ (ตอนส่งเป็น: ' + esc(c.from) + ')</div>' : '') + '</td><td>' +
+          (w ? editCtrl('ec' + e.row + '_' + i, c.key, c.to) : '<span class="new">' + esc(c.to) + '</span>') + '</td></tr>';
+      }).join('') + '</table>';
+  }
+  if (e.comment) h += '<div style="margin:8px 0;white-space:pre-wrap">💬 ' + esc(e.comment) + '</div>';
+  if (e.note) h += '<div class="muted">หมายเหตุแอดมิน: ' + esc(e.note) + '</div>';
+  if (w) h += '<div class="row" style="margin-top:10px">' +
+    (ch.length ? '<button class="btn g" onclick="approveEdit(' + e.row + ')"' + (e.found ? '' : ' disabled') + '>✅ อนุมัติ → แก้ drugTH ทันที</button>'
+      : '<button class="btn g" onclick="doneEdit(' + e.row + ')">✔ แก้เองแล้ว / ดำเนินการแล้ว</button>') +
+    '<button class="btn r" onclick="rejectEdit(' + e.row + ')">⛔ ไม่อนุมัติ</button></div>';
+  return h + '</div>';
+}
+
+async function act(fn, args, okMsg) {
+  try { await run(fn, ...args); toast(okMsg); await load(); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+const approveReset = row => { if (confirm('อนุมัติรหัสผ่านใหม่ให้ผู้ใช้คนนี้? (ผู้ใช้จะเข้าระบบด้วยรหัสใหม่ได้ทันที)')) act('admin_approveReset', [row], '✅ อนุมัติรหัสใหม่แล้ว'); };
+const rejectReset = row => { if (confirm('ปฏิเสธคำขอรีเซ็ตรหัสผ่าน? (รหัสเดิมของผู้ใช้ไม่ถูกเปลี่ยน)')) act('admin_rejectReset', [row], 'ปฏิเสธคำขอแล้ว'); };
+const setUser = (row, st) => act('admin_setUser', [row, st, $('#un' + row).value], 'บันทึกแล้ว');
+const rejectDrug = row => { const n = prompt('เหตุผล (ไม่บังคับ):') ; if (n === null) return; act('admin_rejectDrug', [row, n], 'ไม่อนุมัติแล้ว'); };
+const doneEdit = row => act('admin_doneEdit', [row], 'บันทึกแล้ว');
+const rejectEdit = row => { const n = prompt('เหตุผลที่ไม่อนุมัติ (ผู้ใช้จะเห็นใน "รายการของฉัน"):'); if (n === null) return; act('admin_rejectEdit', [row, n], 'ไม่อนุมัติแล้ว'); };
+function approveEdit(row) {
+  const e = DATA.edits.find(x => x.row === row); if (!e || !e.changes) return;
+  const to = {};
+  e.changes.forEach((c, i) => { const el = $('#ec' + row + '_' + i); if (el) to[c.key] = el.value.trim(); });
+  const list = e.changes.map(c => '• ' + c.label + ': ' + String(to[c.key]).slice(0, 60)).join('\n');
+  if (!confirm('แก้ข้อมูล "' + (e.drugName || e.barcodeNo) + '" ใน drugTH และทุกแท็บภาษา?\n\n' + list + '\n\n(สรรพคุณ/คำแนะนำจะถูกแปลใหม่และต้องตรวจคำแปลอีกครั้ง)')) return;
+  run('admin_approveEdit', row, to, '').then(async r => {
+    toast('✅ แก้ drugTH แล้ว' + (r.updated && r.updated.length ? ' + ' + r.updated.length + ' แท็บภาษา' : '') +
+      (r.missing && r.missing.length ? ' · ⚠ ไม่พบยาในแท็บ: ' + r.missing.join(', ') : '') + (r.untranslated && r.untranslated.length ? ' · แปลไม่สำเร็จ: ' + r.untranslated.join(', ') : ''));
+    await load();
+  }).catch(err => toast('❌ ' + err.message));
+}
+const doneFeedback = row => act('admin_doneFeedback', [row], 'บันทึกแล้ว');
+async function fillUserData(row) {
+  const u = DATA.users.find(x => x.row === row);
+  if (!u) return toast('❌ ไม่พบข้อมูลผู้ใช้นี้');
+  const license = u.license || '';
+  const name = ($('#un' + row) && $('#un' + row).value) ? $('#un' + row).value.trim() : u.name || '';
+  try {
+    const r = await run('admin_fillUserInfo', row, license, name);
+    if (r.ok) {
+      toast('✅ ดึงข้อมูลสำเร็จ: ' + (r.data.name ? r.data.name + ' ' : '') + (r.data.status ? r.data.status : ''));
+      await load();
+    } else {
+      toast('❌ ' + r.message);
+    }
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
+async function verifyUserData(row) {
+  try {
+    const r = await run('admin_verifyUserInfo', row);
+    if (r.ok && r.verified) {
+      toast('✅ ' + r.message);
+    } else if (r.ok && !r.verified) {
+      toast('⚠️ ' + r.message);
+    } else {
+      toast('❌ ' + r.message);
+    }
+    await load();
+  } catch (e) { toast('❌ ' + e.message); }
+}
+// ค่าที่แอดมินแก้ไว้ในการ์ด (ใช้ทั้งอนุมัติทีละตัวและอนุมัติพร้อมกัน)
+function drugEdited(row) {
+  const v = id => { const el = $('#d' + id + row); return el ? el.value.trim() : ''; };
+  return { tradeName: v('t'), genericName: v('g').toUpperCase(), drugType: v('y'), meal: v('m'), category: v('c'), morning: v('1'), noon: v('2'), evening: v('3'), bed: v('4'), indication: v('i'), advice: v('a') };
+}
+function approveDrug(row) {
+  const edited = drugEdited(row);
+  if (!edited.tradeName || !edited.genericName) return toast('ชื่อการค้า/ชื่อสามัญห้ามว่าง');
+  if (!confirm('อนุมัติ "' + edited.tradeName + '" และเพิ่มเข้า drugTH + ทุกแท็บภาษา?\n(ระบบจะแปลสรรพคุณ/คำแนะนำให้ อาจใช้เวลาสักครู่)')) return;
+  run('admin_approveDrug', row, edited).then(async r => {
+    const un = (r && r.untranslated) || [];
+    toast(un.length ? '✅ ย้ายเข้า drugTH แล้ว · ⚠ แปลไม่สำเร็จ: ' + un.join(', ') + ' (ใช้ข้อความไทยไปก่อน)' : '✅ ย้ายเข้า drugTH และแปลทุกภาษาแล้ว');
+    await load();
+  }).catch(e => toast('❌ ' + e.message));
+}
+
+// ===== v1.36: กลุ่มยา = รายการมาตรฐานใน data.js + กลุ่มอื่นที่มีในชีท (ไม่รวมกลุ่มที่เลิกใช้) =====
+function catList() {
+  const sheet = (typeof DATA !== 'undefined' && DATA && DATA.categories) || [];
+  try { return categoryOptions(sheet); } catch (e) { return sheet; }
+}
+// ===== v1.37: วิธีใช้ยาตามโรค (แท็บ diseaseRegimen ในไฟล์ยาหลัก) =====
+const REGIMEN_TAB = 'diseaseRegimen';
+async function regimenOpen() {
+  if (!guard()) return renderData();
+  const ok = await loadSiteData(DATA && DATA.siteUrl);
+  const meals = ok && typeof MEAL_OPTIONS !== 'undefined' ? MEAL_OPTIONS.map(o => o.th).filter(Boolean) : [];
+  const exists = (SH.sheets || []).some(x => x.name === REGIMEN_TAB);
+  const seed = confirm((exists ? 'ตรวจหัวตาราง + dropdown ของแท็บ ' : 'สร้างแท็บ ') + REGIMEN_TAB + ' ในไฟล์ยาหลัก\n\n' +
+    'ใส่แถวตัวอย่างด้วยไหม? (Azithromycin ทางเดินหายใจ/หนองในเทียม · Aciclovir 400 มก. เริมครั้งแรก/กลับเป็นซ้ำ/งูสวัด)\n' +
+    'แถวตัวอย่างเป็นสถานะ "รอตรวจ" — ยังไม่แสดงในหน้าพิมพ์ฉลากจนกว่าจะตรวจแล้วเปลี่ยนเป็น "ใช้งาน"\n\n' +
+    'ตกลง = ใส่ตัวอย่าง (ข้ามแถวที่มีอยู่แล้ว) · ยกเลิก = ไม่ใส่');
+  if (!meals.length && !confirm('โหลดรายการเวลาใช้ยาจาก data.js ไม่ได้ — คอลัมน์ meal จะยังไม่เป็น dropdown\nทำต่อไหม?')) return;
+  toast('กำลังเตรียมแท็บ ' + REGIMEN_TAB + '…');
+  try {
+    const r = await run('admin_regimenSetup', { meals: meals, seed: seed });
+    toast((r.created ? '✅ สร้างแท็บแล้ว' : '✅ ตรวจแท็บแล้ว') + (r.added ? ' · เพิ่มตัวอย่าง ' + r.added + ' แถว' : '') + ' · ทั้งหมด ' + r.rows + ' แถว');
+    SH.sheets = null; SH.name = REGIMEN_TAB; SH.q = ''; SH.adding = false;
+    await loadSheets();
+  } catch (e) { toast('❌ ' + e.message); }
+}
+// ===== v1.36: แยกกลุ่มยาโรคติดเชื้อ → แบคทีเรีย / รา / ไวรัส =====
+let RC = null;
+async function recatOpen() {
+  const ok = await loadSiteData(DATA && DATA.siteUrl);
+  if (!ok || typeof CATEGORY_RULES === 'undefined') return alert('โหลดกฎจาก data.js (v1.36 ขึ้นไป) ไม่ได้ — อัปโหลด data.js ใหม่ขึ้นเว็บก่อน แล้วรีเฟรชหน้านี้');
+  const cfg = { rules: CATEGORY_RULES, retired: RETIRED_CATEGORIES, cats: catList() };
+  toast('กำลังตรวจกลุ่มยาใน drugTH…');
+  try { RC = { cfg: cfg, items: (await run('admin_recatPreview', cfg)).items }; } catch (e) { return toast('❌ ' + e.message); }
+  renderRC();
+}
+function renderRC() {
+  const L = $('#list'); if (!L || !RC) return;
+  const cats = RC.cfg.cats;
+  const row = (x, i) => '<tr><td><input type="checkbox" class="rc_item" data-i="' + i + '"' + (x.retired && x.suggest ? ' checked' : '') + ' style="width:18px;height:18px"></td>' +
+    '<td><b>' + esc(x.drug) + '</b><div class="muted">แถว ' + x.row + (x.type ? ' · ' + esc(x.type) : '') + (x.hits.length > 1 ? ' · ⚠ มีตัวยาหลายกลุ่ม' : '') + '</div></td>' +
+    '<td class="muted">' + esc(x.old || '(ว่าง)') + '</td>' +
+    '<td><select id="rc_to' + i + '" onchange="this.closest(\'tr\').querySelector(\'.rc_item\').checked=!!this.value"><option value="">-- เลือก --</option>' +
+    cats.map(c => '<option' + (c === x.suggest ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select></td></tr>';
+  const tbl = (xs, title, note, on) => !xs.length ? '' : '<div class="card"><div class="row"><b>' + title + ' (' + xs.length + ')</b>' +
+    '<label style="margin:0;font-size:.8rem"><input type="checkbox" style="width:auto"' + (on ? ' checked' : '') + ' onchange="this.closest(\'.card\').querySelectorAll(\'.rc_item\').forEach(c=>c.checked=this.checked)"> เลือกทั้งหมด</label></div>' +
+    (note ? '<div class="muted" style="margin:4px 0 8px">' + note + '</div>' : '') +
+    '<table class="ed"><tr><th></th><th>ยา</th><th>กลุ่มเดิม</th><th>ย้ายไปกลุ่ม</th></tr>' + xs.map(x => row(x, RC.items.indexOf(x))).join('') + '</table></div>';
+  const A = RC.items.filter(x => x.retired), B = RC.items.filter(x => !x.retired);
+  L.innerHTML = '<div class="dt-bar"><button class="btn s sm" onclick="RC=null;renderData()">‹ กลับ</button><b>🏷 แยกกลุ่มโรคติดเชื้อ → แบคทีเรีย / รา / ไวรัส</b></div>' +
+    (RC.items.length ? '' : '<div class="card">✅ ไม่มียาที่ต้องย้ายกลุ่มแล้ว</div>') +
+    tbl(A, '💊 ยาในกลุ่มเดิม "' + esc(RETIRED_CATEGORIES.join(', ')) + '"', 'ระบบเลือกกลุ่มให้จากตัวยาในชื่อสามัญ — ตรวจแล้วแก้ช่อง "ย้ายไปกลุ่ม" ได้ · ตัวที่ระบบเดาไม่ได้ต้องเลือกเอง', true) +
+    tbl(B, '🔎 ยาต้านเชื้อที่อยู่กลุ่มอื่น', 'ไม่ได้ติ๊กไว้ — ยาหลายตัวเหมาะกับกลุ่มตามอวัยวะเดิมมากกว่า (เช่น ยาหยอดตาอยู่ "โรคตา", ครีมผสมสเตียรอยด์อยู่ "โรคผิวหนัง") ติ๊กเฉพาะตัวที่ต้องการย้าย', false) +
+    (RC.items.length ? '<div class="row"><button class="btn g" onclick="applyRC()">✅ ย้ายกลุ่มรายการที่เลือก</button></div>' : '');
+}
+async function applyRC() {
+  const ch = Array.from(document.querySelectorAll('.rc_item:checked')).map(c => { const i = +c.dataset.i, x = RC.items[i]; return { row: x.row, drug: x.drug, old: x.old, to: $('#rc_to' + i).value }; });
+  if (!ch.length) return toast('ยังไม่ได้เลือกรายการ');
+  const miss = ch.filter(c => !c.to); if (miss.length) return toast('ยังไม่ได้เลือกกลุ่มใหม่ ' + miss.length + ' ตัว (เช่น ' + miss[0].drug + ')');
+  if (!confirm('ย้ายกลุ่มยา ' + ch.length + ' ตัวใน drugTH?')) return;
+  try {
+    const r = await run('admin_recatApply', RC.cfg, ch);
+    alert('✅ ย้ายกลุ่มแล้ว ' + r.done + ' ตัว' + (r.skipped.length ? '\n\n⚠ ข้าม ' + r.skipped.length + ' ตัว (ข้อมูลในชีทเปลี่ยนไประหว่างนี้ — กดตรวจใหม่):\n' + r.skipped.join('\n') : ''));
+    DATA = await run('admin_load'); recatOpen();
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
+// ===== v1.36: ติ๊กเลือกหลายตัว แล้วอนุมัติเข้า drugTH ในคราวเดียว =====
+let BULK_BUSY = false;
+function bulkBar(n) {
+  return '<div class="card" id="bulkbar" style="position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:2px solid #04B085">' +
+    '<label style="display:flex;gap:6px;align-items:center;margin:0;font-weight:600"><input type="checkbox" id="dselall" style="width:20px;height:20px;margin:0" onchange="selAllDrugs(this.checked)"> เลือกทั้งหมด (' + n + ')</label>' +
+    '<button class="btn g" id="bulkbtn" onclick="bulkApprove()" disabled>✅ อนุมัติที่เลือก → นำเข้า drugTH</button>' +
+    '<span class="muted" id="bulkinfo">ติ๊กช่องหน้าชื่อยาที่ตรวจแล้ว</span></div>';
+}
+function selAllDrugs(on) { document.querySelectorAll('.dsel').forEach(c => { c.checked = on; }); updBulk(); }
+function updBulk() {
+  const all = document.querySelectorAll('.dsel'), k = document.querySelectorAll('.dsel:checked').length;
+  const btn = $('#bulkbtn'), info = $('#bulkinfo'), sa = $('#dselall');
+  if (btn) { btn.disabled = !k || BULK_BUSY; btn.textContent = '✅ อนุมัติที่เลือก' + (k ? ' (' + k + ')' : '') + ' → นำเข้า drugTH'; }
+  if (info && !BULK_BUSY) info.textContent = k ? 'เลือกแล้ว ' + k + ' ตัว' : 'ติ๊กช่องหน้าชื่อยาที่ตรวจแล้ว';
+  if (sa) { sa.checked = k > 0 && k === all.length; sa.indeterminate = k > 0 && k < all.length; }
+}
+async function bulkApprove() {
+  if (BULK_BUSY) return;
+  const rows = Array.from(document.querySelectorAll('.dsel:checked')).map(c => +c.value).sort((a, b) => a - b);   // ตามลำดับที่ส่งเข้ามา (เก่า → ใหม่)
+  if (!rows.length) return toast('ยังไม่ได้เลือกยา');
+  const list = rows.map(r => ({ row: r, edited: drugEdited(r) }));
+  const bad = list.filter(x => !x.edited.tradeName || !x.edited.genericName);
+  if (bad.length) { $('#dcard' + bad[0].row).scrollIntoView({ behavior: 'smooth', block: 'center' }); return toast('ชื่อการค้า/ชื่อสามัญห้ามว่าง (' + bad.length + ' ตัว)'); }
+  const names = list.map(x => '• ' + x.edited.tradeName).slice(0, 20).join('\n') + (list.length > 20 ? '\n… และอีก ' + (list.length - 20) + ' ตัว' : '');
+  if (!confirm('อนุมัติ ' + list.length + ' ตัว และนำเข้า drugTH + ทุกแท็บภาษา?\n\n' + names + '\n\n(ใช้ค่าที่แก้ไว้ในแต่ละการ์ด · ระบบทำทีละตัว อาจใช้เวลาตัวละหลายวินาที — อย่าปิดหน้านี้จนกว่าจะเสร็จ)')) return;
+  BULK_BUSY = true;
+  const info = $('#bulkinfo'), btn = $('#bulkbtn');
+  if (btn) btn.disabled = true;
+  document.querySelectorAll('.dsel, #dselall').forEach(c => { c.disabled = true; });
+  const ok = [], fail = [], untr = [];
+  for (let i = 0; i < list.length; i++) {
+    const x = list[i];
+    if (info) info.textContent = '⏳ กำลังนำเข้า ' + (i + 1) + '/' + list.length + ': ' + x.edited.tradeName;
+    try {
+      const r = await run('admin_approveDrug', x.row, x.edited);
+      ok.push(x.edited.tradeName);
+      if (r && r.untranslated && r.untranslated.length) untr.push(x.edited.tradeName + ' (' + r.untranslated.join(', ') + ')');
+      const card = $('#dcard' + x.row); if (card) { card.style.opacity = '.45'; card.style.borderLeft = '4px solid #04B085'; }
+    } catch (e) {
+      fail.push(x.edited.tradeName + ': ' + e.message);
+      const card = $('#dcard' + x.row); if (card) card.style.borderLeft = '4px solid #e53935';
+    }
+  }
+  BULK_BUSY = false;
+  alert('✅ นำเข้า drugTH แล้ว ' + ok.length + ' จาก ' + list.length + ' ตัว' +
+    (fail.length ? '\n\n❌ ไม่สำเร็จ ' + fail.length + ' ตัว (ยังรออนุมัติอยู่):\n' + fail.join('\n') : '') +
+    (untr.length ? '\n\n⚠ แปลไม่สำเร็จบางช่อง (ใช้ข้อความไทยไปก่อน ตรวจในแท็บ 🌐):\n' + untr.join('\n') : ''));
+  await load();
+}
+
+// ======================= 🗂 ข้อมูลทั้งหมด (แก้ทุกชีทจากหน้าเว็บ) =======================
+const SH = { sheets: null, main: '', name: '', headers: [], rows: [], total: 0, offset: 0, limit: 50, q: '', locked: [], loading: false, adding: false };
+const hk = h => String(h == null ? '' : h).toLowerCase().replace(/[^a-z0-9\u0E00-\u0E7F]/g, '');
+const shInfo = () => (SH.sheets || []).find(x => x.name === SH.name) || {};
+const dirtyCount = () => TAB === 'data' ? document.querySelectorAll('#list tr.dirty').length : 0;
+const guard = () => !dirtyCount() || confirm('มีการแก้ไขที่ยังไม่ได้บันทึก จะทิ้งการแก้ไขนั้นหรือไม่?');
+
+// ===== v1.38: คลังเวอร์ชันไฟล์หน้าเว็บ (เก็บใน Google Drive: Pharmax Backups / เวอร์ชันหน้าเว็บ) =====
+// การ์ดบน: เก็บเวอร์ชันปัจจุบัน (ดึงจากเว็บ + แนบ Code.gs) · การ์ดที่สอง: อัปโหลดไฟล์จากเครื่องเป็นเวอร์ชันที่ตั้งชื่อเอง
+const VER = { data: null, loading: false, busy: '', snap: { note: '', files: [] }, up: { version: '', note: '', files: [] }, edit: null };
+const kb = n => n == null ? '' : n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(0) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+const VER_TEXT = /\.(gs|js|html?|json|txt|css|md|csv)$/i, VER_MAX = 25 * 1048576;
+const VER_ACCEPT = '.gs,.js,.html,.htm,.json,.txt,.css,.md,.csv,.zip';
+const readB64_ = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => no(r.error); r.readAsDataURL(f); });
+async function loadVer() {
+  VER.loading = true; renderVer();
+  try { VER.data = await run('admin_archiveList'); DATA.archived = VER.data.archived; }
+  catch (e) { toast('❌ ' + e.message); VER.data = { items: [], current: ADMIN_VERSION, error: e.message }; }
+  VER.loading = false; if (TAB === 'ver') render();
+}
+// รายการไฟล์ที่เลือกไว้ + ช่องโน้ตของแต่ละไฟล์ (k = 'snap' | 'up')
+function verAttList(k) {
+  const fs = VER[k].files; if (!fs.length) return '';
+  return '<div style="margin-top:6px;border:1px solid var(--line);border-radius:8px;padding:6px 8px">' + fs.map((f, i) =>
+    '<div class="row" style="margin:3px 0;flex-wrap:nowrap"><span style="white-space:nowrap;font-size:.85rem">' + (/\.zip$/i.test(f.name) ? '🗜 ' : '📄 ') + '<b>' + esc(f.name) + '</b> <span class="muted">' + kb(f.size) + '</span></span>' +
+    '<input placeholder="โน้ตไฟล์นี้ (ไม่บังคับ) เช่น แก้บั๊กปุ่มพิมพ์" maxlength="300" value="' + esc(f.note || '') + '" oninput="VER.' + k + '.files[' + i + '].note=this.value" style="flex:1">' +
+    '<button class="btn r sm" title="เอาออก" onclick="VER.' + k + '.files.splice(' + i + ',1);renderVer()">✕</button></div>').join('') + '</div>';
+}
+function renderVer() {
+  const L = $('#list'); if (!L) return;
+  if (!VER.data && !VER.loading) return loadVer();
+  if (!VER.data) { L.innerHTML = '<div class="card muted">กำลังโหลดคลังเวอร์ชัน…</div>'; return; }
+  const d = VER.data, S = VER.snap, U = VER.up;
+  let h = '<div class="card"><div class="row" style="justify-content:space-between"><b>📦 เก็บไฟล์เวอร์ชันปัจจุบัน (' + esc(d.current) + ')</b>' +
+    (d.archived ? '<span class="pill ok">เก็บแล้ว</span>' : '<span class="pill w">ยังไม่ได้เก็บ</span>') + '</div>' +
+    '<div class="muted" style="margin:6px 0">ระบบดึง <b>index.html, data.js, drug-submit.js, glossary_lines.js, admin.html, sw.js</b> จากเว็บจริง ' +
+    'ไปเก็บใน Google Drive (โฟลเดอร์ <b>Pharmax Backups / เวอร์ชันหน้าเว็บ</b>) พร้อมไฟล์ .zip รวมทั้งชุด · <b>Code.gs</b> ต้องแนบจากเครื่อง (สคริปต์อ่านโค้ดตัวเองไม่ได้) ' +
+    '· ทุกวันระบบจะเก็บให้เองเมื่อเว็บขึ้นเวอร์ชันใหม่ (ยกเว้น Code.gs)</div>' +
+    '<label>โน้ตเวอร์ชันนี้ — ปรับแก้อะไรบ้าง (ไม่บังคับ)</label><textarea rows="2" maxlength="1000" placeholder="เช่น เพิ่มเลือกวิธีใช้ยาตามโรค, แก้คำแปลภาษาพม่า" oninput="VER.snap.note=this.value">' + esc(S.note) + '</textarea>' +
+    '<label>แนบไฟล์จากเครื่อง (ไม่บังคับ · เช่น Code.gs · สูงสุด 25 MB ต่อไฟล์ — ถ้าชื่อซ้ำกับไฟล์ที่ระบบดึงเอง จะใช้ไฟล์ที่แนบแทน)</label>' +
+    '<input type="file" multiple accept="' + VER_ACCEPT + '" onchange="verPick(this,\'snap\')">' + verAttList('snap') +
+    '<div class="row" style="margin-top:10px"><button class="btn g" onclick="verSave()"' + (VER.busy ? ' disabled' : '') + '>' + (VER.busy === 'snap' ? '⏳ กำลังเก็บ…' : '📦 เก็บเวอร์ชันนี้ลง Drive') + '</button>' +
+    (d.rootUrl ? '<a class="btn s sm" href="' + esc(d.rootUrl) + '" target="_blank" rel="noopener" style="text-decoration:none">📁 เปิดโฟลเดอร์ใน Drive</a>' : '') + '</div></div>';
+
+  h += '<div class="card" style="border-color:#c9d8ee"><b>📤 อัปโหลดเวอร์ชันจากเครื่อง</b>' +
+    '<div class="muted" style="margin:6px 0">สำหรับไฟล์ที่มีอยู่ในเครื่อง เช่น เวอร์ชันเก่าที่เคยโหลดไว้ หรือ .zip — ตั้งชื่อเวอร์ชันและเขียนโน้ตเองได้ (ไม่ดึงไฟล์จากเว็บ)<br>' +
+    '💡 หรือวางไฟล์ใน Google Drive เองก็ได้: สร้างโฟลเดอร์ย่อยใน <b>Pharmax Backups / เวอร์ชันหน้าเว็บ</b> ตั้งชื่อโฟลเดอร์เป็นชื่อเวอร์ชัน (เช่น <b>v1.36</b>) แล้วลากไฟล์ใส่ — กด 🔄 รีเฟรช ก็จะขึ้นในรายการด้านล่าง ' +
+    '(โน้ต: ใส่ใน Description ของโฟลเดอร์/ไฟล์ใน Drive หรือกด ✏️ ที่นี่)</div>' +
+    '<div class="g2"><div><label>ชื่อเวอร์ชัน *</label><input maxlength="40" placeholder="เช่น v1.36 หรือ v1.37 ก่อนแก้ regimen" value="' + esc(U.version) + '" oninput="VER.up.version=this.value"></div>' +
+    '<div><label>ไฟล์ * (เลือกได้หลายไฟล์ · กดเลือกซ้ำเพื่อเพิ่ม)</label><input type="file" multiple accept="' + VER_ACCEPT + '" onchange="verPick(this,\'up\')"></div></div>' +
+    '<label>โน้ต — เวอร์ชันนี้ปรับแก้อะไรบ้าง</label><textarea rows="3" maxlength="1000" placeholder="เช่น แปลครบ 16 ภาษา, เพิ่มแท็บตรวจคำแปลในหน้า Admin" oninput="VER.up.note=this.value">' + esc(U.note) + '</textarea>' +
+    verAttList('up') +
+    '<div class="row" style="margin-top:10px"><button class="btn" onclick="verUpload()"' + (VER.busy ? ' disabled' : '') + '>' + (VER.busy === 'up' ? '⏳ กำลังอัปโหลด…' : '📤 อัปโหลดเป็นเวอร์ชันนี้') + '</button></div></div>';
+
+  if (d.error) h += '<div class="note">⚠ ' + esc(d.error) + '</div>';
+  if (d.loose && d.loose.length) h += '<div class="note">⚠ มีไฟล์วางอยู่ตรงโฟลเดอร์ "เวอร์ชันหน้าเว็บ" โดยไม่ได้อยู่ในโฟลเดอร์ย่อย จึงไม่ขึ้นในรายการ: <b>' + d.loose.map(esc).join(', ') +
+    '</b><br>ย้ายเข้าโฟลเดอร์ย่อยที่ตั้งชื่อเป็นชื่อเวอร์ชัน (เช่น v1.36) แล้วกด 🔄 รีเฟรช</div>';
+  h += d.items.length ? d.items.map(verCard).join('') : '<div class="card muted">ยังไม่มีเวอร์ชันที่เก็บไว้</div>';
+  L.innerHTML = h;
+}
+function verCard(v) {
+  if (VER.edit === v.id) return verEditCard(v);
+  const hasCode = v.files.some(f => f.name === 'Code.gs'), noted = v.files.filter(f => f.note);
+  return '<div class="card"><div class="row" style="justify-content:space-between"><div><b>' + esc(v.version || v.name) + '</b> <span class="muted">' + esc(v.date || '') + (v.by ? ' · ' + esc(v.by) : '') + '</span>' +
+    (v.manual ? ' <span class="pill w" title="สร้างโฟลเดอร์เองใน Google Drive">📁 วางเองใน Drive</span>' : v.upload ? ' <span class="pill w">📤 อัปโหลดเอง</span>' : '') + (!v.upload && v.version === VER.data.current ? ' <span class="pill ok">ปัจจุบัน</span>' : '') +
+    (v.upload || hasCode ? '' : ' <span class="pill dn" title="ไม่ได้แนบ Code.gs">ไม่มี Code.gs</span>') + '</div>' +
+    '<div class="row"><button class="btn sm" title="' + (v.zip ? 'ไฟล์ ' + esc(v.zip.name) + ' ที่เก็บไว้ใน Drive' : 'รวมไฟล์ใหม่ตอนกด') + '" onclick="verZip(\'' + v.id + '\')">⬇ ดาวน์โหลดทั้งหมด (.zip' + (v.zip ? ' ' + kb(v.zip.size) : '') + ')</button>' +
+    '<button class="btn s sm" title="แก้ชื่อเวอร์ชัน/โน้ต" onclick="VER.edit=\'' + v.id + '\';renderVer()">✏️</button>' +
+    '<a class="btn s sm" href="' + esc(v.url) + '" target="_blank" rel="noopener" style="text-decoration:none">📁 Drive</a>' +
+    '<button class="btn r sm" onclick="verDel(\'' + v.id + '\')">🗑</button></div></div>' +
+    (v.note ? '<div style="margin:6px 0;white-space:pre-wrap">📝 ' + esc(v.note) + '</div>' : '') +
+    (v.warnings.length ? '<div class="note" style="margin:6px 0">⚠ ' + v.warnings.map(esc).join('<br>⚠ ') + '</div>' : '') +
+    (v.errors.length ? '<div class="note" style="margin:6px 0;background:#fde0de;color:#b3261e">ดึงไม่ได้: ' + v.errors.map(esc).join(' · ') + '</div>' : '') +
+    '<div class="row" style="margin-top:6px">' + v.files.map(f => '<button class="btn s sm" title="' + esc((f.from ? 'ที่มา: ' + f.from + ' · ' : '') + (f.note ? 'โน้ต: ' + f.note + ' · ' : '') + 'คลิกเพื่อดาวน์โหลดไฟล์นี้') + '" onclick="verOne(\'' + v.id + '\',\'' + f.id + '\')">' + (/\.zip$/i.test(f.name) ? '🗜 ' : '📄 ') +
+      esc(f.name) + ' <span style="font-weight:400;opacity:.7">' + kb(f.size) + '</span></button>').join('') + '</div>' +
+    (noted.length ? '<div class="muted" style="margin-top:6px;line-height:1.5">' + noted.map(f => '• <b>' + esc(f.name) + '</b> — ' + esc(f.note)).join('<br>') + '</div>' : '') + '</div>';
+}
+function verEditCard(v) {
+  return '<div class="card" style="border:2px solid var(--navy)"><b>✏️ แก้ไข ' + esc(v.version) + '</b> <span class="muted">' + esc(v.date) + '</span>' +
+    '<label>ชื่อเวอร์ชัน</label><input id="ve_ver" maxlength="40" value="' + esc(v.version) + '">' +
+    (!v.upload && v.version === VER.data.current ? '<div class="muted">ถ้าเปลี่ยนชื่อ ระบบจะถือว่า ' + esc(VER.data.current) + ' ยังไม่ได้เก็บ แล้วเก็บซ้ำให้อัตโนมัติ</div>' : '') +
+    '<label>โน้ต — ปรับแก้อะไรบ้าง</label><textarea id="ve_note" rows="3" maxlength="1000">' + esc(v.note) + '</textarea>' +
+    '<label>โน้ตรายไฟล์</label>' + v.files.map(f => '<div class="row" style="margin:3px 0;flex-wrap:nowrap"><span style="white-space:nowrap;font-size:.85rem;min-width:140px">' + esc(f.name) + '</span>' +
+      '<input class="ve_fn" data-id="' + esc(f.id) + '" maxlength="300" value="' + esc(f.note || '') + '" style="flex:1"></div>').join('') +
+    '<div class="row" style="margin-top:10px"><button class="btn g" onclick="verEditSave(\'' + v.id + '\')">💾 บันทึก</button><button class="btn s" onclick="VER.edit=null;renderVer()">ยกเลิก</button></div></div>';
+}
+async function verEditSave(id) {
+  const fileNotes = {}; document.querySelectorAll('.ve_fn').forEach(i => fileNotes[i.dataset.id] = i.value);
+  try { await run('admin_archiveEdit', id, { version: $('#ve_ver').value, note: $('#ve_note').value, fileNotes: fileNotes }); toast('✅ บันทึกแล้ว'); VER.edit = null; VER.data = null; loadVer(); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+function verPick(inp, k) {
+  const all = Array.from(inp.files || []), big = all.filter(f => f.size > VER_MAX), fs = all.filter(f => f.size <= VER_MAX);
+  if (big.length) toast('❌ ไฟล์ใหญ่เกิน 25 MB: ' + big.map(f => f.name).join(', '));
+  Promise.all(fs.map(f => VER_TEXT.test(f.name) ? f.text().then(t => ({ name: f.name, text: t, size: f.size, note: '' }))
+    : readB64_(f).then(b => ({ name: f.name, b64: b, mime: f.type || 'application/octet-stream', size: f.size, note: '' })))).then(a => {
+    const L = VER[k].files;
+    a.forEach(x => { const i = L.findIndex(y => y.name === x.name); if (i >= 0) { x.note = L[i].note; L[i] = x; } else L.push(x); });
+    renderVer();
+  });
+}
+async function verSave() {
+  if (VER.busy) return;
+  const S = VER.snap;
+  if (!S.files.some(f => f.name === 'Code.gs') && !confirm('ยังไม่ได้แนบ Code.gs — เก็บเฉพาะไฟล์หน้าเว็บกับ Admin.html ไปก่อนไหม?')) return;
+  VER.busy = 'snap'; renderVer();
+  try {
+    const r = await run('admin_archiveSnapshot', { note: S.note, files: S.files });
+    VER.snap = { note: '', files: [] };
+    toast('✅ เก็บแล้ว: ' + r.name + ' (' + r.files.length + ' ไฟล์)' + (r.errors.length ? ' · บางไฟล์ดึงไม่ได้' : ''));
+    if (r.warnings.length) setTimeout(() => alert('⚠ ' + r.warnings.join('\n⚠ ')), 50);
+    VER.data = null;
+  } catch (e) { toast('❌ ' + e.message); }
+  VER.busy = ''; loadVer();
+}
+async function verUpload() {
+  if (VER.busy) return;
+  const U = VER.up;
+  if (!U.version.trim()) return toast('❌ กรุณาตั้งชื่อเวอร์ชัน');
+  if (!U.files.length) return toast('❌ กรุณาเลือกไฟล์');
+  VER.busy = 'up'; renderVer();
+  try {
+    const r = await run('admin_archiveSnapshot', { mode: 'upload', version: U.version, note: U.note, files: U.files });
+    VER.up = { version: '', note: '', files: [] };
+    toast('✅ อัปโหลดแล้ว: ' + r.name + ' (' + r.files.length + ' ไฟล์)');
+    if (r.warnings.length) setTimeout(() => alert('⚠ ' + r.warnings.join('\n⚠ ')), 50);
+    VER.data = null;
+  } catch (e) { toast('❌ ' + e.message); }
+  VER.busy = ''; loadVer();
+}
+function saveB64_(name, b64, mime) {
+  const bin = atob(b64), u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  saveBlob_(name, new Blob([u], { type: mime }));
+}
+function saveBlob_(name, blob) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+async function verZip(id) {
+  toast('⏳ กำลังรวมไฟล์…');
+  try { const r = await run('admin_archiveZip', id); saveB64_(r.name, r.b64, 'application/zip'); toast('✅ ดาวน์โหลด ' + r.name); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+async function verOne(folderId, fileId) {
+  try { const r = await run('admin_archiveFile', folderId, fileId); if (r.b64 != null) saveB64_(r.name, r.b64, r.mime); else saveBlob_(r.name, new Blob([r.text], { type: 'text/plain;charset=utf-8' })); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+async function verDel(id) {
+  const v = (VER.data.items || []).find(x => x.id === id) || {};
+  if (!confirm('ย้ายเวอร์ชัน "' + (v.version || '') + ' · ' + (v.date || '') + '" ไปถังขยะของ Google Drive?\n(กู้คืนได้จากถังขยะภายใน 30 วัน)')) return;
+  try { await run('admin_archiveDelete', id); toast('🗑 ย้ายไปถังขยะแล้ว'); VER.data = null; loadVer(); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+
+// ===== v1.38: Glossary รอตรวจ — คำแปลเครื่องที่ระบบเพิ่มเข้า medical_glossary ตอนอนุมัติยา/คำขอแก้ไข =====
+const GL = { data: null, all: null };
+const GL_NAMES = { en: 'อังกฤษ', ja: 'ญี่ปุ่น', ko: 'เกาหลี', 'zh-CN': 'จีนย่อ', 'zh-TW': 'จีนเต็ม', es: 'สเปน', fr: 'ฝรั่งเศส', ru: 'รัสเซีย', ar: 'อาหรับ', my: 'พม่า', vi: 'เวียดนาม', km: 'เขมร', it: 'อิตาลี', de: 'เยอรมัน', hi: 'ฮินดี' };
+async function loadGloss() {
+  const L = $('#list'); if (L) L.innerHTML = '<div class="card muted">กำลังโหลด…</div>';
+  try { GL.all = FILTER === 'all'; GL.data = await run('admin_glossPending', GL.all); renderGloss(); }
+  catch (e) { if (L) L.innerHTML = '<div class="card muted">โหลดไม่ได้: ' + esc(e.message) + '</div>'; }
+}
+function renderGloss() {
+  const L = $('#list'); if (!L) return;
+  if (!GL.data || GL.all !== (FILTER === 'all')) return loadGloss();
+  const d = GL.data;
+  const head = '<div class="note" style="background:#eef3fa;color:#24406b">เมื่ออนุมัติยาใหม่หรือคำขอแก้ไข ระบบจะเพิ่มประโยคสรรพคุณ/คำแนะนำที่ยังไม่มีใน medical_glossary ให้เอง พร้อมคำแปลเครื่องทุกภาษา — ' +
+    'หน้าพิมพ์ฉลากใช้คำแปลนี้ได้ทันทีแต่ขึ้นเตือนสีเหลือง · แก้คำแปลที่ผิด แล้วกด <b>✅ ตรวจแล้ว</b> (คำแปลจะใช้กับยาทุกตัวที่มีประโยคนี้)</div>' +
+    '<div class="row" style="margin-bottom:12px"><button class="btn s" onclick="nearMatchOpen()" title="หาบรรทัดใน drugTH / diseaseRegimen ที่ต่างจาก glossary แค่เว้นวรรค/ตัวสะกด แล้วแก้ให้ตรงในคลิกเดียว">🔎 บรรทัดที่เกือบตรง glossary</button>' +
+    '<button class="btn s" onclick="seedFrequency()" title="เพิ่มวลีความถี่มาตรฐาน (ทุก 6 ชั่วโมง, วันละ 5 ครั้ง ฯลฯ) พร้อมคำแปลเครื่อง ให้ตรวจ">➕ วลีความถี่มาตรฐาน</button></div>';
+  if (!d.rows.length) { L.innerHTML = head + '<div class="card muted">ไม่มีรายการ' + (FILTER === 'all' ? '' : 'ที่รอตรวจ') + ' 🎉</div>'; return; }
+  L.innerHTML = head + d.rows.slice().reverse().map((r, n) => {
+    const i = d.rows.length - 1 - n;
+    return '<div class="card" id="gl' + i + '"><div class="row"><b>' + esc(r.th) + '</b>' +
+      '<span class="pill ' + (r.status === 'ตรวจแล้ว' ? 'ok' : 'w') + '">' + esc(r.status) + '</span>' +
+      '<span class="muted">' + esc(r.cat || '') + (r.source ? ' · จาก ' + esc(r.source) : '') + (r.added ? ' · ' + esc(r.added) : '') + ' · แถว ' + r.row + '</span></div>' +
+      '<div class="g3">' + d.langs.map(l => '<div><label>' + esc(GL_NAMES[l.lang] || l.lang) + ' <span class="hintk">' + esc(l.header) + '</span></label>' +
+        '<textarea rows="2" data-lang="' + esc(l.lang) + '" style="min-height:44px">' + esc(r.tr[l.lang] || '') + '</textarea></div>').join('') + '</div>' +
+      '<div class="row" style="margin-top:12px"><button class="btn g" onclick="saveGloss(' + i + ',true)">✅ ตรวจแล้ว</button>' +
+      '<button class="btn s" onclick="saveGloss(' + i + ',false)">💾 บันทึก (ยังรอตรวจ)</button></div></div>';
+  }).join('');
+}
+async function seedFrequency() {
+  if (!confirm('เพิ่มวลีความถี่มาตรฐาน (ทุก 4/6/8/12 ชั่วโมง, วันละ 5 ครั้ง, สัปดาห์ละ 1 ครั้ง ฯลฯ) เข้า medical_glossary พร้อมคำแปลเครื่อง?\n(ข้ามวลีที่มีอยู่แล้ว · สถานะ "รอตรวจ")')) return;
+  toast('กำลังแปลและเพิ่ม…');
+  try { const r = await run('admin_seedFrequency'); toast(r.added ? '✅ เพิ่ม ' + r.added + ' วลี — ตรวจคำแปลด้านล่าง' : 'มีครบทุกวลีแล้ว'); DATA.glossPending = (DATA.glossPending || 0) + (r.added || 0); GL.data = null; render(); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+// v1.38: บรรทัดที่เกือบตรง glossary
+let NM = null;
+function nmDiff(a, b) {   // ไฮไลต์ส่วนที่ต่าง (ตัดหัว-ท้ายที่เหมือนกัน)
+  let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  let j = 0; while (j < a.length - i && j < b.length - i && a[a.length - 1 - j] === b[b.length - 1 - j]) j++;
+  const mid = (s, tag) => esc(s.slice(0, i)) + (s.length - j > i ? '<' + tag + '>' + esc(s.slice(i, s.length - j)).replace(/ /g, '␣') + '</' + tag + '>' : '') + esc(s.slice(s.length - j));
+  return [mid(a, 'del'), mid(b, 'ins')];
+}
+async function nearMatchOpen() {
+  openModal('🔎 บรรทัดที่เกือบตรง glossary', '<div class="muted">กำลังสแกน drugTH + diseaseRegimen…</div>', true);
+  try { NM = await run('admin_glossNearMatches'); } catch (e) { const b = document.getElementById('amodal_body'); if (b) b.innerHTML = '<div class="note">❌ ' + esc(e.message) + '</div>'; return; }
+  const b = document.getElementById('amodal_body'); if (!b) return;
+  if (!NM.near.length) { b.innerHTML = '<div class="card muted">ไม่พบบรรทัดที่เกือบตรง 🎉' + (NM.farCount ? ' · มี ' + NM.farCount + ' บรรทัดที่ยังไม่มีใน glossary เลย (ระบบเพิ่มให้ตรวจเมื่อมีการอนุมัติยา/แก้ไข)' : '') + '</div>'; return; }
+  b.innerHTML = '<div class="note">บรรทัดในชีทยา (สีแดง) ที่ต่างจากประโยคใน glossary (สีเขียว) เล็กน้อย — ทำให้หน้าเว็บหา glossary ไม่เจอแล้วแปลอัตโนมัติแทน · ติ๊กรายการที่ถูกต้อง แล้วกด <b>แก้ที่เลือก</b> ระบบจะแทนที่บรรทัดเดิมทุกแถวที่มี (บันทึกในประวัติการแก้ไข)</div>' +
+    '<div style="max-height:60vh;overflow:auto"><table class="nm-t"><thead><tr><th style="width:28px"><input type="checkbox" checked onchange="document.querySelectorAll(\'.nm-c\').forEach(c=>c.checked=this.checked)"></th><th>ในชีทยา → ใน glossary</th><th>ต่าง</th><th>พบ</th></tr></thead><tbody>' +
+    NM.near.map((x, i) => { const d = nmDiff(x.line, x.suggest);
+      return '<tr><td><input type="checkbox" class="nm-c" data-i="' + i + '"' + (x.dist <= 3 ? ' checked' : '') + '></td><td><div class="old">' + d[0] + '</div><div class="new">' + d[1] + '</div><div class="muted" style="font-size:11px">' + esc(x.where.slice(0, 6).join(' · ')) + (x.where.length > 6 ? ' …' : '') + '</div></td>' +
+        '<td class="n">' + (x.dist === 0 ? 'เว้นวรรค' : x.dist + ' ตัว') + '</td><td class="n">' + x.n + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+    '<div class="row" style="margin-top:12px;justify-content:flex-end"><span class="muted" style="flex:1">' + NM.near.length + ' บรรทัดเกือบตรง · ' + NM.farCount + ' บรรทัดยังไม่มีใน glossary · glossary ' + NM.glossary + ' ประโยค</span>' +
+    '<button class="btn g" onclick="nearMatchFix()">✅ แก้ที่เลือก</button></div>';
+}
+async function nearMatchFix() {
+  const fixes = Array.from(document.querySelectorAll('.nm-c:checked')).map(c => NM.near[+c.dataset.i]).map(x => ({ line: x.line, to: x.suggest }));
+  if (!fixes.length) return toast('ยังไม่ได้เลือกรายการ');
+  if (!confirm('แทนที่ ' + fixes.length + ' ประโยคในชีทยาให้ตรงกับ glossary?')) return;
+  try { const r = await run('admin_glossFixLines', fixes); toast('✅ แก้แล้ว ' + r.cells + ' เซลล์ — หน้าเว็บจะใช้คำแปลจาก glossary ภายในไม่กี่นาที'); nearMatchOpen(); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+async function saveGloss(i, checked) {
+  const r = GL.data.rows[i], card = $('#gl' + i); if (!r || !card) return;
+  const vals = {}; card.querySelectorAll('textarea[data-lang]').forEach(t => { vals[t.dataset.lang] = t.value; });
+  if (checked && Object.keys(vals).some(k => !vals[k].trim()) && !confirm('ยังมีบางภาษาที่ว่างอยู่ — หน้าพิมพ์ฉลากจะแปลสดสำหรับภาษานั้น\nยืนยันว่าตรวจแล้ว?')) return;
+  card.querySelectorAll('button').forEach(b => b.disabled = true);
+  try {
+    const res = await run('admin_glossSave', r.row, r.th, vals, checked);
+    r.tr = vals; r.status = res.status;
+    if (checked && DATA.glossPending) DATA.glossPending--;
+    toast(checked ? '✅ ตรวจแล้ว — ใช้กับยาทุกตัวที่มีประโยคนี้' : '💾 บันทึกแล้ว');
+    if (checked && FILTER !== 'all') GL.data.rows.splice(i, 1);
+    render();
+  } catch (e) { toast('❌ ' + e.message); card.querySelectorAll('button').forEach(b => b.disabled = false); }
+}
+
+// ===== v1.38: สถิติการพิมพ์ฉลาก (ข้อมูลดิบอยู่ในไฟล์ลับ แท็บ printLog_<รหัสสาขา>) =====
+const STS = { data: null, days: 30, branch: '', busy: false };
+const LANG_TH = { th: 'ไทย', en: 'อังกฤษ', ja: 'ญี่ปุ่น', ko: 'เกาหลี', 'zh-CN': 'จีนย่อ', 'zh-TW': 'จีนเต็ม', es: 'สเปน', fr: 'ฝรั่งเศส', ru: 'รัสเซีย', ar: 'อาหรับ', my: 'พม่า', vi: 'เวียดนาม', km: 'เขมร', it: 'อิตาลี', de: 'เยอรมัน', hi: 'ฮินดี' };
+const nf = n => Number(n || 0).toLocaleString('th-TH');
+async function loadStats() {
+  if (STS.busy) return; STS.busy = true;
+  const L = $('#list'); if (L) L.innerHTML = '<div class="card muted">กำลังรวบรวมสถิติ…</div>';
+  try { STS.data = await run('admin_printStats', STS.days, STS.branch); }
+  catch (e) { STS.data = null; STS.busy = false; if (L) L.innerHTML = '<div class="card muted">โหลดสถิติไม่ได้: ' + esc(e.message) + '</div>'; return; }
+  STS.busy = false; renderStats();
+}
+async function statsSummarize() {
+  toast('กำลังสรุปสถิติรายวัน…');
+  try { const r = await run('admin_printDailyNow'); toast('✅ สรุปเพิ่ม ' + r.added + ' วัน-สาขา'); STS.data = null; renderStats(); } catch (e) { toast('❌ ' + e.message); }
+}
+function statsSet(k, v) { STS[k] = v; STS.data = null; renderStats(); }
+function hbars(list, label, opt) {
+  opt = opt || {};
+  if (!list || !list.length) return '<div class="muted" style="padding:10px 0">— ยังไม่มีข้อมูล —</div>';
+  const max = Math.max.apply(null, list.map(x => x.n)) || 1, tot = list.reduce((a, x) => a + x.n, 0) || 1;
+  return '<div class="hb">' + list.map((x, i) => '<div class="hb-row" title="' + esc(label(x)) + ' — ' + nf(x.n) + ' ใบ (' + Math.round(x.n * 100 / tot) + '%)">' +
+    '<div class="hb-lab">' + (opt.rank ? '<span class="hb-rk">' + (i + 1) + '</span>' : '') + esc(label(x)) + '</div>' +
+    '<div class="hb-track"><div class="hb-fill" style="width:' + Math.max(2, x.n * 100 / max).toFixed(1) + '%"></div></div>' +
+    '<div class="hb-val">' + nf(x.n) + '</div></div>').join('') + '</div>';
+}
+const TR_ = { W: 1100, H: 230, pl: 44, pr: 14, pt: 12, pb: 26 };
+function niceMax_(series) { const max = Math.max(4, Math.max.apply(null, series.map(x => x.n))); const step = Math.pow(10, Math.floor(Math.log10(max))); return Math.ceil(max / step) * step; }
+function trendSvg(series) {
+  const { W, H, pl, pr, pt, pb } = TR_, n = series.length, nice = niceMax_(series);
+  const x = i => pl + (n <= 1 ? 0 : i * (W - pl - pr) / (n - 1)), y = v => pt + (H - pt - pb) * (1 - v / nice);
+  const pts = series.map((d, i) => x(i).toFixed(1) + ',' + y(d.n).toFixed(1));
+  const grid = [0, 0.5, 1].map(f => '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(nice * f) + '" y2="' + y(nice * f) + '" class="tg"/><text x="' + (pl - 6) + '" y="' + (y(nice * f) + 4) + '" class="tl" text-anchor="end">' + nf(Math.round(nice * f)) + '</text>').join('');
+  const every = Math.ceil(n / 8);
+  const xl = series.map((d, i) => ((i % every === 0 && (n - 1 - i >= every / 2 || i === n - 1)) || i === n - 1) ? '<text x="' + x(i) + '" y="' + (H - 6) + '" class="tl" text-anchor="middle">' + d.d.slice(8, 10) + '/' + d.d.slice(5, 7) + '</text>' : '').join('');
+  return '<div class="trend"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="จำนวนฉลากต่อวัน" onmousemove="trendHover(event,this)" onmouseleave="trendHover(null,this)">' + grid +
+    '<path d="M' + x(0) + ',' + y(0) + ' L' + pts.join(' L') + ' L' + x(n - 1) + ',' + y(0) + ' Z" class="ta"/>' +
+    '<polyline points="' + pts.join(' ') + '" class="tline"/>' + xl +
+    '<line class="tx" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" style="display:none"/><circle class="td" r="4.5" style="display:none"/>' +
+    '<rect x="' + pl + '" y="0" width="' + (W - pl - pr) + '" height="' + H + '" fill="transparent"/></svg><div class="ttip" style="display:none"></div></div>';
+}
+function trendHover(e, svg) {
+  const wrap = svg.parentNode, tip = wrap.querySelector('.ttip'), ln = svg.querySelector('.tx'), dot = svg.querySelector('.td');
+  if (!e) { tip.style.display = ln.style.display = dot.style.display = 'none'; return; }
+  const s = STS.data && STS.data.daySeries; if (!s || !s.length) return;
+  const { W, H, pl, pr, pt, pb } = TR_, r = svg.getBoundingClientRect(), n = s.length, nice = niceMax_(s);
+  const vx = (e.clientX - r.left) * W / r.width;
+  const i = Math.max(0, Math.min(n - 1, Math.round((vx - pl) / ((W - pl - pr) / Math.max(1, n - 1)))));
+  const px = pl + (n <= 1 ? 0 : i * (W - pl - pr) / (n - 1)), py = pt + (H - pt - pb) * (1 - s[i].n / nice);
+  ln.setAttribute('x1', px); ln.setAttribute('x2', px); dot.setAttribute('cx', px); dot.setAttribute('cy', py);
+  ln.style.display = dot.style.display = '';
+  const d = new Date(s[i].d + 'T00:00:00');
+  tip.innerHTML = '<b>' + nf(s[i].n) + ' ใบ</b><br>' + d.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' });
+  tip.style.display = 'block';
+  tip.style.left = Math.min(r.width - 124, Math.max(0, px * r.width / W - 62)) + 'px';
+}
+function hoursSvg(hours) {
+  const max = Math.max(1, Math.max.apply(null, hours.map(h => h.n)));
+  return '<div class="hrs">' + hours.map(h => '<div class="hr" title="' + h.h + ':00–' + h.h + ':59 น. — ' + nf(h.n) + ' ใบ"><div class="hr-bar" style="height:' + (h.n ? Math.max(3, h.n * 100 / max) : 0).toFixed(1) + '%"></div><span>' + (h.h % 3 === 0 ? h.h : '') + '</span></div>').join('') + '</div>';
+}
+function renderStats() {
+  const L = $('#list'); if (!L) return;
+  if (!STS.data) return loadStats();
+  const d = STS.data, bn = c => (d.branchNames && d.branchNames[c] ? c + ' · ' + d.branchNames[c] : c);
+  const avg = d.days ? d.total / d.days : 0;
+  const busiest = d.daySeries.reduce((a, x) => x.n > a.n ? x : a, { n: -1 });
+  const filt = '<div class="dt-bar">' +
+    '<div class="filter">' + [[7, '7 วัน'], [30, '30 วัน'], [90, '90 วัน'], [365, '1 ปี']].map(o => '<button class="' + (STS.days === o[0] ? 'on' : '') + '" onclick="statsSet(\'days\',' + o[0] + ')">' + o[1] + '</button>').join('') + '</div>' +
+    '<select onchange="statsSet(\'branch\',this.value)" style="width:auto;min-width:220px" aria-label="สาขา"><option value="">ทุกสาขา (' + d.branches.length + ')</option>' +
+      d.branches.map(c => '<option value="' + esc(c) + '"' + (c === d.branch ? ' selected' : '') + '>' + esc(bn(c)) + '</option>').join('') + '</select>' +
+    '<span class="muted">ตั้งแต่ ' + esc(d.since) + '</span><span style="flex:1"></span>' +
+    '<button class="btn s sm" onclick="statsSummarize()" title="สรุปสถิติรายวันย้อนหลังตอนนี้ (ปกติระบบทำให้เองทุกคืนตี 2)">⟳ สรุปรายวัน</button>' +
+    '<a class="btn s sm" href="' + esc(d.rawFileUrl) + '" target="_blank" rel="noopener" style="text-decoration:none">📄 ข้อมูลดิบ (ไฟล์ลับ)</a></div>';
+  if (!d.total) {
+    L.innerHTML = filt + '<div class="card muted">ยังไม่มีการพิมพ์ในช่วงนี้' + (d.branches.length ? '' : ' — ระบบจะเริ่มเก็บข้อมูลเมื่อหน้าพิมพ์ฉลากรุ่นใหม่สั่งพิมพ์ครั้งแรก') + '</div>';
+    return;
+  }
+  const kpi = (lab, val, sub) => '<div class="kpi"><small>' + lab + '</small><b>' + val + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</div>';
+  L.innerHTML = filt +
+    '<div class="kpis">' +
+      kpi('ฉลากที่พิมพ์', nf(d.total), 'เฉลี่ย ' + avg.toFixed(1) + ' ใบ/วัน') +
+      kpi('งานพิมพ์', nf(d.jobs), d.jobs ? (d.total / d.jobs).toFixed(1) + ' ใบ/งาน' : '') +
+      kpi('รายการยา', nf(d.drugs), 'ชนิดที่ไม่ซ้ำกัน') +
+      kpi('ผู้ใช้ยา (ระบุชื่อ)', nf(d.patients), 'นับไม่ซ้ำต่อสาขา') +
+      kpi('วันที่พิมพ์มากสุด', busiest.n > 0 ? nf(busiest.n) : '-', busiest.n > 0 ? new Date(busiest.d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '') +
+      kpi('สำเนาไทย / ยารออนุมัติ', nf(d.thaiCopies) + ' / ' + nf(d.pendingPrints), 'ใบ') +
+    '</div>' +
+    '<div class="card sc" style="margin-bottom:12px"><div class="sc-h">ฉลากต่อวัน</div>' + trendSvg(d.daySeries) + '</div>' +
+    '<div class="sgrid">' +
+      '<div class="card sc"><div class="sc-h">ยาที่พิมพ์บ่อย</div>' + hbars(d.topDrugs, x => x.k, { rank: true }) + '</div>' +
+      '<div class="card sc"><div class="sc-h">ภาษาบนฉลาก</div>' + hbars(d.byLang, x => (LANG_TH[x.k] || x.k) + ' (' + x.k + ')') + '</div>' +
+      (d.branch ? '' : '<div class="card sc"><div class="sc-h">แยกตามสาขา</div>' + hbars(d.byBranch, x => bn(x.k), { rank: true }) + '</div>') +
+      '<div class="card sc"><div class="sc-h">ช่วงเวลาที่พิมพ์ (นาฬิกา)</div>' + hoursSvg(d.hours) + '</div>' +
+      '<div class="card sc"><div class="sc-h">เภสัชกรผู้จ่ายยา (จากเลขใบอนุญาต)</div>' + hbars(d.byRph, x => x.k) + '</div>' +
+      '<div class="card sc"><div class="sc-h">ผู้ใช้ที่ล็อกอินขณะพิมพ์</div>' + hbars(d.byUser, x => x.k) + '</div>' +
+      (d.byRegimen && d.byRegimen.length ? '<div class="card sc"><div class="sc-h">วิธีใช้ตามโรคที่เลือก</div>' + hbars(d.byRegimen, x => x.k) + '</div>' : '') +
+    '</div>';
+}
+
+function switchTab(k) { if (!guard()) return; TAB = k; render(); }
+function refreshAll() { if (TAB === 'data') { if (guard()) loadSheet(SH.offset); } else if (TAB === 'tr') { TR.data = null; loadTr(); } else if (TAB === 'ver') { VER.data = null; loadVer(); } else if (TAB === 'gloss') { GL.data = null; load(); } else if (TAB === 'stats') { STS.data = null; renderStats(); } else load(); }
+
+async function loadSheets() {
+  try {
+    const r = await run('admin_listSheets');
+    SH.sheets = r.sheets; SH.main = r.main;
+    if (!SH.name || !SH.sheets.some(x => x.name === SH.name)) SH.name = (SH.sheets.find(x => x.name === r.main) || SH.sheets[0] || {}).name || '';
+    if (SH.name) await loadSheet(0); else renderData();
+  } catch (e) { toast('❌ ' + e.message); $('#list').innerHTML = '<div class="card muted">โหลดรายชื่อชีทไม่ได้: ' + esc(e.message) + '</div>'; }
+}
+
+async function loadSheet(offset) {
+  SH.loading = true; renderData();
+  try {
+    const r = await run('admin_readSheet', SH.name, SH.q, offset == null ? SH.offset : offset, SH.limit);
+    SH.headers = r.headers; SH.rows = r.rows; SH.total = r.total; SH.offset = r.offset; SH.locked = r.locked || [];
+  } catch (e) { toast('❌ ' + e.message); }
+  SH.loading = false; renderData();
+}
+
+function pickSheet(name) { if (!guard()) return renderData(); SH.name = name; SH.q = ''; SH.adding = false; loadSheet(0); }
+function doSearch() { if (!guard()) return; SH.q = $('#dt_q').value; loadSheet(0); }
+function goPage(off) { if (!guard()) return; loadSheet(Math.max(0, off)); }
+
+// สร้างช่องกรอก 1 ช่อง ตามชนิดคอลัมน์ (ชนิดยา/เวลาที่ใช้ยา ของ drugTH เป็น dropdown, กลุ่มยามี datalist)
+function ctrl(ci, v, attrs, dis, cls) {
+  const k = hk(SH.headers[ci]), isMain = SH.name === SH.main;
+  const a = ' ' + attrs + ' class="' + (cls || '') + '"' + (dis ? ' disabled' : '');
+  const isRx = SH.name === REGIMEN_TAB;   // v1.37: แท็บวิธีใช้ตามโรค — เวลาใช้ยา/สถานะ เป็น dropdown
+  const list = isMain && k.indexOf('drugtype') === 0 ? TYPES : (isMain || isRx) && k.indexOf('meal') === 0 ? MEALS : isRx && k.indexOf('status') === 0 ? ['ใช้งาน', 'รอตรวจ', 'ปิด'] : null;
+  if (list) {
+    const L = list.slice(); if (v && L.indexOf(v) < 0) L.unshift(v);
+    return '<select' + a + '><option value=""></option>' + L.map(o => '<option value="' + esc(o) + '"' + (o === v ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select>';
+  }
+  if (isMain && k.indexOf('category') === 0) return '<input' + a + ' list="dl_cat" value="' + esc(v) + '">';
+  if (/indication|advice|line\d|note|comment|หมายเหตุ|definition|meaning|desc/.test(k) || String(v).length > 45 || String(v).indexOf('\n') >= 0)
+    return '<textarea' + a + '>\n' + esc(v) + '</textarea>';       // ขึ้นบรรทัดว่างนำหน้า เพราะ HTML ตัดบรรทัดแรกของ textarea ทิ้ง
+  return '<input' + a + ' value="' + esc(v) + '">';
+}
+
+function renderData() {
+  const L = $('#list'); if (!L) return;
+  if (!SH.sheets) { L.innerHTML = '<div class="card muted">กำลังโหลดรายชื่อชีท…</div>'; return loadSheets(); }
+  const info = shInfo(), ro = !!info.readOnly;
+  const opts = SH.sheets.map(x => '<option value="' + esc(x.name) + '"' + (x.name === SH.name ? ' selected' : '') + '>' + (x.private ? '🔒 ' : '') + esc(x.name) + ' (' + x.rows + ')</option>').join('');
+  let h = '<div class="dt-bar"><select id="dt_sheet" onchange="pickSheet(this.value)">' + opts + '</select>' +
+    '<input type="search" id="dt_q" placeholder="ค้นหาในชีทนี้…" value="' + esc(SH.q) + '" onkeydown="if(event.key===\'Enter\')doSearch()">' +
+    '<button class="btn s" onclick="doSearch()">🔍 ค้นหา</button>' +
+    (info.canAdd ? '<button class="btn g" onclick="toggleAdd()">➕ เพิ่มแถว</button>' : '') +
+    '<button class="btn s" onclick="recatOpen()" title="ย้ายยาในกลุ่ม โรคติดเชื้อและยาปฏิชีวนะ ไปกลุ่ม แบคทีเรีย / รา / ไวรัส">🏷 แยกกลุ่มโรคติดเชื้อ</button>' +
+    '<button class="btn s" onclick="regimenOpen()" title="ยาที่วิธีใช้ต่างกันตามโรค (แท็บ diseaseRegimen) — สร้างแท็บ/ตรวจหัวตาราง แล้วเปิดแก้ไข">🩺 วิธีใช้ตามโรค</button>' +
+    '<button class="btn s" onclick="geocodeBranches()" title="หาพิกัดสาขาจากลิงก์ Google Maps (คอลัมน์ map) หรือค้นจากที่อยู่ — ให้มือถือ/แท็บเล็ตเลือกสาขาใกล้ที่สุดอัตโนมัติ">📍 หาพิกัดสาขา</button>' +
+    '<button class="btn s" onclick="notifyOpen()" title="อีเมลแจ้งเตือนเมื่อมียาใหม่ / คำขอแก้ไข / ฟีดแบ็ก / สมัครใช้งาน">🔔 แจ้งเตือนอีเมล</button></div>';
+  const notes = [];
+  if (info.private) notes.push('🔒 ชีทนี้อยู่ใน "ไฟล์ลับ" (ไม่แชร์สาธารณะ) — หน้าเว็บผู้ใช้ทั่วไปอ่านไม่ได้');
+  if (ro) notes.push('🔒 ชีทนี้เป็นประวัติการแก้ไข ดูได้อย่างเดียว');
+  if (SH.locked.length) notes.push('🔒 คอลัมน์ ' + SH.locked.map(i => esc(SH.headers[i])).join(', ') + ' ถูกซ่อนเพื่อความปลอดภัย แก้ไม่ได้');
+  if (SH.name === REGIMEN_TAB) notes.push('🩺 <b>วิธีใช้ยาตามโรค</b> — 1 แถว = 1 โรคของยา 1 ตัว · <b>drugName</b> ใส่ชื่อตรงกับ drugTH (แนะนำ เพราะขนาดยาขึ้นกับความแรง) หรือชื่อสามัญตัวพิมพ์ใหญ่ เช่น ACICLOVIR = ทุกยี่ห้อ · <b>matchText</b> (ไม่บังคับ) เช่น 400 = เฉพาะยาที่ชื่อมี 400 · ช่องที่ว่าง = ใช้ค่าเดิมของยา · ขนาดยา 4 ช่อง: กรอกช่องใดช่องหนึ่ง = ใช้ทั้ง 4 ช่องตามแถวนี้ · <b>ว่างทั้ง 4 ช่อง = ใช้ขนาดยาเดิมจาก drugTH</b> · ถ้าไม่ต้องการตารางเวลาบนฉลากเลย ใส่ <b>X</b> ในช่องเช้า (ช่องเดียวพอ) · <b>frequency_th</b> (ไม่บังคับ) = บรรทัด "ความถี่" บนฉลาก เช่น วันละ 5 ครั้ง ห่างกันประมาณ 4 ชั่วโมง / ทุก 6 ชั่วโมง · <b>status</b> ต้องเป็น "ใช้งาน" (หรือว่าง) หน้าพิมพ์ฉลากถึงจะแสดง · คำแปลภาษาอื่นมาจาก medical_glossary');
+  if (info.group === 'drug') notes.push('⚠️ แท็บยาทุกภาษาจับคู่กันด้วยชื่อยา (drugName) — ถ้าแก้ชื่อยา ต้องแก้ให้ตรงกันทุกแท็บ drug*');
+  if (info.group === 'branches') notes.push('⚠️ แท็บสาขาทุกภาษาจับคู่กันด้วยรหัสสาขา (branchCode) — ถ้าแก้รหัส ต้องแก้ให้ตรงกันทุกแท็บ branches*');
+  notes.push('เซลล์สีฟ้า = เป็นสูตร (แก้ในชีทโดยตรง) · ค่าที่บันทึกจากหน้านี้จะเก็บเป็นข้อความ · ทุกการแก้ไขถูกบันทึกในชีท "ประวัติการแก้ไข"');
+  h += '<div class="note">' + notes.join('<br>') + '</div>';
+  if (SH.adding && info.canAdd) h += addForm(info);
+  if (SH.loading) h += '<div class="card muted">กำลังโหลด…</div>';
+  else if (!SH.headers.length) h += '<div class="card muted">ชีทนี้ยังไม่มีข้อมูล/หัวคอลัมน์</div>';
+  else {
+    h += '<datalist id="dl_cat">' + catList().map(c => '<option value="' + esc(c) + '">').join('') + '</datalist>';
+    h += '<div class="tbl-wrap"><table class="dt"><thead><tr><th class="act">แถว</th>' + SH.headers.map(x => '<th>' + esc(x) + '</th>').join('') + '</tr></thead><tbody>';
+    h += SH.rows.length ? SH.rows.map((r, i) => '<tr data-i="' + i + '"><td class="act"><span class="muted">#' + r.row + '</span> ' +
+      (ro ? '' : '<button class="btn g sm" onclick="saveRow(' + i + ')" title="บันทึกแถวนี้">💾</button> <button class="btn r sm" onclick="delRow(' + i + ')" title="ลบแถวนี้">🗑</button>') + '</td>' +
+      SH.headers.map((_, ci) => {
+        const lock = SH.locked.indexOf(ci) >= 0, fx = r.fx && r.fx.indexOf(ci) >= 0;
+        const v = lock ? '••••' : r.v[ci];
+        return '<td' + (/indication|advice/.test(hk(SH.headers[ci])) ? ' class="long"' : '') + '>' +
+          ctrl(ci, v, 'data-i="' + i + '" data-c="' + ci + '"' + (lock ? ' title="ซ่อนเพื่อความปลอดภัย"' : fx ? ' title="เซลล์นี้เป็นสูตร แก้ในชีทโดยตรง"' : ''), ro || lock || fx, lock ? 'locked' : fx ? 'fx' : '') + '</td>';
+      }).join('') + '</tr>').join('') : '<tr><td colspan="' + (SH.headers.length + 1) + '" class="muted" style="padding:14px">ไม่พบรายการ</td></tr>';
+    h += '</tbody></table></div>';
+    const a = SH.total ? SH.offset + 1 : 0, b = Math.min(SH.total, SH.offset + SH.limit);
+    h += '<div class="pager"><button class="btn s sm" ' + (SH.offset <= 0 ? 'disabled' : '') + ' onclick="goPage(' + (SH.offset - SH.limit) + ')">‹ ก่อนหน้า</button>' +
+      '<span class="muted">แสดง ' + a + '–' + b + ' จาก ' + SH.total + ' แถว' + (SH.q ? ' (ค้นหา "' + esc(SH.q) + '")' : '') + '</span>' +
+      '<button class="btn s sm" ' + (b >= SH.total ? 'disabled' : '') + ' onclick="goPage(' + (SH.offset + SH.limit) + ')">ถัดไป ›</button></div>';
+  }
+  L.innerHTML = h;
+  L.querySelectorAll('textarea[data-c]').forEach(autosize);
+}
+
+// v1.38: พิกัดสาขา + ตั้งค่าแจ้งเตือนอีเมล
+async function geocodeBranches() {
+  const force = confirm('หาพิกัดสาขา (branchesTH)\n\nตกลง = ค้นใหม่ทุกสาขา (ทับพิกัดเดิม)\nยกเลิก = เฉพาะสาขาที่ยังไม่มีพิกัด หรือเพิ่งใส่ลิงก์ map\n\nมีลิงก์ Google Maps ในคอลัมน์ map → ใช้ลิงก์ (แม่นที่สุด) · ไม่มี → ค้นจากที่อยู่ line1 + line2');
+  toast('กำลังหาพิกัด… (สาขาละประมาณ 0.3 วินาที)');
+  try {
+    const r = await run('admin_geocodeBranches', force);
+    openModal('📍 หาพิกัดสาขา', '<div class="kpis"><div class="kpi"><small>สำเร็จ</small><b>' + r.done + '</b></div><div class="kpi"><small>มีอยู่แล้ว</small><b>' + (r.kept || 0) + '</b></div><div class="kpi"><small>ไม่สำเร็จ</small><b>' + r.failed.length + '</b></div></div>' +
+      (r.failed.length ? '<div class="note">ไม่สำเร็จ — ใส่ลิงก์ Google Maps ของสาขาในคอลัมน์ <b>map</b> แล้วกดอีกครั้ง:<br>' + r.failed.map(esc).join('<br>') + '</div>' : '') +
+      '<div class="muted">ตรวจพิกัดได้ที่คอลัมน์ lat / lng / geo_source ในแท็บ branchesTH · ระบบหาพิกัดสาขาใหม่ให้เองทุกคืน</div>');
+  } catch (e) { toast('❌ ' + e.message); }
+}
+async function notifyOpen() {
+  let st; try { st = await run('admin_notifySettings', null); } catch (e) { return toast('❌ ' + e.message); }
+  openModal('🔔 แจ้งเตือนอีเมล', '<label style="display:flex;gap:8px;align-items:center;margin:0 0 10px"><input type="checkbox" id="nt_on" style="width:18px;height:18px"' + (st.on ? ' checked' : '') + '> ส่งอีเมลเมื่อมี ยาใหม่ / คำขอแก้ไข / ฟีดแบ็ก / สมัครใช้งาน / ขอรีเซ็ตรหัส</label>' +
+    '<label>ส่งถึง (คั่นหลายคนด้วย ,) — ว่าง = เจ้าของสคริปต์ (' + esc(st.owner || '-') + ')</label><input id="nt_email" value="' + esc(st.email) + '" placeholder="' + esc(st.owner || 'name@example.com') + '">' +
+    '<div class="muted" style="margin-top:6px">โควตาอีเมลวันนี้เหลือ ' + st.quota + ' ฉบับ · ส่งไม่เกิน 6 ฉบับ/10 นาที (เกินจะรวมแจ้งในฉบับถัดไป)</div>' +
+    '<div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn s" onclick="notifySave(true)">✉ บันทึก + ส่งอีเมลทดสอบ</button><button class="btn g" onclick="notifySave(false)">💾 บันทึก</button></div>');
+}
+async function notifySave(test) {
+  try { await run('admin_notifySettings', { email: $('#nt_email').value, on: $('#nt_on').checked, test: test }); toast(test ? '✅ บันทึกแล้ว · ส่งอีเมลทดสอบแล้ว' : '✅ บันทึกแล้ว'); closeModal(); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+function autosize(el) { el.style.height = 'auto'; el.style.height = Math.min(Math.max(el.scrollHeight + 2, 30), 220) + 'px'; }
+
+function rowDirty(tr, i) {
+  const r = SH.rows[i]; let d = false;
+  tr.querySelectorAll('[data-c]').forEach(el => { if (!el.disabled && el.value !== r.v[+el.dataset.c]) d = true; });
+  return d;
+}
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (!el.dataset || el.dataset.i === undefined || el.dataset.c === undefined) return;
+  if (el.tagName === 'TEXTAREA') autosize(el);
+  const tr = el.closest('tr'); if (tr) tr.classList.toggle('dirty', rowDirty(tr, +el.dataset.i));
+});
+window.addEventListener('beforeunload', e => { if (dirtyCount()) { e.preventDefault(); e.returnValue = ''; } });
+
+async function saveRow(i) {
+  const r = SH.rows[i], tr = document.querySelector('#list tr[data-i="' + i + '"]'); if (!r || !tr) return;
+  const ch = [];
+  tr.querySelectorAll('[data-c]').forEach(el => { if (el.disabled) return; const c = +el.dataset.c; if (el.value !== r.v[c]) ch.push({ c: c, v: el.value, o: r.v[c] }); });
+  if (!ch.length) return toast('ไม่มีการเปลี่ยนแปลง');
+  try {
+    const nv = await run('admin_saveRow', SH.name, r.row, ch);
+    r.v = nv;
+    tr.querySelectorAll('[data-c]').forEach(el => { if (!el.disabled) el.value = nv[+el.dataset.c]; });
+    tr.classList.remove('dirty'); toast('✅ บันทึกแถว #' + r.row + ' แล้ว');
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
+async function delRow(i) {
+  const r = SH.rows[i], info = shInfo(); if (!r) return;
+  const label = r.v.filter(x => x).slice(0, 3).join(' · ');
+  if (!confirm('ลบแถว #' + r.row + ' ในชีท "' + SH.name + '" ?\n' + label + '\n\n(กู้คืนไม่ได้ แต่มีบันทึกในชีทประวัติการแก้ไข)')) return;
+  let also = false;
+  if (info.group) also = confirm('ลบรายการเดียวกันในแท็บอื่นของกลุ่ม ' + info.group + '* (ทุกภาษา) ด้วยไหม?\n\nตกลง = ลบทุกแท็บ\nยกเลิก = ลบเฉพาะชีทนี้');
+  try {
+    const res = await run('admin_deleteRow', SH.name, r.row, r.v, also);
+    toast('✅ ลบแล้ว' + (res.removed && res.removed.length ? ' (และในอีก ' + res.removed.length + ' แท็บ)' : '') + (res.skipped && res.skipped.length ? ' · ข้าม ' + res.skipped.join(', ') + ' (ไม่มีคอลัมน์กุญแจ ต้องลบเอง)' : ''));
+    await loadSheet(SH.offset);
+    const info2 = SH.sheets.find(x => x.name === SH.name); if (info2) info2.rows = Math.max(0, info2.rows - 1);
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
+function toggleAdd() { SH.adding = !SH.adding; renderData(); if (SH.adding) { const f = $('#na0'); if (f) f.focus(); } }
+function addForm(info) {
+  return '<div class="card"><b>➕ เพิ่มแถวใหม่ใน "' + esc(SH.name) + '"</b><div class="addgrid" style="margin-top:6px">' +
+    SH.headers.map((x, ci) => '<div><label>' + esc(x) + '</label>' + ctrl(ci, '', 'id="na' + ci + '"', false, '') + '</div>').join('') + '</div>' +
+    (info.group ? '<label style="display:flex;gap:6px;align-items:center;margin-top:10px"><input type="checkbox" id="na_also" style="width:auto" ' + (SH.name === SH.main || /TH$/i.test(SH.name) ? 'checked' : '') + '> เพิ่มลงทุกแท็บภาษา (' + info.group + '*) ด้วย — แท็บอื่นจะได้ข้อความเดียวกับที่กรอก ไว้แก้คำแปลทีหลัง</label>' : '') +
+    '<div class="row" style="margin-top:10px"><button class="btn g" onclick="addRow()">💾 เพิ่ม</button><button class="btn s" onclick="toggleAdd()">ยกเลิก</button></div></div>';
+}
+async function addRow() {
+  if (!guard()) return;
+  const vals = SH.headers.map((_, ci) => { const el = document.getElementById('na' + ci); return el ? el.value : ''; });
+  const also = !!($('#na_also') && $('#na_also').checked);
+  try {
+    const res = await run('admin_addRow', SH.name, vals, also);
+    toast('✅ เพิ่มแล้ว' + (res.addedTabs && res.addedTabs.length > 1 ? ' (' + res.addedTabs.length + ' แท็บ)' : ''));
+    SH.adding = false; SH.q = '';
+    const info = SH.sheets.find(x => x.name === SH.name); if (info) info.rows++;
+    await loadSheet(-1);
+  } catch (e) { toast('❌ ' + e.message); }
+}
+
+// ======================= 🌐 ตรวจคำแปล (แท็บภาษา drugEN, drugJA …) =======================
+const TR = { tab: '', only: true, offset: 0, data: null, loading: false };
+const TR_LABEL = { indication: 'สรรพคุณ', advice: 'คำแนะนำ' };
+async function loadTr() {
+  TR.loading = true; renderTr();
+  try { TR.data = await run('admin_listTranslations', TR.tab, TR.only, TR.offset); TR.tab = TR.data.tab || ''; }
+  catch (e) { toast('❌ ' + e.message); }
+  TR.loading = false; renderTr();
+}
+function renderTr() {
+  const L = $('#list'); if (!L) return;
+  if (!TR.data && !TR.loading) return loadTr();
+  const d = TR.data || { tabs: [], rows: [] };
+  const needPrep = d.tabs.some(t => !t.hasCheck || !t.hasBarcode);
+  let h = '<div class="dt-bar"><select onchange="TR.tab=this.value;TR.offset=0;loadTr()">' +
+    d.tabs.map(t => '<option value="' + esc(t.name) + '"' + (t.name === TR.tab ? ' selected' : '') + '>' + esc(t.name) + ' — รอตรวจ ' + t.unchecked + '</option>').join('') + '</select>' +
+    '<label style="display:flex;gap:5px;align-items:center;margin:0;font-size:.85rem"><input type="checkbox" style="width:auto" ' + (TR.only ? 'checked' : '') +
+    ' onchange="TR.only=this.checked;TR.offset=0;loadTr()"> เฉพาะที่ยังไม่ตรวจ</label>' +
+    (needPrep ? '<button class="btn s sm" onclick="prepLang()">🌐 เตรียมแท็บภาษา</button>' : '') +
+    '<button class="btn s sm" onclick="syncGloss(\'vocab\')" title="ให้ medical_glossary ตรงกับตัวเลือกชนิดยา/เวลาใช้ยา/ขนาดยาในหน้าเว็บ (ดูรายการก่อนแล้วติ๊กเลือก)">🔄 ซิงก์ glossary กับตัวเลือกในหน้าเว็บ</button>' +
+    '<button class="btn s sm" onclick="syncGloss(\'lines\')" title="คำแปลสรรพคุณ/คำแนะนำทุกบรรทัดใน drugTH จากไฟล์ glossary_lines.js">📝 ซิงก์คำแปลสรรพคุณ/คำแนะนำ</button>' +
+    '<button class="btn g sm" onclick="glossFix()" title="ดูรายการก่อน แล้วค่อยยืนยัน">🔧 ใช้ glossary แก้คำแปลในแท็บภาษา</button>' +
+    '<button class="btn sm" onclick="upgradeFormulas()" title="สำหรับแท็บภาษาที่เป็นสูตร (GOOGLETRANSLATE/XLOOKUP)">🔗 อัปเกรดสูตรแท็บภาษา</button></div>';
+  h += '<div class="note">คำแปลที่ระบบแปลอัตโนมัติ (ตอนอนุมัติยา/แก้ข้อมูล) จะ "รอตรวจ" จนกว่าเภสัชกรจะกด ✅ — ระหว่างรอ หน้าเว็บจะใช้ medical_glossary / พจนานุกรมก่อน · คำแปลที่เตรียมไว้เองเดิมใช้ได้ทันทีไม่ต้องตรวจ (เอาติ๊ก "เฉพาะที่ยังไม่ตรวจ" ออกเพื่อดู/แก้) · ซ้าย = ข้อความไทยใน drugTH · ขวา = คำแปลในแท็บนี้' +
+    (needPrep ? '<br>⚠ บางแท็บยังไม่มีคอลัมน์บาร์โค้ด/ตรวจคำแปล — กด "เตรียมแท็บภาษา" 1 ครั้ง' : '') + '</div>';
+  if (TR.loading) h += '<div class="card muted">กำลังโหลด…</div>';
+  else if (!d.rows.length) h += '<div class="card muted">' + (TR.only ? '🎉 ไม่มีคำแปลที่รอตรวจในแท็บนี้' : 'ไม่มีรายการ') + '</div>';
+  else h += d.rows.map((r, i) => '<div class="card"><div class="row"><b>' + esc(r.drugName || '-') + '</b>' +
+      (/^ตรวจแล้ว/.test(r.checked) ? '<span class="pill ok">✓ ' + esc(r.checked) + '</span>'
+        : /^(แปลอัตโนมัติ|รอตรวจ)/.test(r.checked) ? '<span class="pill w">' + esc(r.checked) + '</span>' : '<span class="pill dn">เตรียมไว้เอง</span>') +
+      '<span class="muted">' + (r.barcode ? 'บาร์โค้ด ' + esc(r.barcode) + ' · ' : '') + 'แถว #' + r.row + (r.th.found ? '' : ' · ⚠ หาไม่เจอใน drugTH') + '</span></div>' +
+      Object.keys(r.tr).filter(k => r.tr[k] !== null).map(k => '<label>' + TR_LABEL[k] + '</label><div class="trgrid"><div class="th">' + esc(r.th[k] || '—') + '</div>' +
+        '<textarea id="tr_' + i + '_' + k + '">' + esc(r.tr[k]) + '</textarea></div>').join('') +
+      '<div class="row" style="margin-top:8px"><button class="btn g sm" onclick="saveTr(' + i + ',true)">✅ ถูกต้อง / บันทึก + ตรวจแล้ว</button>' +
+      '<button class="btn s sm" onclick="saveTr(' + i + ',false)">💾 บันทึก (ยังไม่ติ๊กตรวจ)</button></div></div>').join('');
+  if (d.total > 25) h += '<div class="pager"><button class="btn s sm" ' + (TR.offset <= 0 ? 'disabled' : '') + ' onclick="TR.offset=Math.max(0,TR.offset-25);loadTr()">‹ ก่อนหน้า</button>' +
+    '<span class="muted">' + (TR.offset + 1) + '–' + Math.min(d.total, TR.offset + 25) + ' จาก ' + d.total + '</span>' +
+    '<button class="btn s sm" ' + (TR.offset + 25 >= d.total ? 'disabled' : '') + ' onclick="TR.offset+=25;loadTr()">ถัดไป ›</button></div>';
+  L.innerHTML = h;
+  L.querySelectorAll('.trgrid textarea').forEach(autosize);
+}
+async function saveTr(i, checked) {
+  const r = TR.data.rows[i]; if (!r) return;
+  const vals = {};
+  Object.keys(r.tr).forEach(k => { const el = $('#tr_' + i + '_' + k); if (el) vals[k] = el.value; });
+  try {
+    const res = await run('admin_saveTranslation', TR.tab, r.row, vals, r.tr, checked);
+    toast(checked ? '✅ ตรวจแล้ว' : '💾 บันทึกแล้ว');
+    if (checked && TR.only) return loadTr();
+    Object.keys(vals).forEach(k => { r.tr[k] = vals[k].trim(); }); r.checked = res.checked; renderTr();
+  } catch (e) { toast('❌ ' + e.message); }
+}
+async function prepLang() {
+  if (!confirm('เพิ่มคอลัมน์บาร์โค้ด + "ตรวจคำแปลแล้ว" ในทุกแท็บภาษา และเติมบาร์โค้ดโดยจับคู่ชื่อยากับ drugTH?')) return;
+  try { const rep = await run('admin_prepareLangTabs'); alert('เตรียมแท็บภาษาแล้ว\n\n' + rep.join('\n')); TR.data = null; loadTr(); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+
+async function upgradeFormulas() {
+  if (!confirm('อัปเกรดสูตรในแท็บภาษาทั้งหมด?\n\n• ให้อ่าน medical_glossary ได้ทุกแถว (เดิมอ่านถึงแถว 48)\n• สรรพคุณ/คำแนะนำ ค้น glossary ก่อน แล้วค่อย GOOGLETRANSLATE\n• เติมแถวสูตรให้พอกับจำนวนยาใน drugTH\n\nทำซ้ำได้ไม่เสียหาย')) return;
+  toast('กำลังอัปเกรดสูตร… (อาจใช้เวลา 1–2 นาที)');
+  try { const r = await run('admin_upgradeLangFormulas'); alert('✅ อัปเกรดแล้ว\n\n' + r.join('\n') + '\n\nGoogle Sheets จะคำนวณคำแปลใหม่ อาจขึ้น "Loading..." สักครู่'); TR.data = null; loadTr(); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+// ===== v1.36: ซิงก์ medical_glossary ให้ตรงกับคำศัพท์มาตรฐานใน data.js (dropdown ชนิดยา / เวลาใช้ยา / ขนาดยา) =====
+const GS_LANGS = ['en', 'ja', 'zh-CN', 'zh-TW', 'ko', 'es', 'fr', 'it', 'de', 'ru', 'ar', 'vi', 'km', 'my', 'hi'];
+let GS = null;
+function canonFromSite() {
+  const rows = [];
+  ALL_TYPE_OPTIONS.forEach(o => rows.push(['Drug Form', o.th, o.tr]));
+  MEAL_OPTIONS.forEach(o => { if (o.value) rows.push(['Meal Timing', o.th, o.tr]); });
+  DOSE_OPTIONS.concat(Object.keys(DOSE_PHRASES)).filter((v, i, a) => a.indexOf(v) === i).forEach(d => {
+    const tr = {}; let ok = true;
+    GS_LANGS.forEach(l => { const t = doseTextOf(d, l); if (t) tr[l] = t; else ok = false; });
+    if (ok) rows.push(['Dosage', d, tr]);
+  });
+  (typeof GLOSSARY_EXTRA !== 'undefined' ? GLOSSARY_EXTRA : []).forEach(r => rows.push(r));
+  const toTh = (kind, o) => { const r = {}; Object.keys(o || {}).forEach(a => { const x = termOptionOf(kind, o[a]); if (x) r[a] = x.th; }); return r; };   // ชื่ออื่น → ชื่อมาตรฐาน (ไทย)
+  return { rows: rows, typeAliases: toTh('type', TERM_ALIASES.type), typeReview: toTh('type', TERM_ALIASES.typeReview), mealAliases: toTh('meal', TERM_ALIASES.meal) };
+}
+// ไฟล์คำแปลสรรพคุณ/คำแนะนำ (ใหญ่ — โหลดเฉพาะตอนกดปุ่ม)
+function loadLinesFile() {
+  return new Promise(res => {
+    if (typeof GLOSSARY_LINES !== 'undefined') return res(true);
+    const url = DATA && DATA.siteUrl; if (!url) return res(false);
+    const sc = document.createElement('script'); sc.src = url + 'glossary_lines.js?v=' + Date.now();
+    sc.onload = () => res(typeof GLOSSARY_LINES !== 'undefined'); sc.onerror = () => res(false);
+    document.head.appendChild(sc);
+  });
+}
+async function syncGloss(kind) {
+  kind = kind || (GS && GS.kind) || 'vocab';
+  const ok = await loadSiteData(DATA && DATA.siteUrl);
+  if (!ok || typeof ALL_TYPE_OPTIONS === 'undefined' || typeof doseTextOf !== 'function')
+    return alert('โหลดคำศัพท์มาตรฐานจาก data.js (v1.36 ขึ้นไป) ไม่ได้ — อัปโหลด data.js ใหม่ขึ้นเว็บก่อน แล้วกดรีเฟรชหน้านี้');
+  if (kind === 'lines' && !(await loadLinesFile()))
+    return alert('โหลดไฟล์ glossary_lines.js จากหน้าเว็บไม่ได้ — อัปโหลดไฟล์นี้ขึ้น GitHub (โฟลเดอร์เดียวกับ data.js) ก่อน แล้วรีเฟรชหน้านี้');
+  toast(kind === 'lines' ? 'กำลังเทียบคำแปลสรรพคุณ/คำแนะนำกับ glossary… (อาจใช้เวลาสักครู่)' : 'กำลังเทียบ glossary กับตัวเลือกในหน้าเว็บ…');
+  const canon = kind === 'lines' ? { kind: 'lines', rows: GLOSSARY_LINES } : canonFromSite();
+  try { GS = { kind: kind, canon: canon, plan: await run('admin_glossarySyncPreview', canon) }; } catch (e) { return toast('❌ ' + e.message); }
+  renderGS();
+}
+function renderGS() {
+  const L = $('#list'); if (!L || !GS) return;
+  const p = GS.plan, it = p.items;
+  const grp = [
+    ['add', '➕ เพิ่มคำที่ยังไม่มีใน glossary', x => '<b>' + esc(x.th) + '</b> <span class="muted">(' + esc(x.cat) + ')</span> → ' + esc(x.tr.en || '') + (x.tr.ja ? ' · ' + esc(x.tr.ja) : '')],
+    ['update', '✏️ คำแปลใน glossary ไม่ตรงกับหน้าเว็บ → แก้ให้ตรง', x => '<b>' + esc(x.th) + '</b> <span class="muted">แถว ' + x.row + (x.why ? ' · ' + esc(x.why) : '') + '</span><br>' +
+      x.diffs.map(d => '<span class="muted">' + esc(d.col) + ':</span> <s>' + esc(d.old || '(ว่าง)') + '</s> → ' + esc(d.nv)).join('<br>')],
+    ['delete', '🗑 ลบแถวที่ซ้ำ / ชื่อเก่า / สะกดผิด', x => '<b>' + esc(x.th) + '</b> <span class="muted">แถว ' + x.row + ' · ' + esc(x.why) + '</span>'],
+    ['fix', '🧾 ค่าใน drugTH เป็นชื่ออื่น → เปลี่ยนเป็นชื่อมาตรฐาน (แท็บภาษาแบบสูตรตามให้เอง)', x => esc(x.drug || '-') + ' <span class="muted">แถว ' + x.row + ' · ' + esc(x.field) + ':</span> <s>' + esc(x.old) + '</s> → <b>' + esc(x.nv) + '</b>' +
+      (x.review ? ' <span class="pill w">ตรวจก่อน — ชื่อกว้าง</span>' : '')]
+  ];
+  let h = '<div class="dt-bar"><button class="btn s sm" onclick="GS=null;renderTr()">‹ กลับ</button><b>' + (GS.kind === 'lines' ? '📝 ซิงก์คำแปลสรรพคุณ/คำแนะนำ (glossary_lines.js)' : '🔄 ซิงก์ medical_glossary กับตัวเลือกในหน้าเว็บ') + '</b></div>' +
+    '<div class="note">ตัวเลือกชนิดยา / เวลาใช้ยา / ขนาดยา ในหน้าเว็บ (data.js) คือชื่อมาตรฐาน — ติ๊กรายการที่ต้องการ แล้วกด "ทำรายการที่เลือก" · ระบบสำรองแท็บ glossary ไว้ในไฟล์ลับก่อนแก้ทุกครั้ง' +
+    '<br>ถ้าเคยแก้คำแปลใน glossary เองและอยากเก็บไว้ ให้เอาติ๊กข้อนั้นออก (ฉลากใช้คำใน glossary ก่อนเสมอ)</div>';
+  if (!it.length) h += '<div class="card">✅ glossary ตรงกับตัวเลือกในหน้าเว็บแล้วทั้งหมด</div>';
+  grp.forEach(([k, title, line]) => {
+    const xs = it.filter(x => x.kind === k); if (!xs.length) return;
+    const big = xs.length > 40;
+    h += '<div class="card"><div class="row"><b>' + title + ' (' + xs.length + ')</b>' +
+      '<label style="margin:0;font-size:.8rem"><input type="checkbox" style="width:auto" checked onchange="document.querySelectorAll(\'.gs_' + k + '\').forEach(c=>{if(!c.dataset.review)c.checked=this.checked})"> เลือกทั้งหมด</label></div>' +
+      (big ? '<details><summary class="muted" style="cursor:pointer;margin:6px 0">ดูรายการทั้งหมด ' + xs.length + ' ข้อ (ติ๊กไว้ให้แล้ว)</summary>' : '') +
+      xs.map(x => '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:6px 0"><input type="checkbox" style="width:auto;margin-top:3px" class="gs_' + k + ' gs_item" value="' + esc(x.id) + '"' +
+        (x.review ? ' data-review="1"' : ' checked') + '><span>' + line(x) + '</span></label>').join('') + (big ? '</details>' : '') + '</div>';
+  });
+  if (p.notInList.length) h += '<div class="card"><b>⚠ ค่าใน drugTH ที่ยังไม่มีในตัวเลือก</b><div class="muted">' + p.notInList.map(esc).join('<br>') + '</div><div class="muted">→ แก้ในชีทให้เป็นชื่อในตัวเลือก หรือแจ้งให้เพิ่มตัวเลือกใน data.js</div></div>';
+  if (p.unused.length) h += '<div class="card"><b>ℹ️ คำใน glossary ที่ไม่มีในตัวเลือกและ drugTH ไม่ได้ใช้</b> <span class="muted">(ไม่แตะ — ลบเองได้ถ้าไม่ต้องการ)</span><div class="muted">' + p.unused.map(esc).join(' · ') + '</div></div>';
+  if (p.missingCols.length) h += '<div class="card">⚠ glossary ไม่มีคอลัมน์ภาษา: ' + p.missingCols.map(esc).join(', ') + '</div>';
+  if (it.length) h += '<div class="row"><button class="btn g" onclick="applyGS()">✅ ทำรายการที่เลือก</button></div>';
+  L.innerHTML = h;
+}
+async function applyGS() {
+  const ids = Array.from(document.querySelectorAll('.gs_item:checked')).map(c => c.value);
+  if (!ids.length) return toast('ยังไม่ได้เลือกรายการ');
+  if (!confirm('ทำ ' + ids.length + ' รายการที่เลือก?\n(สำรองแท็บ glossary ไว้ในไฟล์ลับก่อน)')) return;
+  toast('กำลังบันทึก…');
+  try {
+    const n = await run('admin_glossarySyncApply', GS.canon, ids);
+    alert('✅ เสร็จแล้ว\n\nเพิ่มคำ ' + n.add + ' · แก้คำแปล ' + n.update + ' · ลบแถว ' + n.delete + ' · แก้ค่าใน drugTH ' + n.fix +
+      '\n\nหน้าเว็บจะใช้คำใหม่เมื่อรีเฟรช · ภาษาพม่า เขมร ฮินดี อาหรับ ควรให้ผู้ที่ใช้ภาษานั้นตรวจอีกครั้ง');
+    syncGloss();
+  } catch (e) { toast('❌ ' + e.message); }
+}
+async function glossFix() {
+  toast('กำลังตรวจทุกแท็บภาษา…');
+  let pv;
+  try { pv = await run('admin_glossaryFixPreview'); } catch (e) { return toast('❌ ' + e.message); }
+  const ft = (pv.formulaTabs || []);
+  if (!pv.total) return alert(ft.length ? 'แท็บภาษาเป็นแบบสูตร (' + ft.length + ' แท็บ) — ระบบไม่เขียนทับสูตร\nให้กด "🔗 อัปเกรดสูตรแท็บภาษา" แทน แล้วสูตรจะดึงคำแปลจาก glossary เอง'
+    : 'ไม่มีช่องที่ต้องแก้ — คำแปลในแท็บภาษาตรงกับ medical_glossary แล้วทั้งหมด');
+  const lines = pv.tabs.map(t => '■ ' + t.tab + ': ' + t.count + ' ช่อง\n' + t.samples.map(x => '   • ' + x.drug + ' [' + x.key + '] "' + x.from + '" → "' + x.to + '"').join('\n'));
+  const msg = 'จะเขียนคำแปลจาก medical_glossary ทับ ' + pv.total + ' ช่อง:\n\n' + lines.join('\n\n').slice(0, 3500) +
+    '\n\n(ระบบสำรองไฟล์ทั้งหมดไว้ในโฟลเดอร์ Pharmax Backups ก่อนเขียน) ยืนยัน?';
+  if (!confirm(msg)) return;
+  toast('กำลังสำรองข้อมูลและแก้คำแปล… (อาจใช้เวลา 1–2 นาที)');
+  try { const r = await run('admin_glossaryFixApply'); alert('✅ แก้แล้ว ' + r.changed + ' ช่อง\n' + r.tabs.join('\n')); TR.data = null; loadTr(); }
+  catch (e) { toast('❌ ' + e.message); }
+}
+
+PW ? load() : loginView();
+</script>
+</body>
+</html>
