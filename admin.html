@@ -740,12 +740,45 @@ function verAttList(k) {
     '<input placeholder="โน้ตไฟล์นี้ (ไม่บังคับ) เช่น แก้บั๊กปุ่มพิมพ์" maxlength="300" value="' + esc(f.note || '') + '" oninput="VER.' + k + '.files[' + i + '].note=this.value" style="flex:1">' +
     '<button class="btn r sm" title="เอาออก" onclick="VER.' + k + '.files.splice(' + i + ',1);renderVer()">✕</button></div>').join('') + '</div>';
 }
+// v1.39: อัปเดต Code.gs จากหน้านี้ (ใช้ iPad ได้) — Apps Script เขียนโค้ดใหม่ทับตัวเอง + สร้างเวอร์ชันใหม่ + ลิงก์ Web App เดิมใช้ต่อได้
+const SU = { st: null, loading: false, file: null, busy: false, msg: '' };
+function suCard() {
+  if (!SU.st && !SU.loading) { SU.loading = true; run('admin_selfUpdateStatus').then(r => { SU.st = r; }).catch(e => { SU.st = { ready: false, why: e.message }; }).finally(() => { SU.loading = false; if (TAB === 'ver') renderVer(); }); }
+  const st = SU.st, f = SU.file;
+  return '<div class="card" style="border:2px solid #16478E"><div class="row" style="justify-content:space-between"><b>⬆️ อัปเดต Code.gs (ระบบหลังบ้าน)</b>' +
+    '<span class="muted">ตอนนี้: <b>' + esc((st && st.version) || '…') + '</b></span></div>' +
+    (!st ? '<div class="muted">กำลังตรวจ…</div>' : st.ready
+      ? '<div class="muted" style="margin:6px 0">เลือกไฟล์ <b>Code.gs</b> ที่ได้รับมา → ระบบสำรองโค้ดเดิมไว้ใน Drive แล้วอัปเดตให้ทันที (ลิงก์เดิมใช้ต่อได้ ไม่ต้องแก้หน้าเว็บ)</div>' +
+        '<input type="file" accept=".gs,.js,.txt,text/plain" onchange="suPick(this)">' +
+        (f ? '<div style="margin:8px 0">ไฟล์: <b>' + esc(f.name) + '</b> · เวอร์ชันในไฟล์: <b>' + esc(f.ver) + '</b> · ' + Math.round(f.text.length / 1024) + ' KB</div>' +
+          '<button class="btn g" ' + (SU.busy ? 'disabled' : '') + ' onclick="suGo()">' + (SU.busy ? '⏳ กำลังอัปเดต… (ประมาณ 10–30 วินาที)' : '⬆️ อัปเดตเป็น ' + esc(f.ver)) + '</button>' : '')
+      : '<div style="margin:6px 0;padding:8px;background:#fff3e0;border-left:3px solid #ff9800">ยังอัปเดตจากหน้านี้ไม่ได้: ' + esc(st.why || '') + '<br><span class="muted">ต้องตั้งค่าครั้งแรกบนคอม 1 ครั้ง (เปิด Apps Script API + appsscript.json + รัน setupSelfUpdate)</span></div>') +
+    (SU.msg ? '<div style="margin-top:8px">' + SU.msg + '</div>' : '') + '</div>';
+}
+function suPick(inp) {
+  const file = inp.files && inp.files[0]; if (!file) return;
+  const rd = new FileReader();
+  rd.onload = () => { const text = String(rd.result || ''); SU.file = { name: file.name, text: text, ver: (text.match(/const APP_VERSION = '([^']+)'/) || [])[1] || '(ไม่พบเลขเวอร์ชัน)' }; SU.msg = ''; renderVer(); };
+  rd.readAsText(file, 'utf-8');
+}
+async function suGo() {
+  const f = SU.file; if (!f || SU.busy) return;
+  if (!confirm('อัปเดต Code.gs จาก ' + ((SU.st && SU.st.version) || '?') + ' เป็น ' + f.ver + ' ?\n\nระบบจะสำรองโค้ดเดิมไว้ใน Google Drive ก่อน')) return;
+  SU.busy = true; SU.msg = ''; renderVer();
+  try {
+    const r = await run('admin_selfUpdate', f.text);
+    SU.msg = '<span style="color:#14633f">✅ อัปเดตแล้ว: ' + esc(r.from) + ' → ' + esc(r.to) + ' (เวอร์ชันที่ ' + r.versionNumber + ' · Web App ' + r.deployments + ' ลิงก์)' + (r.backup ? '<br>สำรองโค้ดเดิม: Drive / Pharmax Backups / ' + esc(r.backup) : '') + '</span>';
+    SU.file = null; SU.st = null; toast('✅ อัปเดต Code.gs แล้ว');
+  } catch (e) { SU.msg = '<span style="color:#b3261e">❌ ' + esc(e.message) + '</span>'; }
+  SU.busy = false; renderVer();
+}
 function renderVer() {
   const L = $('#list'); if (!L) return;
   if (!VER.data && !VER.loading) return loadVer();
   if (!VER.data) { L.innerHTML = '<div class="card muted">กำลังโหลดคลังเวอร์ชัน…</div>'; return; }
   const d = VER.data, S = VER.snap, U = VER.up;
-  let h = '<div class="card"><div class="row" style="justify-content:space-between"><b>📦 เก็บไฟล์เวอร์ชันปัจจุบัน (' + esc(d.current) + ')</b>' +
+  let h = suCard() +
+    '<div class="card"><div class="row" style="justify-content:space-between"><b>📦 เก็บไฟล์เวอร์ชันปัจจุบัน (' + esc(d.current) + ')</b>' +
     (d.archived ? '<span class="pill ok">เก็บแล้ว</span>' : '<span class="pill w">ยังไม่ได้เก็บ</span>') + '</div>' +
     '<div class="muted" style="margin:6px 0">ระบบดึง <b>index.html, data.js, drug-submit.js, glossary_lines.js, admin.html, sw.js</b> จากเว็บจริง ' +
     'ไปเก็บใน Google Drive (โฟลเดอร์ <b>Pharmax Backups / เวอร์ชันหน้าเว็บ</b>) พร้อมไฟล์ .zip รวมทั้งชุด · <b>Code.gs</b> ต้องแนบจากเครื่อง (สคริปต์อ่านโค้ดตัวเองไม่ได้) ' +
