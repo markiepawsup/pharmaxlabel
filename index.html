@@ -6732,6 +6732,32 @@
         return confirm(msg);
     }
 
+    // ต้อง log-in ก่อนสั่งพิมพ์ฉลาก (ใช้หน้าต่าง log-in เดิมของ PharmaxDrugSubmit)
+    async function requirePrintLogin() {
+        try {
+            const D = window.PharmaxDrugSubmit;
+            if (D && D.token && D.token()) return true;
+            if (!D || !D.requireLogin) {
+                alert('ระบบ log-in ยังโหลดไม่เสร็จ กรุณารอสักครู่หรือรีเฟรชหน้า แล้วลองใหม่อีกครั้ง');
+                return false;
+            }
+            const ok = await D.requireLogin('กรุณา log-in ก่อนสั่งพิมพ์ฉลากยา');
+            return !!(ok && D.token && D.token());
+        } catch (e) { return false; }
+    }
+
+    // กัน Print จากเมนูเบราว์เซอร์ (File > Print, เมนู ⋮) ตอนยังไม่ได้ log-in: พิมพ์ออกมาเป็นหน้าเปล่า
+    // (Ctrl+P / F4 / F8 ผ่าน requirePrintLogin อยู่แล้ว; โหมดเครื่องรับงาน ?hub=1 ไม่โดนล็อก)
+    (function () {
+        const hubMode = /[?&]hub=1\b/.test(location.search);
+        const st = document.createElement('style');
+        st.textContent = '@media print{body.pmx-print-locked #batch_print_container{display:none!important}}';
+        document.head.appendChild(st);
+        const logged = () => { try { const D = window.PharmaxDrugSubmit; return !!(D && D.token && D.token()); } catch (e) { return false; } };
+        window.addEventListener('beforeprint', () => { if (!hubMode && !logged()) document.body.classList.add('pmx-print-locked'); });
+        window.addEventListener('afterprint', () => document.body.classList.remove('pmx-print-locked'));
+    })();
+
     async function safeBatchPrint() {
         // 1. ใช้เฉพาะรายการที่มีอยู่ในคิว (Batch Queue) จริงๆ เท่านั้น ไม่อนุญาตให้แอบหยิบจากฟอร์มปัจจุบันมาแถม
         let validQueue = labelQueue.filter(item => item && item.drugName && item.drugName.trim() !== "");
@@ -6741,6 +6767,8 @@
             document.getElementById('in_drug_name').focus();
             return;
         }
+
+        if (!(await requirePrintLogin())) return; // ต้อง log-in ก่อนพิมพ์
 
         let printContainer = document.getElementById('batch_print_container');
         if (!printContainer) return;
@@ -6814,6 +6842,8 @@
             return;
         }
         drugNameEl.classList.remove('field-invalid');
+
+        if (!(await requirePrintLogin())) return; // ต้อง log-in ก่อนพิมพ์
 
         // ดึงข้อมูลฟอร์มปัจจุบันมาแปลงเป็นไอเทมชั่วคราว
         let currentItem = snapshotFormState();
