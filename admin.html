@@ -131,6 +131,16 @@
   .kpi small{font-size:12px;color:var(--muted)}.kpi b{font-size:28px;line-height:1.15;color:var(--ink);font-weight:700;letter-spacing:-.5px}.kpi span{font-size:12px;color:var(--muted)}
   .sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px}
   .card.sc{margin-bottom:0}
+  /* v1.40: สถิติรายวัน + ประวัติการพิมพ์ */
+  .stv{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .stv button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 16px;font:inherit;font-size:14px;cursor:pointer;color:#33415A}
+  .stv button.on{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600}
+  .dt-bar input[type=date]{width:auto;padding:6px 8px}
+  .pl td{padding:6px 8px;white-space:nowrap;font-size:13px}.pl td.wrap{white-space:normal;min-width:180px}
+  .pl .tag{display:inline-block;border-radius:6px;padding:1px 7px;font-size:12px;background:#EEF2F7;color:#33415A}
+  .pl .tag.hub{background:#e8f5ec;color:#1d6b35}.pl .tag.nl{background:#fde8e8;color:#9b1c1c}
+  .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px}
+  .trend svg{cursor:pointer}
   .sc-h{font-weight:700;font-size:14px;margin-bottom:10px;color:var(--ink)}
   .hb{display:flex;flex-direction:column;gap:7px}
   .hb-row{display:grid;grid-template-columns:minmax(0,42%) 1fr 52px;align-items:center;gap:10px;font-size:13px}
@@ -291,12 +301,12 @@ function gasUrl() {
 gasUrl();
 // v1.39.1: ทุกครั้งที่เรียก Apps Script (โหลด/บันทึก) → เด้งหน้าต่างรอพร้อมแถบความคืบหน้า บังทั้งหน้า กด/พิมพ์อย่างอื่นไม่ได้จนกว่าจะเสร็จ
 const Busy = (() => {
-  const DL = /^admin_(load|login|list|read|gloss(Pending|NearMatches)|printStats|archive(List|File|Zip)|selfUpdateStatus|.*Preview$)/;
+  const DL = /^admin_(load|login|list|read|gloss(Pending|NearMatches)|print(Stats|Log)|archive(List|File|Zip)|selfUpdateStatus|.*Preview$)/;
   const MSG = {
     admin_login: 'กำลังตรวจรหัสผ่าน', admin_load: 'กำลังโหลดข้อมูลจากชีท', admin_selfUpdate: 'กำลังอัปเดต Code.gs และสร้างเวอร์ชันใหม่',
     admin_selfUpdateStatus: 'กำลังตรวจสถานะการอัปเดต', admin_archiveZip: 'กำลังสร้างไฟล์ ZIP', admin_archiveSnapshot: 'กำลังสำรองข้อมูล',
     admin_approveDrug: 'กำลังอนุมัติยาและบันทึกลงชีท', admin_prepareLangTabs: 'กำลังเตรียมแท็บภาษา', admin_geocodeBranches: 'กำลังหาพิกัดสาขา',
-    admin_printDailyNow: 'กำลังส่งรายงาน', admin_glossSave: 'กำลังบันทึกคำแปล', admin_saveTranslation: 'กำลังบันทึกคำแปล'
+    admin_printDailyNow: 'กำลังส่งรายงาน', admin_printLog: 'กำลังอ่านประวัติการพิมพ์', admin_setUserBranch: 'กำลังบันทึกสาขา', admin_glossSave: 'กำลังบันทึกคำแปล', admin_saveTranslation: 'กำลังบันทึกคำแปล'
   };
   // เวลาที่คาดว่าใช้ (วินาที) — ใช้คำนวณความเร็วแถบ (Apps Script ไม่บอกความคืบหน้าจริง แถบจะวิ่งไม่เกิน 95% จนกว่าจะเสร็จ)
   const EST = { admin_load: 6, admin_selfUpdate: 30, admin_archiveZip: 25, admin_archiveSnapshot: 15, admin_prepareLangTabs: 30, admin_upgradeLangFormulas: 30,
@@ -1093,14 +1103,16 @@ async function saveGloss(i, checked) {
 }
 
 // ===== v1.38: สถิติการพิมพ์ฉลาก (ข้อมูลดิบอยู่ในไฟล์ลับ แท็บ printLog_<รหัสสาขา>) =====
-const STS = { data: null, days: 30, branch: '', busy: false };
+const STS = { data: null, days: 30, branch: '', busy: false, view: 'sum' };
+const todayStr_ = () => { const d = new Date(Date.now() + 7 * 3600e3); return d.toISOString().slice(0, 10); };   // วันที่ตามเวลาไทย
+const PLV = { day: '', from: '', to: '', branch: '', q: '', user: '', via: '', offset: 0, data: null, dayData: null };
 const LANG_TH = { th: 'ไทย', en: 'อังกฤษ', ja: 'ญี่ปุ่น', ko: 'เกาหลี', 'zh-CN': 'จีนย่อ', 'zh-TW': 'จีนเต็ม', es: 'สเปน', fr: 'ฝรั่งเศส', ru: 'รัสเซีย', ar: 'อาหรับ', my: 'พม่า', vi: 'เวียดนาม', km: 'เขมร', it: 'อิตาลี', de: 'เยอรมัน', hi: 'ฮินดี' };
 const nf = n => Number(n || 0).toLocaleString('th-TH');
 async function loadStats() {
   if (STS.busy) return; STS.busy = true;
-  const L = $('#list'); if (L) L.innerHTML = '<div class="card muted">กำลังรวบรวมสถิติ…</div>';
+  const L = $('#list'); if (L) L.innerHTML = statTabs_() + '<div class="card muted">กำลังรวบรวมสถิติ…</div>';
   try { STS.data = await run('admin_printStats', STS.days, STS.branch); }
-  catch (e) { STS.data = null; STS.busy = false; if (L) L.innerHTML = '<div class="card muted">โหลดสถิติไม่ได้: ' + esc(e.message) + '</div>'; return; }
+  catch (e) { STS.data = null; STS.busy = false; if (L) L.innerHTML = statTabs_() + '<div class="card muted">โหลดสถิติไม่ได้: ' + esc(e.message) + '</div>'; return; }
   STS.busy = false; renderStats();
 }
 async function statsSummarize() {
@@ -1126,7 +1138,7 @@ function trendSvg(series) {
   const grid = [0, 0.5, 1].map(f => '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(nice * f) + '" y2="' + y(nice * f) + '" class="tg"/><text x="' + (pl - 6) + '" y="' + (y(nice * f) + 4) + '" class="tl" text-anchor="end">' + nf(Math.round(nice * f)) + '</text>').join('');
   const every = Math.ceil(n / 8);
   const xl = series.map((d, i) => ((i % every === 0 && (n - 1 - i >= every / 2 || i === n - 1)) || i === n - 1) ? '<text x="' + x(i) + '" y="' + (H - 6) + '" class="tl" text-anchor="middle">' + d.d.slice(8, 10) + '/' + d.d.slice(5, 7) + '</text>' : '').join('');
-  return '<div class="trend"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="จำนวนฉลากต่อวัน" onmousemove="trendHover(event,this)" onmouseleave="trendHover(null,this)">' + grid +
+  return '<div class="trend"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="จำนวนฉลากต่อวัน" onmousemove="trendHover(event,this)" onmouseleave="trendHover(null,this)" onclick="trendClick(event,this)">' + grid +
     '<path d="M' + x(0) + ',' + y(0) + ' L' + pts.join(' L') + ' L' + x(n - 1) + ',' + y(0) + ' Z" class="ta"/>' +
     '<polyline points="' + pts.join(' ') + '" class="tline"/>' + xl +
     '<line class="tx" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" style="display:none"/><circle class="td" r="4.5" style="display:none"/>' +
@@ -1147,29 +1159,41 @@ function trendHover(e, svg) {
   tip.style.display = 'block';
   tip.style.left = Math.min(r.width - 124, Math.max(0, px * r.width / W - 62)) + 'px';
 }
+function trendClick(e, svg) {
+  const s = STS.data && STS.data.daySeries; if (!s || !s.length) return;
+  const { W, pl, pr } = TR_, r = svg.getBoundingClientRect(), n = s.length;
+  const i = Math.max(0, Math.min(n - 1, Math.round(((e.clientX - r.left) * W / r.width - pl) / ((W - pl - pr) / Math.max(1, n - 1)))));
+  openDay(s[i].d);
+}
 function hoursSvg(hours) {
   const max = Math.max(1, Math.max.apply(null, hours.map(h => h.n)));
   return '<div class="hrs">' + hours.map(h => '<div class="hr" title="' + h.h + ':00–' + h.h + ':59 น. — ' + nf(h.n) + ' ใบ"><div class="hr-bar" style="height:' + (h.n ? Math.max(3, h.n * 100 / max) : 0).toFixed(1) + '%"></div><span>' + (h.h % 3 === 0 ? h.h : '') + '</span></div>').join('') + '</div>';
 }
+const statTabs_ = () => '<div class="stv" role="tablist">' + [['sum', '📊 ภาพรวม'], ['day', '📅 รายวัน'], ['log', '🧾 ประวัติการพิมพ์']].map(v =>
+  '<button role="tab" class="' + (STS.view === v[0] ? 'on' : '') + '" onclick="statView(\'' + v[0] + '\')">' + v[1] + '</button>').join('') + '</div>';
+function statView(v) { STS.view = v; renderStats(); }
 function renderStats() {
   const L = $('#list'); if (!L) return;
+  if (STS.view === 'day') return renderDay();
+  if (STS.view === 'log') return renderLog();
   if (!STS.data) return loadStats();
   const d = STS.data, bn = c => (d.branchNames && d.branchNames[c] ? c + ' · ' + d.branchNames[c] : c);
   const avg = d.days ? d.total / d.days : 0;
   const busiest = d.daySeries.reduce((a, x) => x.n > a.n ? x : a, { n: -1 });
   const filt = '<div class="dt-bar">' +
-    '<div class="filter">' + [[7, '7 วัน'], [30, '30 วัน'], [90, '90 วัน'], [365, '1 ปี']].map(o => '<button class="' + (STS.days === o[0] ? 'on' : '') + '" onclick="statsSet(\'days\',' + o[0] + ')">' + o[1] + '</button>').join('') + '</div>' +
+    '<div class="filter">' + [[1, 'วันนี้'], [7, '7 วัน'], [14, '14 วัน'], [30, '30 วัน'], [90, '90 วัน'], [180, '6 เดือน'], [365, '1 ปี']].map(o => '<button class="' + (STS.days === o[0] ? 'on' : '') + '" onclick="statsSet(\'days\',' + o[0] + ')">' + o[1] + '</button>').join('') + '</div>' +
     '<select onchange="statsSet(\'branch\',this.value)" style="width:auto;min-width:220px" aria-label="สาขา"><option value="">ทุกสาขา (' + d.branches.length + ')</option>' +
       d.branches.map(c => '<option value="' + esc(c) + '"' + (c === d.branch ? ' selected' : '') + '>' + esc(bn(c)) + '</option>').join('') + '</select>' +
     '<span class="muted">ตั้งแต่ ' + esc(d.since) + '</span><span style="flex:1"></span>' +
     '<button class="btn s sm" onclick="statsSummarize()" title="สรุปสถิติรายวันย้อนหลังตอนนี้ (ปกติระบบทำให้เองทุกคืนตี 2)">⟳ สรุปรายวัน</button>' +
-    '<a class="btn s sm" href="' + esc(d.rawFileUrl) + '" target="_blank" rel="noopener" style="text-decoration:none">📄 ข้อมูลดิบ (ไฟล์ลับ)</a></div>';
+    '<a class="btn s sm" href="' + esc(d.rawFileUrl) + '" target="_blank" rel="noopener" style="text-decoration:none">📄 ข้อมูลดิบ (ไฟล์ลับ)</a></div>' +
+    '<div class="muted" style="font-size:12px;margin:-4px 0 10px">💡 คลิกที่กราฟ “ฉลากต่อวัน” เพื่อดูรายละเอียดของวันนั้น</div>';
   if (!d.total) {
-    L.innerHTML = filt + '<div class="card muted">ยังไม่มีการพิมพ์ในช่วงนี้' + (d.branches.length ? '' : ' — ระบบจะเริ่มเก็บข้อมูลเมื่อหน้าพิมพ์ฉลากรุ่นใหม่สั่งพิมพ์ครั้งแรก') + '</div>';
+    L.innerHTML = statTabs_() + filt + '<div class="card muted">ยังไม่มีการพิมพ์ในช่วงนี้' + (d.branches.length ? '' : ' — ระบบจะเริ่มเก็บข้อมูลเมื่อหน้าพิมพ์ฉลากรุ่นใหม่สั่งพิมพ์ครั้งแรก') + '</div>';
     return;
   }
   const kpi = (lab, val, sub) => '<div class="kpi"><small>' + lab + '</small><b>' + val + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</div>';
-  L.innerHTML = filt +
+  L.innerHTML = statTabs_() + filt +
     '<div class="kpis">' +
       kpi('ฉลากที่พิมพ์', nf(d.total), 'เฉลี่ย ' + avg.toFixed(1) + ' ใบ/วัน') +
       kpi('งานพิมพ์', nf(d.jobs), d.jobs ? (d.total / d.jobs).toFixed(1) + ' ใบ/งาน' : '') +
@@ -1190,8 +1214,129 @@ function renderStats() {
     '</div>';
 }
 
+// ===== v1.40: สถิติรายวัน + ประวัติการพิมพ์ (ใคร · เวลา · ยา · พิมพ์ผ่านอะไร) — อ่านจากข้อมูลดิบ printLog_<สาขา> ด้วย admin_printLog =====
+const plBn_ = (d, c) => d && d.branchNames && d.branchNames[c] ? c + ' · ' + d.branchNames[c] : c;
+const branchList_ = () => (PLV.dayData && PLV.dayData.branches) || (PLV.data && PLV.data.branches) || (STS.data && STS.data.branches) || [];
+const brNames_ = () => Object.assign({}, STS.data && STS.data.branchNames, PLV.data && PLV.data.branchNames, PLV.dayData && PLV.dayData.branchNames);
+function plErr_(e) {
+  return /ไม่รู้จักคำสั่ง/.test(e.message) ? '⚠ ต้องอัปเดต Code.gs เป็น v1.40 ก่อน จึงจะดูสถิติรายวัน/ประวัติการพิมพ์ได้ (เมนู “อัปเดต Code.gs”)' : 'โหลดไม่ได้: ' + e.message;
+}
+function branchSel_(val, on) {
+  const names = brNames_(), list = branchList_();
+  return '<select onchange="' + on + '(this.value)" aria-label="สาขา"><option value="">ทุกสาขา' + (list.length ? ' (' + list.length + ')' : '') + '</option>' +
+    list.map(c => '<option value="' + esc(c) + '"' + (c === val ? ' selected' : '') + '>' + esc(names[c] ? c + ' · ' + names[c] : c) + '</option>').join('') + '</select>';
+}
+function dayShift_(d, n) { const t = new Date(d + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); }
+const thDate_ = d => new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+function openDay(d) { PLV.day = d; PLV.dayData = null; STS.view = 'day'; renderStats(); }
+function daySet(k, v) { if (k === 'day') PLV.day = v || todayStr_(); else PLV.branch = v; PLV.dayData = null; renderDay(); }
+async function renderDay() {
+  const L = $('#list'); if (!L) return;
+  if (!PLV.day) PLV.day = todayStr_();
+  const isToday = PLV.day >= todayStr_();
+  const bar = '<div class="dt-bar"><button class="btn s sm" onclick="daySet(\'day\',dayShift_(PLV.day,-1))" aria-label="วันก่อนหน้า">◀</button>' +
+    '<input type="date" value="' + esc(PLV.day) + '" max="' + todayStr_() + '" onchange="daySet(\'day\',this.value)" aria-label="เลือกวัน">' +
+    '<button class="btn s sm" onclick="daySet(\'day\',dayShift_(PLV.day,1))"' + (isToday ? ' disabled' : '') + ' aria-label="วันถัดไป">▶</button>' +
+    (isToday ? '' : '<button class="btn s sm" onclick="daySet(\'day\',\'\')">วันนี้</button>') +
+    branchSel_(PLV.branch, 'daySet.bind(null,\'branch\')') + '<span class="muted">' + esc(thDate_(PLV.day)) + '</span></div>';
+  if (!PLV.dayData) {
+    L.innerHTML = statTabs_() + bar + '<div class="card muted">กำลังอ่านประวัติการพิมพ์ของวันนี้…</div>';
+    try { PLV.dayData = await run('admin_printLog', { from: PLV.day, to: PLV.day, branch: PLV.branch, limit: 300 }); }
+    catch (e) { L.innerHTML = statTabs_() + bar + '<div class="card muted">' + esc(plErr_(e)) + '</div>'; return; }
+    if (STS.view !== 'day') return;
+    return renderDay();
+  }
+  const d = PLV.dayData, bn = c => plBn_(d, c);
+  if (!d.total) { L.innerHTML = statTabs_() + bar + '<div class="card muted">ไม่มีการพิมพ์ฉลากในวันนี้' + (PLV.branch ? 'ที่สาขานี้' : '') + '</div>'; return; }
+  const kpi = (lab, val, sub) => '<div class="kpi"><small>' + lab + '</small><b>' + val + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</div>';
+  const peak = d.hours.reduce((a, x) => x.n > a.n ? x : a, { n: -1 });
+  const logged = d.byUser.filter(x => x.k !== '(ไม่ได้ล็อกอิน)').reduce((a, x) => a + x.n, 0);
+  L.innerHTML = statTabs_() + bar +
+    '<div class="kpis">' + kpi('ฉลากที่พิมพ์', nf(d.total), nf(d.jobs) + ' งานพิมพ์') +
+      kpi('ผู้สั่งพิมพ์ (บัญชี)', nf(d.byUser.filter(x => x.k !== '(ไม่ได้ล็อกอิน)').length), 'ล็อกอิน ' + Math.round(logged * 100 / d.total) + '% ของฉลาก') +
+      kpi('สาขาที่พิมพ์', nf(d.byBranch.length), '') + kpi('ชั่วโมงที่พิมพ์มากสุด', peak.n > 0 ? peak.h + ':00' : '-', peak.n > 0 ? nf(peak.n) + ' ใบ' : '') +
+      kpi('ส่งไปพิมพ์ที่คอมเครื่องอื่น', nf(d.byVia.filter(x => x.k !== 'เครื่องนี้').reduce((a, x) => a + x.n, 0)), 'ใบ') + '</div>' +
+    '<div class="sgrid">' +
+      '<div class="card sc"><div class="sc-h">ช่วงเวลาที่พิมพ์ (นาฬิกา)</div>' + hoursSvg(d.hours) + '</div>' +
+      '<div class="card sc"><div class="sc-h">ผู้สั่งพิมพ์ (บัญชีที่ล็อกอิน)</div>' + hbars(d.byUser, x => x.k, { rank: true }) + '</div>' +
+      '<div class="card sc"><div class="sc-h">พิมพ์ผ่าน (เครื่องที่ออกฉลาก)</div>' + hbars(d.byVia, x => x.k) + '</div>' +
+      '<div class="card sc"><div class="sc-h">อุปกรณ์ที่กดสั่งพิมพ์</div>' + hbars(d.byDevice, x => x.k) + '</div>' +
+      '<div class="card sc"><div class="sc-h">ยาที่พิมพ์</div>' + hbars(d.topDrugs, x => x.k, { rank: true }) + '</div>' +
+      (PLV.branch ? '' : '<div class="card sc"><div class="sc-h">แยกตามสาขา</div>' + hbars(d.byBranch, x => bn(x.k), { rank: true }) + '</div>') +
+      '<div class="card sc"><div class="sc-h">ภาษาบนฉลาก</div>' + hbars(d.byLang, x => (LANG_TH[x.k] || x.k) + ' (' + x.k + ')') + '</div>' +
+      '<div class="card sc"><div class="sc-h">เภสัชกรผู้จ่ายยา (บนฉลาก)</div>' + hbars(d.byRph, x => x.k) + '</div>' +
+    '</div>' +
+    '<div class="card sc" style="margin-top:12px"><div class="sc-h">รายการพิมพ์ของวันนี้ (ล่าสุดก่อน' + (d.total > d.rows.length ? ' · แสดง ' + nf(d.rows.length) + ' จาก ' + nf(d.total) : '') + ')</div>' +
+      plTable_(d.rows, !PLV.branch) +
+      '<div class="pager"><button class="btn s sm" onclick="PLV.from=PLV.to=PLV.day;PLV.data=null;PLV.offset=0;statView(\'log\')">🧾 เปิดในประวัติการพิมพ์ (ค้นหา/กรอง/ดาวน์โหลด)</button></div></div>';
+}
+function plTable_(rows, showBr) {
+  if (!rows.length) return '<div class="muted" style="padding:10px 0">— ไม่พบรายการ —</div>';
+  const hm = t => String(t || '').slice(11, 16), dd = t => { const x = String(t || ''); return x.slice(8, 10) + '/' + x.slice(5, 7); };
+  const multiDay = rows.some(r => String(r.t).slice(0, 10) !== String(rows[0].t).slice(0, 10));
+  return '<div class="tbl-wrap" style="max-height:60vh"><table class="dt pl"><thead><tr><th>เวลา</th><th>ผู้สั่งพิมพ์ (บัญชี)</th><th>ยา</th><th>ภาษา</th><th>พิมพ์ผ่าน</th><th>อุปกรณ์</th>' + (showBr ? '<th>สาขา</th>' : '') + '<th>วิธีใช้</th><th>ผู้ใช้ยา</th><th>เภสัชกรบนฉลาก</th><th>แบบ</th></tr></thead><tbody>' +
+    rows.map(r => '<tr><td>' + (multiDay ? esc(dd(r.t)) + ' ' : '') + '<b>' + esc(hm(r.t)) + '</b></td>' +
+      '<td>' + (r.user || r.emp ? esc(r.user || '') + (r.emp ? ' <span class="muted">(' + esc(r.emp) + ')</span>' : '') : '<span class="tag nl">ไม่ได้ล็อกอิน</span>') + '</td>' +
+      '<td class="wrap">' + esc(r.drug) + (r.pend ? ' <span class="tag">รออนุมัติ</span>' : '') + (r.regimen ? '<div class="muted" style="font-size:12px">' + esc(r.regimen) + '</div>' : '') + '</td>' +
+      '<td>' + esc(LANG_TH[r.lang] || r.lang) + (r.thai ? ' <span class="tag">+ไทย</span>' : '') + '</td>' +
+      '<td><span class="tag' + (r.via && r.via !== 'เครื่องนี้' ? ' hub' : '') + '">' + esc(r.via || '-') + '</span></td>' +
+      '<td class="muted">' + esc(r.dev || '-') + '</td>' + (showBr ? '<td>' + esc(r.br) + '</td>' : '') +
+      '<td class="muted">' + esc([r.meal, r.dose].filter(Boolean).join(' · ')) + '</td>' +
+      '<td>' + esc(r.patient || '') + '</td><td class="muted">' + esc(r.rph || '') + (r.rphLic ? ' (' + esc(r.rphLic) + ')' : '') + '</td>' +
+      '<td class="muted">' + esc(r.mode === 'batch' ? 'ทั้งคิว' : r.mode === 'single' ? 'ทีละใบ' : (r.mode || '')) + '</td></tr>').join('') + '</tbody></table></div>';
+}
+function logSet(k, v) { PLV[k] = v; if (k !== 'offset') PLV.offset = 0; PLV.data = null; renderLog(); }
+function logOpts_(extra) { return Object.assign({ from: PLV.from, to: PLV.to, branch: PLV.branch, q: PLV.q, user: PLV.user, via: PLV.via, offset: PLV.offset, limit: 100 }, extra || {}); }
+async function renderLog() {
+  const L = $('#list'); if (!L) return;
+  if (!PLV.to) PLV.to = todayStr_(); if (!PLV.from) PLV.from = dayShift_(PLV.to, -6);
+  const d = PLV.data;
+  const opt = (list, val) => (list || []).map(x => '<option value="' + esc(x.k) + '"' + (x.k === val ? ' selected' : '') + '>' + esc(x.k) + ' (' + nf(x.n) + ')</option>').join('');
+  const bar = '<div class="dt-bar">' +
+    '<label class="muted">ตั้งแต่ <input type="date" value="' + esc(PLV.from) + '" max="' + todayStr_() + '" onchange="logSet(\'from\',this.value)"></label>' +
+    '<label class="muted">ถึง <input type="date" value="' + esc(PLV.to) + '" max="' + todayStr_() + '" onchange="logSet(\'to\',this.value)"></label>' +
+    branchSel_(PLV.branch, 'logSet.bind(null,\'branch\')') +
+    '<select onchange="logSet(\'user\',this.value)" aria-label="ผู้สั่งพิมพ์" style="min-width:180px"><option value="">ผู้สั่งพิมพ์: ทุกคน</option>' + opt(d && d.byUser, PLV.user) + (PLV.user && !(d && d.byUser.some(x => x.k === PLV.user)) ? '<option selected value="' + esc(PLV.user) + '">' + esc(PLV.user) + '</option>' : '') + '</select>' +
+    '<select onchange="logSet(\'via\',this.value)" aria-label="พิมพ์ผ่าน" style="min-width:160px"><option value="">พิมพ์ผ่าน: ทั้งหมด</option>' + opt(d && d.byVia, PLV.via) + (PLV.via && !(d && d.byVia.some(x => x.k === PLV.via)) ? '<option selected value="' + esc(PLV.via) + '">' + esc(PLV.via) + '</option>' : '') + '</select>' +
+    '<input type="search" placeholder="ค้นหา ชื่อยา / ผู้ใช้ยา / บาร์โค้ด…" value="' + esc(PLV.q) + '" onkeydown="if(event.key===\'Enter\')logSet(\'q\',this.value)" onsearch="logSet(\'q\',this.value)">' +
+    '<button class="btn s sm" onclick="plCsv()">⬇ CSV</button></div>' +
+    '<div class="muted" style="font-size:12px;margin:-4px 0 10px">ดูได้ครั้งละไม่เกิน 31 วัน · “พิมพ์ผ่าน” = เครื่องที่ออกฉลากจริง (เครื่องนี้ หรือชื่อคอมสาขาที่ส่งไปพิมพ์) · บันทึกก่อน v1.40 จะเป็น “เครื่องนี้” ทั้งหมด</div>';
+  if (!d) {
+    L.innerHTML = statTabs_() + bar + '<div class="card muted">กำลังอ่านประวัติการพิมพ์…</div>';
+    try { PLV.data = await run('admin_printLog', logOpts_()); }
+    catch (e) { L.innerHTML = statTabs_() + bar + '<div class="card muted">' + esc(plErr_(e)) + '</div>'; return; }
+    if (PLV.data.from !== PLV.from) PLV.from = PLV.data.from;
+    if (STS.view !== 'log') return;
+    return renderLog();
+  }
+  const pages = Math.max(1, Math.ceil(d.total / d.limit)), page = Math.floor(d.offset / d.limit) + 1;
+  L.innerHTML = statTabs_() + bar +
+    '<div class="card sc"><div class="sc-h">' + nf(d.total) + ' ฉลาก · ' + nf(d.jobs) + ' งานพิมพ์ · ' + esc(d.from) + (d.to !== d.from ? ' ถึง ' + esc(d.to) : '') + '</div>' +
+    plTable_(d.rows, !PLV.branch) +
+    '<div class="pager"><span class="muted">หน้า ' + page + ' / ' + pages + '</span>' +
+      '<button class="btn s sm" ' + (page <= 1 ? 'disabled' : '') + ' onclick="logSet(\'offset\',' + Math.max(0, d.offset - d.limit) + ')">◀ ใหม่กว่า</button>' +
+      '<button class="btn s sm" ' + (page >= pages ? 'disabled' : '') + ' onclick="logSet(\'offset\',' + (d.offset + d.limit) + ')">เก่ากว่า ▶</button></div></div>';
+}
+async function plCsv() {
+  try {
+    const out = []; let off = 0, total = 1;
+    while (off < total && off < 20000) {
+      const r = await run('admin_printLog', logOpts_({ offset: off, limit: 500 }));
+      total = r.total; out.push.apply(out, r.rows); off += 500;
+    }
+    const H = ['เวลา', 'รหัสสาขา', 'ชื่อสาขา', 'ผู้สั่งพิมพ์', 'รหัสพนักงาน', 'ชื่อยา', 'ภาษา', 'สำเนาไทย', 'พิมพ์ผ่าน', 'อุปกรณ์', 'เวลาใช้ยา', 'ขนาด (เช้า-กลางวัน-เย็น-ก่อนนอน)', 'ผู้ใช้ยา', 'เภสัชกรบนฉลาก', 'เลขใบอนุญาต', 'วิธีพิมพ์', 'ยารออนุมัติ', 'โรค', 'งานพิมพ์'];
+    const q = v => { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    const lines = [H.join(',')].concat(out.map(r => [r.t, r.br, r.brName, r.user, r.emp, r.drug, r.lang, r.thai ? 'Y' : '', r.via, r.dev, r.meal, r.dose, r.patient, r.rph, r.rphLic, r.mode, r.pend ? 'Y' : '', r.regimen, r.job].map(q).join(',')));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'ประวัติการพิมพ์_' + PLV.from + '_' + PLV.to + (PLV.branch ? '_' + PLV.branch : '') + '.csv';
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast('✅ ดาวน์โหลด ' + nf(out.length) + ' แถว');
+  } catch (e) { toast('❌ ' + plErr_(e)); }
+}
+
 function switchTab(k) { if (!guard()) return; TAB = k; render(); }
-function refreshAll() { if (TAB === 'data') { if (guard()) loadSheet(SH.offset); } else if (TAB === 'tr') { TR.data = null; loadTr(); } else if (TAB === 'ver') { VER.data = null; loadVer(); } else if (TAB === 'gloss') { GL.data = null; load(); } else if (TAB === 'stats') { STS.data = null; renderStats(); } else load(); }
+function refreshAll() { if (TAB === 'data') { if (guard()) loadSheet(SH.offset); } else if (TAB === 'tr') { TR.data = null; loadTr(); } else if (TAB === 'ver') { VER.data = null; loadVer(); } else if (TAB === 'gloss') { GL.data = null; load(); } else if (TAB === 'stats') { STS.data = null; PLV.data = null; PLV.dayData = null; renderStats(); } else load(); }
 
 async function loadSheets() {
   try {
@@ -1525,30 +1670,16 @@ PW ? load() : loginView();
 async function saveBranch(row) {
   const newBranch = document.getElementById('ub' + row).value.trim();
   const btn = window.event ? window.event.target : null;
+  const reset = () => { if (btn) { btn.innerText = '💾 เซฟสาขา'; btn.disabled = false; } };
   if (btn) { btn.innerText = '⏳...'; btn.disabled = true; }
-
   try {
-    // ส่งข้อมูลไปหา Code.gs โดยตรง
-    const r = await fetch(await gasUrl(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'updateBranch', row: row, branchCode: newBranch })
-    });
-    const res = await r.json();
-
-    if (res && res.ok) {
-      if (btn) { 
-        btn.innerText = '✅ เรียบร้อย'; 
-        setTimeout(() => { btn.innerText = '💾 เซฟสาขา'; btn.disabled = false; }, 2000); 
-      }
-      toast('✅ บันทึกสาขาเรียบร้อยแล้ว');
-    } else {
-      alert('เกิดข้อผิดพลาด: ' + (res?.msg || 'ไม่สามารถบันทึกได้'));
-      if (btn) { btn.innerText = '💾 เซฟสาขา'; btn.disabled = false; }
-    }
+    // v1.40: แก้สาขาผ่าน admin_setUserBranch (ต้องใช้รหัสแอดมิน)
+    await run('admin_setUserBranch', row, newBranch);
+    if (btn) { btn.innerText = '✅ เรียบร้อย'; setTimeout(reset, 2000); }
+    toast('✅ บันทึกสาขาเรียบร้อยแล้ว');
   } catch (err) {
-    alert('ติดต่อระบบหลังบ้านไม่ได้: ' + err.message);
-    if (btn) { btn.innerText = '💾 เซฟสาขา'; btn.disabled = false; }
+    alert(/ไม่รู้จักคำสั่ง/.test(err.message) ? 'Code.gs ยังเป็นรุ่นเก่า — กรุณาอัปเดต Code.gs เป็น v1.40 ก่อน (เมนู “อัปเดต Code.gs”)' : 'บันทึกไม่สำเร็จ: ' + err.message);
+    reset();
   }
 }
 function filterUsersDOM(q) {
