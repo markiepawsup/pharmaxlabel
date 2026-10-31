@@ -2690,6 +2690,18 @@
             list.sort((a, b) => a.localeCompare(b));
             presetNameCandidates.length = 0;
             Array.prototype.push.apply(presetNameCandidates, list);
+            // v1.40: คลังประโยคสรรพคุณ/คำแนะนำ จากข้อมูลยาใน Google Sheet
+            if (typeof sheetIndPhrases !== 'undefined') {
+                const tally = (field, out) => {
+                    const cnt = new Map();
+                    (state.priv || []).concat(state.drugs).forEach(se => (se[field + 'Lines'] || String(se[field] || '').split('\n')).forEach(l => {
+                        l = l.replace(/\s+/g, ' ').trim(); if (l.length < 3) return; cnt.set(l, (cnt.get(l) || 0) + 1);
+                    }));
+                    out.length = 0;
+                    Array.prototype.push.apply(out, Array.from(cnt.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(e => e[0]));
+                };
+                tally('indication', sheetIndPhrases); tally('advice', sheetAdvPhrases);
+            }
         }
 
         function rerenderIfMatched() {
@@ -3438,7 +3450,7 @@
     function handleSmartInput(type) {
         let ta = document.getElementById(type === 'ind' ? 'in_indication' : 'in_advice');
         let popup = document.getElementById(type === 'ind' ? 'ind_popup_list' : 'adv_popup_list');
-        let db = type === 'ind' ? indicationsDB : advicesDB;
+        let db = type === 'ind' ? sheetIndPhrases : sheetAdvPhrases;   // v1.40: ประโยคจากข้อมูลยาใน Google Sheet
 
         let val = ta.value.split('\n').pop().trim().toLowerCase();
 
@@ -3449,11 +3461,11 @@
             return;
         }
 
-        let matches = db.filter(item => item.th.toLowerCase().includes(val));
+        let matches = db.filter(t => t.toLowerCase().includes(val)).slice(0, 30);
 
         if (matches.length > 0) {
-            popup.innerHTML = matches.map(m => 
-                `<div class="smart-popup-item" onclick="selectSmartItem('${type}', '${m.th.replace(/'/g, "\\'")}')">${m.th}</div>`
+            popup.innerHTML = matches.map(t =>
+                `<div class="smart-popup-item" onclick="selectSmartItem('${type}', '${escapeHtml(t).replace(/"/g, '&quot;').replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">${escapeHtml(t)}</div>`
             ).join('');
             popup.style.display = 'block';
         } else {
@@ -4502,7 +4514,7 @@
 
         if (sheetInfo && sheetInfo.trusted) return { text: sheetInfo.text, failed: false, source: 'sheet' };
 
-        let verified = findVerified(text, db, lang);
+        let verified = null;   // v1.40: ไม่ใช้พจนานุกรมใน data.js แล้ว (ทุกประโยคในนั้นอยู่ใน medical_glossary ครบแล้ว)
         if (verified) return { text: verified, failed: false, source: 'dict' };
 
         if (sheetInfo) return { text: sheetInfo.text, failed: false, source: 'sheetAuto' };
@@ -5026,112 +5038,10 @@
         const bc2 = document.getElementById('in_barcode_scan'); if (bc2) setTimeout(() => bc2.focus(), 0);   // พร้อมยิงบาร์โค้ดตัวถัดไป
     }
 
-    function applyPreset(name) {
-        const preset = DRUG_PRESETS.find(p => p.name === name);
-        if (!preset) return;
-
-        document.getElementById('in_drug_name').value = preset.name.toUpperCase();
-        document.getElementById('sel_drug_type').value = preset.type;
-        document.getElementById('sel_meal').value = preset.meal || "";
-        document.getElementById('qty_morning').value = preset.dose.morning === "X" ? "" : preset.dose.morning;
-        document.getElementById('qty_noon').value = preset.dose.noon === "X" ? "" : preset.dose.noon;
-        document.getElementById('qty_evening').value = preset.dose.evening === "X" ? "" : preset.dose.evening;
-        document.getElementById('qty_bed').value = preset.dose.bed === "X" ? "" : preset.dose.bed;
-
-        let indTexts = preset.indications.map(k => {
-            let found = indicationsDB.find(x => x.key === k);
-            return found ? found.th : k;
-        });
-        document.getElementById('in_indication').value = indTexts.join('\n');
-
-        let advTexts = preset.advices.map(k => {
-            let found = advicesDB.find(x => x.key === k);
-            return found ? found.th : k;
-        });
-        document.getElementById('in_advice').value = advTexts.join('\n');
-
-        // v1.7: ถ้าชื่อยาตรงกับใน Google Sheet -> ใช้ข้อมูลจาก Sheet ทับ (ฟิลด์ที่ Sheet ว่างคงค่า data.js ไว้)
-        const sheetMatch = PharmaxSheet.find(preset.name);
-        if (sheetMatch) PharmaxSheet.overlay(sheetMatch);
-
-        updateLabel();
-        performTranslateInd();
-        performTranslateAdv();
-        clinicalCheckOnSelect(); // v1.9: ตรวจข้อมูลผู้ป่วยกับยาที่เลือก
-    }
-
-    function renderPresetDropdown() {
-        let select = document.getElementById('preset_select');
-        if (!select) return;
-        DRUG_PRESETS.forEach(preset => {
-            let opt = document.createElement('option');
-            opt.value = preset.name;
-            opt.textContent = preset.name;
-            select.appendChild(opt);
-        });
-    }
-
-    const drugReferenceCandidates = (() => {
-        const list = [];
-        const seenGeneric = new Set();
-        DRUG_REFERENCE_DB.forEach(e => {
-            list.push(`${e.b} (${e.g})`);
-            const gKey = e.g.toLowerCase();
-            if (gKey !== e.b.toLowerCase() && !seenGeneric.has(gKey)) {
-                seenGeneric.add(gKey);
-                list.push(`${e.g} (${e.b})`);
-            }
-        });
-        return list;
-    })();
-
-    function findReferenceEntry(fullText) {
-        const norm = fullText.trim().toLowerCase();
-        return DRUG_REFERENCE_DB.find(e => {
-            return norm === `${e.b} (${e.g})`.toLowerCase() || norm === `${e.g} (${e.b})`.toLowerCase();
-        });
-    }
-
-    function applyCategoryDefaults(entry) {
-        const def = CATEGORY_DEFAULTS[entry.c];
-        if (!def) return;
-        document.getElementById('in_drug_name').value = `${entry.b} (${entry.g})`.toUpperCase();
-        if (def.type) document.getElementById('sel_drug_type').value = def.type;
-        document.getElementById('sel_meal').value = "";
-        document.getElementById('qty_morning').value = "";
-        document.getElementById('qty_noon').value = "";
-        document.getElementById('qty_evening').value = "";
-        document.getElementById('qty_bed').value = "";
-        
-        let indTexts = (def.indications || []).map(k => {
-            let found = indicationsDB.find(x => x.key === k);
-            return found ? found.th : k;
-        });
-        document.getElementById('in_indication').value = indTexts.join('\n');
-
-        // entry.warnings (set per-drug in DRUG_REFERENCE_DB, e.g. penicillin-allergy
-        // caution on amoxicillin/clavulanate, renal dose adjustment on antivirals) are
-        // pre-translated advicesDB keys - same offline, all-16-language-verified
-        // library as def.advices - so they're safe to auto-select exactly like any
-        // other checklist advice, never a live-translated free-text warning.
-        let advKeys = (def.advices || []).concat(entry.warnings || []).concat(def.chronic ? ["chronicUseAsDirected"] : []);
-        let advTexts = advKeys.map(k => {
-            let found = advicesDB.find(x => x.key === k);
-            return found ? found.th : k;
-        });
-        document.getElementById('in_advice').value = advTexts.join('\n');
-
-        // v1.7: ถ้าชื่อยาตรงกับใน Google Sheet -> ใช้ข้อมูลจาก Sheet ทับ (ฟิลด์ที่ Sheet ว่างคงค่า data.js ไว้)
-        const sheetMatch = PharmaxSheet.find(`${entry.b} (${entry.g})`);
-        if (sheetMatch) PharmaxSheet.overlay(sheetMatch);
-
-        updateLabel();
-        performTranslateInd();
-        performTranslateAdv();
-        clinicalCheckOnSelect(); // v1.9
-    }
-
     const presetNameCandidates = [];   // v1.39: เติมจากข้อมูลยาใน Google Sheet เท่านั้น (PharmaxSheet.applyToUI) — ไม่ใช้รายชื่อใน data.js แล้ว
+    // v1.40: ประโยคสรรพคุณ/คำแนะนำสำหรับ ghost text และรายการเลือก = บรรทัดที่มีจริงในข้อมูลยา Google Sheet (drugTH) เท่านั้น
+    //  เรียงจากที่ใช้บ่อยที่สุดก่อน · ไม่ใช้ indicationsDB/advicesDB ใน data.js แล้ว
+    const sheetIndPhrases = [], sheetAdvPhrases = [];
 
     function ghostSuggestionFor(typed, candidates) {
         if (!typed) return null;
@@ -5226,8 +5136,8 @@
 
     function initGhostText() {
         wireGhostInput('in_drug_name', 'ghost_drug_name', presetNameCandidates, false);
-        wireGhostInput('in_indication', 'ghost_indication', indicationsDB.map(x => x.th), true);
-        wireGhostInput('in_advice', 'ghost_advice', advicesDB.map(x => x.th), true);
+        wireGhostInput('in_indication', 'ghost_indication', sheetIndPhrases, true);   // v1.40: จาก Google Sheet
+        wireGhostInput('in_advice', 'ghost_advice', sheetAdvPhrases, true);
     }
 
     const HISTORY_KEY = 'pharmax_print_history';
@@ -6736,7 +6646,7 @@
     async function requirePrintLogin() {
         try {
             const D = window.PharmaxDrugSubmit;
-            if (D && D.token && D.token()) return true;
+            if (D && D.token && D.token(true)) return true;   // v1.40: true = นับเป็นการใช้งาน (ต่ออายุ 5.5 ชม.)
             if (!D || !D.requireLogin) {
                 alert('ระบบ log-in ยังโหลดไม่เสร็จ กรุณารอสักครู่หรือรีเฟรชหน้า แล้วลองใหม่อีกครั้ง');
                 return false;
@@ -7551,9 +7461,16 @@ window.PrintLog = (function () {
             const rph = (typeof _rph !== 'undefined' && _rph && typeof rphText === 'function' && rphText()) ? _rph : null;
             const tok = window.PharmaxDrugSubmit && PharmaxDrugSubmit.token ? PharmaxDrugSubmit.token() : '';
             const lang = typeof currentLang !== 'undefined' ? currentLang : '';
+            // v1.40: พิมพ์ผ่านอะไร — เครื่องนี้ หรือส่งไปคอมสาขาไหน (ต่อท้ายช่อง "อุปกรณ์" ให้ Code.gs เดิมก็บันทึกได้)
+            let via = { kind: 'local' };
+            try { if (typeof PmxRemote !== 'undefined' && PmxRemote.lastVia) via = PmxRemote.lastVia; } catch (e) {}
+            const viaText = via.kind === 'hub' ? (via.name || 'คอมสาขา') + (via.branch ? ' (' + via.branch + ')' : '') : 'เครื่องนี้';
+            const dev = (device() + ' → ' + viaText).slice(0, 60);
+            const u = (window.PharmaxDrugSubmit && PharmaxDrugSubmit.user && tok) ? (PharmaxDrugSubmit.user() || {}) : {};
             const payload = {
+                clientTime: new Date().toISOString(), via: via.kind, hub: via.name || '', hubBranch: via.branch || '', userName: u.name || '', userId: u.empId || '',
                 action: 'logPrint', token: tok || undefined, branch: currentBranch, branchName: th.pharmacyLine1 || '',
-                brand: (typeof getBrandForBranch === 'function' && getBrandForBranch(currentBranch)) || '', mode: mode, device: device(),
+                brand: (typeof getBrandForBranch === 'function' && getBrandForBranch(currentBranch)) || '', mode: mode, device: dev,
                 rphLicense: rph ? rph.license : '', rphName: rph ? rph.name : '',
                 items: items.map(it => {
                     const se = PharmaxSheet.find(it.drugName);
@@ -7817,7 +7734,8 @@ const PmxRemote = (function () {
         txt.textContent = (!n || st.preferLocal) ? 'Print ที่เครื่องนี้' : t ? 'Print ผ่าน ' + t.name + (t.branch ? ' – ' + t.branch : '') : 'เลือกคอมตอนพิมพ์ (' + n + ')';
         // v1.39.1: ป้ายใต้ปุ่ม "พิมพ์ทันที" / "พิมพ์ทั้งหมดในคิว" — กดแล้วออกเลย จึงต้องเห็นปลายทางก่อนกด
         const kind = (!n || st.preferLocal) ? 'local' : t ? 'hub' : 'ask';
-        const label = kind === 'local' ? '→ พิมพ์ที่เครื่องนี้' : kind === 'hub' ? '→ ' + t.name + (t.branch ? ' – ' + t.branch : '') : '→ จะถามว่าพิมพ์ที่คอมไหน';
+        let who = null; try { who = window.PharmaxDrugSubmit && PharmaxDrugSubmit.token() ? PharmaxDrugSubmit.user() : null; } catch (e) {}
+        const label = (kind === 'local' ? '→ พิมพ์ที่เครื่องนี้' : kind === 'hub' ? '→ ' + t.name + (t.branch ? ' – ' + t.branch : '') : '→ จะถามว่าพิมพ์ที่คอมไหน') + (who && who.name ? ' · โดย ' + who.name : ' · ต้องเข้าสู่ระบบ');
         document.querySelectorAll('.print-dest').forEach(el => { el.hidden = false; el.textContent = label; el.className = 'print-dest' + (kind === 'hub' ? '' : ' ' + kind); el.title = kind === 'hub' ? 'กดแล้วส่งไปพิมพ์ที่ ' + label.slice(2) + ' ทันที · เปลี่ยนได้ที่ปุ่มเครื่องพิมพ์ด้านบน' : ''; });
         btn.title = 'กดเพื่อเลือก/เปลี่ยนเครื่องที่จะพิมพ์' + (t && !st.preferLocal ? ' (ตอนนี้: ' + t.name + (t.branch ? ' – ' + t.branch : '') + ')' : '');
     }
@@ -7918,18 +7836,19 @@ const PmxRemote = (function () {
         refreshStatus().then(() => { if (ov.isConnected) renderList(); });
     }
 
-    // ส่งไปพิมพ์ที่คอมเครื่องอื่น ต้องเข้าสู่ระบบก่อน (พิมพ์ที่เครื่องตัวเองไม่บังคับ)
+    // v1.40: ทุกการพิมพ์ต้องเข้าสู่ระบบก่อน (ตรวจที่ requirePrintLogin ก่อนเรียก route แล้ว — ตรงนี้กันไว้อีกชั้นสำหรับการส่งไปคอมเครื่องอื่น)
+    let lastVia = { kind: 'local' };   // v1.40: ปลายทางของงานพิมพ์ล่าสุด → บันทึกลงประวัติการพิมพ์ (PrintLog)
     const loggedUser = () => { try { return window.PharmaxDrugSubmit && PharmaxDrugSubmit.token() ? PharmaxDrugSubmit.user() : null; } catch (e) { return null; } };
     async function ensureLogin(hideEl) {
         if (loggedUser()) return true;
         const D = window.PharmaxDrugSubmit;
         if (!D || !D.requireLogin) return false;
         if (hideEl) hideEl.style.display = 'none';
-        const ok = await D.requireLogin('ต้องเข้าสู่ระบบก่อน ถึงจะส่งไปพิมพ์ที่คอมเครื่องอื่นได้ (พิมพ์ที่เครื่องนี้ไม่ต้องเข้าสู่ระบบ)');
+        const ok = await D.requireLogin('กรุณาเข้าสู่ระบบก่อนสั่งพิมพ์ฉลากยา');
         if (hideEl) hideEl.style.display = '';
         return ok && !!loggedUser();
     }
-    const NEED_LOGIN = 'ยังไม่ได้เข้าสู่ระบบ — ส่งไปพิมพ์ที่คอมเครื่องอื่นไม่ได้ (เลือก “พิมพ์ที่เครื่องนี้” ได้โดยไม่ต้องเข้าสู่ระบบ)';
+    const NEED_LOGIN = 'ยังไม่ได้เข้าสู่ระบบ — ต้องเข้าสู่ระบบก่อนจึงจะพิมพ์ได้';
 
     async function sendTo(h, container, title) {
         const u = loggedUser();
@@ -7938,6 +7857,7 @@ const PmxRemote = (function () {
         const pages = container.querySelectorAll('.batch-label-page').length || 1;
         const p = await gz(html);
         const r = await api('/print', { token: h.token, enc: p.enc, data: p.data, pages, title });
+        lastVia = { kind: 'hub', name: h.name || '', branch: h.branch || '' };
         st.lastHub = h.token; save(KEY, st);
         online[h.token] = true;
         return { r, pages };
@@ -7950,6 +7870,7 @@ const PmxRemote = (function () {
 
     // คืนค่า 'local' = พิมพ์ที่เครื่องนี้ (window.print) · 'sent' = ส่งไปคอมแล้ว · 'cancel' = ยกเลิก
     async function route(container, title) {
+        lastVia = { kind: 'local' };
         if (isHub || !relay() || !st.hubs.length || st.preferLocal) return 'local';
         const h = targetHub();   // มีเครื่องเดียว หรือเลือก "เครื่องหลัก" ไว้ → ส่งเลย ไม่ถาม
         if (h) {
@@ -8158,7 +8079,7 @@ const PmxRemote = (function () {
         if (relay() && st.hubs.length) setTimeout(refreshStatus, 1500);
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-    return { route, openManager, refreshChip, get isHub() { return isHub; } };
+    return { route, openManager, refreshChip, get isHub() { return isHub; }, get lastVia() { return lastVia; } };
 })();
 </script>
 <script src="drug-submit.js"></script>

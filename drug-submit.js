@@ -14,6 +14,17 @@ window.PMX_DS_BUILD = '20261026-1';   // v1.38: ต้องตรงกับ <
   try { sessionStorage.removeItem('pharmax_submit_session'); } catch (e) {}          // ลบ session รุ่นเก่าที่มี PIN ค้างอยู่
   try { session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch (e) {}
   if (!session || !session.token) session = null;
+  // v1.40: เซิร์ฟเวอร์จำ token ไว้ 6 ชม. นับจากใช้งานล่าสุด → ฝั่งเว็บถือว่าหมดอายุที่ 5.5 ชม. ให้เข้าสู่ระบบใหม่ก่อนพิมพ์ (ประวัติการพิมพ์จะได้มีชื่อผู้สั่งเสมอ)
+  const IDLE_MS = 5.5 * 3600 * 1000;
+  const fresh = (touch) => {
+    if (!session) return false;
+    const now = Date.now();
+    if (session.at && now - session.at > IDLE_MS) { session = null; try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {} return false; }
+    if (!touch) return true;
+    session.at = now; try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+    return true;
+  };
+  if (session && !session.at) session.at = Date.now();
 
   // ---------- API ----------
   async function api(payload) {
@@ -26,7 +37,7 @@ window.PMX_DS_BUILD = '20261026-1';   // v1.38: ต้องตรงกับ <
       return { ok: false, message: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' };
     }
   }
-  const auth = () => ({ token: session.token });
+  const auth = () => { fresh(false); return { token: session ? session.token : '' }; };   // งานเบื้องหลังไม่นับเป็นการใช้งาน
 
   // ---------- validation ----------
   function pinError(pin) {
@@ -139,7 +150,7 @@ window.PMX_DS_BUILD = '20261026-1';   // v1.38: ต้องตรงกับ <
   fab.addEventListener('click', open);
   // พิมพ์ผ่านคอม: ขอให้เข้าสู่ระบบก่อน → คืนค่า true เมื่อเข้าสู่ระบบสำเร็จ / false ถ้าปิดหน้าต่างไปก่อน
   const requireLogin = (note) => new Promise(resolve => {
-    if (session) return resolve(true);
+    if (fresh(true)) return resolve(true);
     let done = false;
     const mo = new MutationObserver(() => { if (!overlay.classList.contains('open')) finish(!!session); });
     const finish = v => { if (done) return; done = true; mo.disconnect(); resolve(v); };
@@ -149,7 +160,7 @@ window.PMX_DS_BUILD = '20261026-1';   // v1.38: ต้องตรงกับ <
     mo.observe(overlay, { attributes: true, attributeFilter: ['class'] });
   });
   window.PharmaxDrugSubmit = { open: open, openFeedback: openFeedback, openMine: openMine, requireLogin: requireLogin, webAppUrl: WEB_APP_URL,
-    token: () => (session && session.token) || '', user: () => session ? { empId: session.empId, name: session.name } : null, refreshMine: () => refreshPrivate() };
+    token: (touch) => (fresh(touch) && session.token) || '', user: () => session ? { empId: session.empId, name: session.name } : null, refreshMine: () => refreshPrivate() };
 
   // ---------- v1.38: ยาที่ฉันส่งและยังรออนุมัติ → ใช้พิมพ์ฉลากได้ทันทีเฉพาะบัญชีนี้ (ต้องล็อกอิน) ----------
   function updateUserChip() {
@@ -213,7 +224,7 @@ window.PMX_DS_BUILD = '20261026-1';   // v1.38: ต้องตรงกับ <
   }
   const _bootPriv = () => { updateUserChip(); if (session) refreshPrivate(); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(_bootPriv, 300)); else setTimeout(_bootPriv, 300);
-  setInterval(() => { if (session && !document.hidden) refreshPrivate(); }, 5 * 60 * 1000);   // อนุมัติแล้ว → ยาย้ายไปอยู่ใน drugTH (หายจากรายการส่วนตัว)
+  setInterval(() => { if (fresh(false) && !document.hidden) refreshPrivate(); }, 5 * 60 * 1000);   // อนุมัติแล้ว → ยาย้ายไปอยู่ใน drugTH (หายจากรายการส่วนตัว)
   overlay.addEventListener('mousedown', e => { if (e.target === overlay) close(); });
   const head = t => '<h3><span>' + t + '</span><button class="dsm-x" type="button" data-close>×</button></h3>';
   overlay.addEventListener('click', e => { if (e.target.hasAttribute('data-close')) close(); });
@@ -244,7 +255,7 @@ window.PMX_DS_BUILD = '20261026-1';   // v1.38: ต้องตรงกับ <
       b.disabled = false; b.textContent = 'เข้าสู่ระบบ';
       if (!r.ok) return setMsg(r.error === 'pending' || r.error === 'reset_pending' ? 'warn' : 'err', r.message || 'เข้าสู่ระบบไม่สำเร็จ');
       if (!r.token) return setMsg('err', 'เซิร์ฟเวอร์ยังเป็นเวอร์ชันเก่า กรุณาแจ้งแอดมินให้ Deploy Code.gs ใหม่');
-      session = { empId: r.empId, token: r.token, name: r.name, license: r.license || '' };
+      session = { empId: r.empId, token: r.token, name: r.name, license: r.license || '', at: Date.now() };
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
       refreshPrivate();
       const nx = afterLogin; afterLogin = null;
