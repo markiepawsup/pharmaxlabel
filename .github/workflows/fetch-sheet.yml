@@ -1,5 +1,6 @@
 name: fetch-sheet
 on: { push: { branches: [audit-data] } }
+permissions: { contents: write }
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -9,5 +10,8 @@ jobs:
           for t in drugTH drugEN drugJA drugKO drugZH-CN drugZH-TW drugES drugFR drugRU drugAR drugMY drugVI drugKM drugIT drugDE drugHI medical_glossary diseaseRegimen; do
             curl -sSL "https://docs.google.com/spreadsheets/d/$ID/gviz/tq?tqx=out:json&headers=1&sheet=$t" -o "out/$t.json"; echo "$t $(wc -c < out/$t.json)"
           done
-      - uses: actions/upload-artifact@v4
-        with: { name: sheet, path: out, retention-days: 1 }
+      - uses: actions/checkout@v4
+        with: { path: repo }
+      - run: |
+          mv out repo/sheetdata && cd repo && git config user.name bot && git config user.email bot@x
+          git add sheetdata && git commit -qm "data [skip ci]" && git push
